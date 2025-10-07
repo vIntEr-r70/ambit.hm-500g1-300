@@ -1,0 +1,27 @@
+install:
+  - cmake: "src/Gui"
+    copy:
+      - to: /usr/local/bin
+        items: [ "Gui" ]
+    dependence:
+      - repo: kvashnin/libaem
+      - repo: kvashnin/libwe
+      - repo: kvashnin/ambit.gui-core
+
+  - cmake: "src/worker"
+    copy:
+      - to: /usr/local/bin
+        items: [ "worker" ]
+    dependence:
+      - repo: kvashnin/libaem
+      - repo: kvashnin/libwe
+
+  - repo: kvashnin/liaem.gate
+
+  - src: "system"
+    copy:
+      - to: /
+        items: [ etc, root, usr, home ]
+
+      
+

@@ -1,0 +1,116 @@
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-0"
+rparams.stop        = "stop.Sp-0"
+event.block-manual  = "worker"
+
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-1"
+rparams.stop        = "stop.Sp-1"
+event.block-manual  = "worker"
+
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-2"
+rparams.stop        = "stop.Sp-2"
+event.block-manual  = "worker"
+
+[pump]
+class.power         = "pr200-A2" 
+class.led           = "plc-0" 
+rparams.start       = "start.pump"
+rparams.stop        = "stop.pump"
+
+[spump]
+class.power         = "pr200-A2" 
+class.led           = "mk110-1" 
+rparams.start       = "start.spump"
+rparams.stop        = "stop.spump"
+
+[fc]
+class.fc            = "fc"
+rparams.STAT        = "fc.STAT"
+rparams.F           = "fc-F"
+rparams.I           = "fc-I"
+rparams.P           = "fc-P"
+rparams.DF          = "fc.DF"
+rparams.U-OUT       = "fc-U"
+rparams.start       = "start.fc"
+rparams.stop        = "stop.fc"
+rparams.conductor-0 = "sys.conductor-0"
+rparams.conductor-1 = "sys.conductor-1"
+event.block-manual  = "worker"
+event.offline       = "fc"
+
+[fc-led-ctl]
+class.fc-led        = "plc-0" 
+rparams.STAT        = "fc.STAT"
+event.offline       = "fc"
+
+[dmg-led-ctl]
+class.dmg-led       = "plc-0" 
+rparams.STAT        = "fc.STAT"
+rparams.emg-stop    = "emg-stop"
+event.state         = "locker"
+
+[rcu-ctrl]
+class.led           = "mk110-0" 
+rparams.spin        = "plc-0.spin"
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+rparams.axis-6      = "rcu-axis.6"
+rparams.axis-5      = "rcu-axis.5"
+rparams.axis-4      = "rcu-axis.4"
+rparams.axis-Z      = "rcu-axis.Z"
+rparams.axis-Y      = "rcu-axis.Y"
+rparams.axis-X      = "rcu-axis.X"
+
+[panel-ctrl]
+class.led           = "mk110-0" 
+rparams.m-A         = "axis-imove.-A"
+rparams.p-A         = "axis-imove.+A"
+rparams.m-B         = "axis-imove.-B"
+rparams.p-B         = "axis-imove.+B"
+rparams.m-C         = "axis-imove.-C"
+rparams.p-C         = "axis-imove.+C"
+rparams.m-U         = "axis-imove.-U"
+rparams.p-U         = "axis-imove.+U"
+rparams.m-V         = "axis-imove.-V"
+rparams.p-V         = "axis-imove.+V"
+rparams.m-X         = "axis-imove.-X"
+rparams.p-X         = "axis-imove.+X"
+rparams.m-Y         = "axis-imove.-Y"
+rparams.p-Y         = "axis-imove.+Y"
+rparams.m-Z         = "axis-imove.-Z"
+rparams.p-Z         = "axis-imove.+Z"
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+
+[move-to-ctrl]
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+
+[bki-reset-ctrl]
+class.reset         = "plc-0"
+rparams.bki-lock    = "sys.bki-lock"
+
+[bki-allow-ctrl]
+class.allow         = "plc-0"
+
+[worker]
+rparams.mode-auto   = "mode.auto"
+rparams.emg-stop    = "emg-stop"
+
+[manual-mode]
+rparams.mode-rcu    = "mode.rcu"
+
+[auto]
+rparams.start       = "start.fc"
+rparams.stop        = "stop.fc"
+rparams.STAT        = "fc.STAT"
+event.offline       = "fc"
+

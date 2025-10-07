@@ -1,0 +1,3 @@
+<0 name="/dev/ttyS1" speed="57600" parity="N" />
+<1 name="/dev/ttyS4" speed="115200" parity="N" />
+<2 name="/dev/ttyACM0" speed="57600" parity="N" />

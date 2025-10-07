@@ -1,0 +1,80 @@
+<cnc-monitor port="1" sid="cnc" poll="100" wait="100" try="5" auto="1" log="0" />
+
+<modbus port="2" slave="100" sid="plc-0" poll="100" wait="100" try="5" auto="1" log="0" >
+    <model>
+        <i32 key="spin"  address="0000" swap="1" />
+        <i32             address="0002" swap="0" />
+        <u32 key="bits"  address="0004" swap="0" notify="1" />
+    </model>
+    <driver>
+        <coil key="dmg-led"             address="60" />
+        <coil key="fc-led"              address="62" />
+        <coil key="pump"                address="63" />
+        <coil key="Sp-0"                address="64" />
+        <coil key="Sp-1"                address="65" />
+        <coil key="Sp-2"                address="66" />
+        <coil key="lubrication"         address="67" />
+        <coil key="bki-reset-ctrl"      address="68" />
+        <coil key="bki-allow-ctrl"      address="69" />
+    </driver>
+</modbus>
+
+<modbus port="0" slave="16" sid="mk110-0" poll="100" wait="100" try="5" auto="1" log="0" coil="0" >
+    <model>
+        <u16 key="bits" address="0033" />
+    </model>
+    <driver>
+        <coil key="rcu-ctrl"    address="0320"  />
+        <coil key="panel-ctrl"  address="0320"  />
+    </driver>
+</modbus>
+
+<modbus port="0" slave="17" sid="mk110-1" poll="100" wait="100" try="5" auto="1" log="0" coil="0" >
+    <model>
+        <u16 key="bits"     address="0033" />
+    </model>
+    <driver>
+        <u16 key="spump"    address="0320" />
+    </driver>
+</modbus>
+
+<modbus port="0" slave="20" sid="pr200-A2" poll="100" wait="100" try="5" auto="1" log="0" >
+    <model>
+        <u16 key="fc"       address="0200" N="6" />
+        <u16 key="dt"       address="0208" N="7" />
+        <u16 key="dp"       address="020F" />
+        <u16 key="vmask"    address="0211" />
+    </model>
+    <driver>
+        <coil key="pump"    address="2110" />
+        <coil key="spump"   address="2111" />
+    </driver>
+</modbus>
+
+<modbus port="0" slave="21" sid="pr200-A1" poll="100" wait="100" try="5" auto="1" log="0" >
+    <model>
+        <u16 key="fc"       address="0200" N="2" />
+        <u16 key="dt"       address="0204" />
+        <u16 key="dp"       address="0206" N="2" />
+        <u16 key="vmask"    address="0208" />
+    </model>
+    <driver>
+        <coil key="Sp-0" address="2080"  />
+        <coil key="Sp-1" address="2081"  />
+        <coil key="Sp-2" address="2082"  />
+    </driver>
+</modbus>
+
+<modbus port="0" slave="11" sid="pr200" poll="100" wait="100" try="5" auto="1" log="0" >
+    <u16 key="fc" address="0200" N="2" />
+    <u16 key="dt" address="0202" N="2" />
+</modbus>
+
+<modbus port="0" slave="10" sid="fc" poll="100" wait="100" try="5" auto="1" log="0" >
+    <u16 key="STAT"  address="A411" />
+    <u32 key="DF"    address="A412" notify="1" />
+    <u16 key="F"     address="A430" />
+    <u16 key="U"     address="A433" />
+    <u16 key="I"     address="A434" />
+    <u16 key="P"     address="A437" />
+</modbus>

@@ -1,0 +1,16 @@
+emulation/
+progs/
+src_/
+cfg/
+src/Lib/
+src/core/
+/interface
+/home-root
+/build*
+/.cache
+*optime-a
+*optime-b
+sys_messages.txt
+
+
+

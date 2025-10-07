@@ -1,0 +1,94 @@
+[sensor]
+DP1  = "mDP-1"
+DP2  = "mDP-2"
+DP3  = "mDP-3"
+DP4  = "mDP-4"
+
+DT1  = "mDT-1"
+DT2  = "mDT-2"
+DT3  = "mDT-3"
+DT4  = "mDT-4"
+DT5  = "mDT-5"
+DT6  = "mDT-6"
+DT7  = "mDT-7"
+DT8  = "mDT-8"
+DT9  = "mDT-9"
+DT10 = "mDT-10"
+DT11 = "mDT-11"
+DT12 = "mDT-12"
+DT13 = "mDT-13"
+DT14 = "mDT-14"
+DT15 = "mDT-15"
+DT16 = "mDT-16"
+DT17 = "mDT-17"
+DT18 = "mDT-18"
+DT20 = "mDT-20"
+
+FC1  =  "mFC-1"
+FC2  =  "mFC-2"
+FC3  =  "mFC-3"
+FC4  =  "mFC-4"
+FC5  =  "mFC-5"
+FC6  =  "mFC-6"
+FC9  =  "mFC-9"
+FC10 =  "mFC-10"
+FC11 =  "mFC-11"
+FC12 =  "mFC-12"
+FC13 =  "mFC-13"
+FC14 =  "mFC-14"
+FC15 =  "mFC-15"
+FC16 =  "mFC-16"
+FC17 =  "mFC-17"
+FC18 =  "mFC-18"
+
+[Sp-0]
+DP = "mDP-2"
+FC = "mFC-9"
+V  = "valve.A14"
+
+[Sp-1]
+DP = "mDP-2" 
+FC = "mFC-10" 
+V  = "valve.A15"
+
+[Sp-2]
+DP = "mDP-3" 
+V  = "valve.A13"
+
+[sys]
+emg-stop    = "emg-stop"
+
+[flag]
+door        = "sys.door"
+pressure    = "sys.pressure" 
+fc          = "sys.fc" 
+bki         = "bki-lock"
+
+[slevel]
+P4          = "slevel.P4"
+P5          = "slevel.P5"
+P6          = "slevel.P6"
+P7          = "slevel.P7"
+P8          = "slevel.P8"
+P9          = "slevel.P9"
+P10         = "slevel.P10"
+P11         = "slevel.P11"
+
+[pump]
+H3          = "pump.H3"
+H4          = "pump.H4"
+H5          = "pump.H5"
+H6          = "pump.H6"
+H7          = "pump.H7"
+
+[valve]
+VA6         = "valve.VA6"
+VA7         = "valve.VA7"
+VA8         = "valve.VA8"
+VA9         = "valve.VA9"
+VA10        = "valve.VA10"
+VA11        = "valve.VA11"
+
+[heater]
+WH1         = "heater.WH1"
+WH2         = "heater.WH2"

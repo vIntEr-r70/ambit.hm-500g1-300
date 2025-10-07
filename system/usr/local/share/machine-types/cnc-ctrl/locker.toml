@@ -1,0 +1,33 @@
+[flags]
+"flag.door-0"       = "Дверь №1"
+"flag.door-1"       = "Дверь №2"
+"flag.pressure"     = "Давление"
+"flag.fc"           = "Авария ПЧ"
+"flag.bki"          = "БКИ"
+
+[intervals]
+"sensor.DP1"  = "DP1"
+"sensor.DP2"  = "DP2"
+"sensor.DP3"  = "DP3"
+
+"sensor.DT1"  = "DT1"
+"sensor.DT2"  = "DT2"
+"sensor.DT3"  = "DT3"
+"sensor.DT4"  = "DT4"
+"sensor.DT5"  = "DT5"
+"sensor.DT6"  = "DT6"
+"sensor.DT7"  = "DT7"
+"sensor.DT8"  = "DT8"  
+"sensor.DT9"  = "DT9"
+"sensor.DT10" = "DT10"
+
+"sensor.FC1"  =  "FC1"
+"sensor.FC2"  =  "FC2"
+"sensor.FC3"  =  "FC3"
+"sensor.FC4"  =  "FC4"
+"sensor.FC5"  =  "FC5"
+"sensor.FC6"  =  "FC6"
+"sensor.FC9"  =  "FC9"
+"sensor.FC10" =  "FC10"
+"sensor.FC11" =  "FC11"
+"sensor.FC12" =  "FC12"

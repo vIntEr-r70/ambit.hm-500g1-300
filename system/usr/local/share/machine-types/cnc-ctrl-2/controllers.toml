@@ -1,0 +1,162 @@
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-0"
+rparams.stop        = "stop.Sp-0"
+event.block-manual  = "worker"
+
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-1"
+rparams.stop        = "stop.Sp-1"
+event.block-manual  = "worker"
+
+[[Sp]]
+class.power         = "pr200-A1" 
+class.led           = "plc-0" 
+rparams.start       = "start.Sp-2"
+rparams.stop        = "stop.Sp-2"
+event.block-manual  = "worker"
+
+[pump]
+class.power         = "pr200-M2" 
+class.led           = "plc-0" 
+rparams.start       = "start.pump"
+rparams.stop        = "stop.pump"
+
+[spump-ctl]
+class.env-pump      = "pr200-M3"
+class.wtr-pump      = "pr200-M4"
+class.spump-led     = "mk110-1" 
+rparams.start       = "start.spump"
+rparams.stop        = "stop.spump"
+rparams.tank        = "panel.tank"
+event.start         = "auto"
+
+[fc]
+class.fc            = "fc"
+rparams.STAT        = "fc.STAT"
+rparams.F           = "fc-F"
+rparams.I           = "fc-I"
+rparams.P           = "fc-P"
+rparams.DF          = "fc.DF"
+rparams.U-OUT       = "fc-U"
+rparams.start       = "start.fc"
+rparams.stop        = "stop.fc"
+rparams.conductor-0 = "sys.conductor-0"
+rparams.conductor-1 = "sys.conductor-1"
+event.block-manual  = "worker"
+event.offline       = "fc"
+
+[fc-led-ctl]
+class.fc-led        = "plc-0" 
+rparams.STAT        = "fc.STAT"
+event.offline       = "fc"
+
+[dmg-led-ctl]
+class.dmg-led       = "plc-0" 
+rparams.STAT        = "fc.STAT"
+rparams.emg-stop    = "emg-stop"
+event.state         = "locker"
+
+[rcu-ctrl]
+class.led           = "mk110-0" 
+rparams.spin        = "plc-0.spin"
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+rparams.axis-6      = "rcu-axis.6"
+rparams.axis-5      = "rcu-axis.5"
+rparams.axis-4      = "rcu-axis.4"
+rparams.axis-Z      = "rcu-axis.Z"
+rparams.axis-Y      = "rcu-axis.Y"
+rparams.axis-X      = "rcu-axis.X"
+
+[panel-ctrl]
+class.led           = "mk110-0" 
+rparams.m-A         = "axis-imove.-A"
+rparams.p-A         = "axis-imove.+A"
+rparams.m-B         = "axis-imove.-B"
+rparams.p-B         = "axis-imove.+B"
+rparams.m-C         = "axis-imove.-C"
+rparams.p-C         = "axis-imove.+C"
+rparams.m-U         = "axis-imove.-U"
+rparams.p-U         = "axis-imove.+U"
+rparams.m-V         = "axis-imove.-V"
+rparams.p-V         = "axis-imove.+V"
+rparams.m-X         = "axis-imove.-X"
+rparams.p-X         = "axis-imove.+X"
+rparams.m-Y         = "axis-imove.-Y"
+rparams.p-Y         = "axis-imove.+Y"
+rparams.m-Z         = "axis-imove.-Z"
+rparams.p-Z         = "axis-imove.+Z"
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+
+[move-to-ctrl]
+rparams.speed-bit0  = "axis-speed.bit0"
+rparams.speed-bit1  = "axis-speed.bit1"
+
+[bki-reset-ctrl]
+class.reset         = "plc-0"
+rparams.bki-lock    = "sys.bki-lock"
+
+[bki-allow-ctrl]
+class.allow         = "plc-0"
+
+[worker]
+rparams.mode-auto   = "mode.auto"
+rparams.emg-stop    = "emg-stop"
+
+[manual-mode]
+rparams.mode-rcu    = "mode.rcu"
+
+[auto]
+rparams.start       = "start.fc"
+rparams.stop        = "stop.fc"
+rparams.STAT        = "fc.STAT"
+event.offline       = "fc"
+
+[drain]
+rparams.drain       = "panel.drain"
+rparams.tank        = "panel.tank"
+rparams.status      = "pr200-M1.bits"
+rparams.state       = "pr200-M1.state"
+class.pos           = "pr200-M1"
+class.timeout       = "pr200-M1"
+class.VA10          = "pr200-M3"
+class.VA11          = "pr200-M4"
+
+[barrel-0]
+rparams.dt          = "mDT-12" 
+rparams.liquid      = "pr200-M2.liquid"
+rparams.add-liquid  = "pr200-M2.add-liquid"
+class.add-liquid    = "pr200-M2"
+class.temp-min      = "pr200-M2"
+class.temp-max      = "pr200-M2"
+class.activate      = "pr200-M2"
+
+[barrel-1]
+rparams.dt          = "mDT-15" 
+rparams.liquid      = "pr200-M3.liquid"
+rparams.add-liquid  = "pr200-M3.add-liquid"
+class.add-liquid    = "pr200-M3"
+class.pump          = "pr200-M3"
+class.heater        = "pr200-M3"
+class.valve         = "pr200-M3"
+
+[barrel-2]
+rparams.dt          = "mDT-18" 
+rparams.liquid      = "pr200-M4.liquid"
+rparams.add-liquid  = "pr200-M4.add-liquid"
+class.add-liquid    = "pr200-M4"
+class.pump          = "pr200-M4"
+class.heater        = "pr200-M4"
+class.valve         = "pr200-M4"
+
+[drainage]
+rparams.min         = "slevel.P11"
+rparams.max         = "slevel.P10" 
+rparams.H7          = "pump.H7"
+class.H7            = "pr200-M1"
+

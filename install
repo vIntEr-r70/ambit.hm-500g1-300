@@ -1,0 +1,16 @@
+#!/bin/env bash
+
+cmake --build ./build-ambit-x86-64 -j8
+
+TARGET=root@192.168.2.79
+
+ssh $TARGET "mount -o remount,rw /usr/local"
+
+scp ./build-ambit-x86-64/src/worker/worker $TARGET:/usr/local/bin
+scp ./build-ambit-x86-64/src/gui/gui $TARGET:/usr/local/bin
+
+scp ./build-ambit-x86-64/_deps/aem-build/libaem.so $TARGET:/usr/local/lib
+scp ./build-ambit-x86-64/_deps/we-build/libwe.so $TARGET:/usr/local/lib
+scp ./build-ambit-x86-64/_deps/gui-core-build/libgui-core.so $TARGET:/usr/local/lib
+
+ssh $TARGET "mount -o remount,ro /usr/local"

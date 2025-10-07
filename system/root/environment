@@ -1,0 +1,25 @@
+#!/bin/sh
+
+BIN=/usr/local/bin
+LIB=/usr/local/lib
+SHARE=/usr/local/share
+CFG_PATH=/etc/cnc-ctrl
+
+export LANG=ru_RU.UTF-8
+export LC_NUMERIC=C
+export LIAEM_RW_PATH=/home/root
+export LIAEM_RO_PATH=$SHARE/machine-types/cnc-ctrl-2
+
+# Под вопросом
+export HOME="/home/root"
+export AMBIT_CFG_PATH=/home/root/cfg
+export AMBIT_HOME_PATH=/home/root
+export LD_LIBRARY_PATH="${LIB}"
+
+# Определяем каталог с конфигурациями для worker
+if [ -f {$LIAEM_RW_PATH}/unit-cfg ];
+then
+    UNIT_CFG=`/bin/cat "{$LIAEM_RW_PATH}/unit-cfg"`
+    export LIAEM_RO_PATH=$SHARE/machine-types/$UNIT_CFG
+fi
+
