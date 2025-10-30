@@ -14,8 +14,9 @@
 #include "SysCfgWindow/SysCfgWindow.h"
 #include "ArcsWindow/ArcsWindow.h"
 #include <NotifyWindow/NotifyWindow.h>
-#include "MnemonicWindow/MnemonicWindow.h"
 #include "LiquidSystem/LiquidSystemWindow.h"
+
+#include <MnemonicWindow/MnemonicWindow.h>
 
 #include "BkiLockMessage.h"
 #include "EmgStopMessage.h"

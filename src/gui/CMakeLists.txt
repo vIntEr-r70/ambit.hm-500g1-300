@@ -2,20 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(gui)
 
-#-----------------------------------------------------------------------
-
-include(FetchContent)
-
-FetchContent_Declare(
-    gui-core
-    GIT_REPOSITORY git@gitlab.com:alexander.kvashnin/ambit-gui-core.git
-    GIT_TAG        master
-)
-
-FetchContent_MakeAvailable(gui-core)
-
-#-----------------------------------------------------------------------
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -57,10 +43,6 @@ add_executable(${PROJECT_NAME}
     gui/SysCfgWindow/SysSetsWidget.cpp
     gui/SysCfgWindow/EngineSignalsWidget.cpp
     gui/SysCfgWindow/BkiCfgWidget.cpp
-
-    gui/MnemonicWindow/MnemonicWindow.cpp
-    gui/MnemonicWindow/MnemonicWidget.cpp
-    gui/MnemonicWindow/LegendWidget.cpp
 
     gui/ArcsWindow/BaseArcsLoader.cpp
     gui/ArcsWindow/ArcsWindow.cpp
