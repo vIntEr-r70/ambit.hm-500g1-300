@@ -11,7 +11,7 @@ class BkiLockMessage;
 class EmgStopMessage;
 class NavigationPanel;
 class SysCfgWindow;
-class AutoCtrlWindow; 
+class AutoCtrlWindow;
 
 class MainFrame
     : public QWidget
@@ -31,7 +31,7 @@ public:
     void nf_sys_ctrl(aem::uint8) noexcept;
 
     void nf_sys_bki_lock(bool) noexcept;
-    
+
     void nf_sys_emg_stop(bool) noexcept;
 
     void nf_sys_locker(aem::uint8) noexcept;
@@ -42,8 +42,10 @@ private slots:
 
 private:
 
+    void on_connected() noexcept;
+
     void on_logout() noexcept;
-    
+
     void keyPressEvent(QKeyEvent*) noexcept override final;
 
 private:
@@ -58,7 +60,7 @@ private:
     BkiLockMessage *bki_lock_msg_;
     bool bki_lock_flag_{ false };
     bool allow_bki_lock_msg_{ false };
-    
+
     EmgStopMessage *emg_stop_msg_;
     bool emg_stop_flag_{ false };
 };

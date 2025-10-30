@@ -14,13 +14,13 @@
 
 ProgramListDlg::ProgramListDlg(QWidget* parent)
     : InteractWidget(parent)
-    , path_(aem::getenv("LIAEM_RW_PATH", "../../../home-root"))
+    , path_(aem::getenv("LIAEM_RW_PATH", "./home-root"))
 {
     path_ /= "programs";
 
     if (!std::filesystem::exists(path_))
         std::filesystem::create_directories(path_);
-    
+
     setMinimumWidth(600);
     setMinimumHeight(600);
 

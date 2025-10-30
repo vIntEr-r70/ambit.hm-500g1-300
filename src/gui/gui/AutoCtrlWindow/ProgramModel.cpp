@@ -14,10 +14,9 @@
 ProgramModel::ProgramModel(QTableView &tref)
     : QAbstractTableModel()
     , table_(tref)
-    , path_(aem::getenv("LIAEM_RW_PATH", "../../../home-root"))
-{ 
+    , path_(aem::getenv("LIAEM_RW_PATH", "./home-root"))
+{
     path_ /= "programs";
-    
     reset();
 }
 
