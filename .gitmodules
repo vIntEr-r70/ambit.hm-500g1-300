@@ -7,3 +7,6 @@
 [submodule "src/libs/ambit-gui-core"]
 	path = src/libs/ambit-gui-core
 	url = git@gitlab.com:alexander.kvashnin/ambit-gui-core.git
+[submodule "src/libs/libeng"]
+	path = src/libs/libeng
+	url = git@github.com:vIntEr-r70/libeng.git
