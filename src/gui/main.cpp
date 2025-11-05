@@ -33,24 +33,22 @@ int main(int argc, char *argv[])
         a.setStyleSheet(block.constData());
     }
 
-    // int id = QFontDatabase::addApplicationFont("./Shentox-Regular.ttf");
-    // int id = QFontDatabase::addApplicationFont("./Manrope-Regular.ttf");
-    int id = QFontDatabase::addApplicationFont("./dejavu/DejaVuSans.ttf");
-    // if (id < 0)
-    //     aem::log::error("Не удалось загрузить шрифт....");
-    // else
-    //     QApplication::setFont(QFontDatabase::applicationFontFamilies(id).at(0));
+    int id = QFontDatabase::addApplicationFont("Roboto-Regular.ttf");
+    if (id < 0)
+        aem::log::error("Не удалось загрузить шрифт....");
+    else
+        QApplication::setFont(QFontDatabase::applicationFontFamilies(id).at(0));
 
 #ifdef BUILDROOT
-	QScreen* screen = QGuiApplication::primaryScreen();
-	QRect screenGeometry(screen->geometry());
+    QScreen* screen = QGuiApplication::primaryScreen();
+    QRect screenGeometry(screen->geometry());
 #else
-	QRect screenGeometry(0, 0, 1024, 768);
+    QRect screenGeometry(0, 0, 1024, 768);
 #endif
 
     MainFrame *w = new MainFrame();
     w->setFixedSize(screenGeometry.width(), screenGeometry.height());
-	w->show();
+    w->show();
 
     aem::timer timer;
     timer.timeout = [&]

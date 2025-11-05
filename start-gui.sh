@@ -1,8 +1,11 @@
-export LIAEM_RO_PATH=$PWD/system/usr/local/share/machine-types/cnc-ctrl-2
-export LIAEM_RW_PATH=$PWD/home-root
-
-cmake --build ./src/Gui/build -j8 
+#!/bin/env bash
 
 SPWD=`pwd`
+
+export LIAEM_RO_PATH=$SPWD/system/usr/local/share/machine-types/cnc-ctrl-2
+export LIAEM_RW_PATH=$SPWD/home-root
+
+cmake --build ./build -j8
+
 cd ./system/etc/cnc-ctrl
-$SPWD/src/Gui/build/Gui
+$SPWD/build/src/gui/gui
