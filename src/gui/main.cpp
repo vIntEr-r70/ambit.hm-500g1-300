@@ -9,8 +9,10 @@
 #include <global.h>
 
 #include <aem/log.h>
-#include <aem/aem.h>
-#include <aem/timer.h>
+
+#include <eng/eng.hpp>
+#include <eng/timer.hpp>
+#include <eng/sibus/client.hpp>
 
 int main(int argc, char *argv[])
 {
@@ -50,8 +52,7 @@ int main(int argc, char *argv[])
     w->setFixedSize(screenGeometry.width(), screenGeometry.height());
     w->show();
 
-    aem::timer timer;
-    timer.timeout = [&]
+    eng::timer::id_t timer_id = eng::timer::add_ms(10, [&]
     {
         a.processEvents();
 
@@ -62,18 +63,19 @@ int main(int argc, char *argv[])
         global::rpc().close();
         global::nf().close();
 
-        // Останавливаем обработку очереди сообщении интерфейса
-        timer.stop();
-    };
-    timer.repeat(aem::time_span::ms(10));
+        eng::timer::kill_timer(timer_id);
+    });
 
-    return aem::run([w](int result)
-        {
-            // Вызываем деструкторы окон
-            delete w;
+    eng::sibus::client::init();
 
-            global::destroy();
-            return result;
-        });
+    int result = eng::run();
+
+    eng::sibus::client::destroy();
+
+    // Вызываем деструкторы окон
+    delete w;
+    global::destroy();
+
+    return result;
 }
 
