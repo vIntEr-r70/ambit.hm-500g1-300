@@ -34,7 +34,7 @@ add_executable(${PROJECT_NAME}
     gui/AutoCtrlWindow/ProgramModel.cpp
     gui/AutoCtrlWindow/ProgramModelHeader.cpp
     gui/AutoCtrlWindow/ProgramStateCtrlWidget.cpp
-    gui/AutoCtrlWindow/ProgramOpFactory.cpp
+    # gui/AutoCtrlWindow/ProgramOpFactory.cpp
     gui/AutoCtrlWindow/ProgramListDlg.cpp
     gui/AutoCtrlWindow/AutoParamKeyboard.cpp
     gui/AutoCtrlWindow/EditorMessageBox.cpp

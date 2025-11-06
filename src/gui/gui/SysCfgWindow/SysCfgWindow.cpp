@@ -30,7 +30,7 @@ SysCfgWindow::SysCfgWindow(QWidget *parent)
     tab_->setFocusPolicy(Qt::NoFocus);
     layout->addWidget(tab_);
 
-    axisSettingsW_ = new AxisSettingsWidget(this, "cnc", global::rpc(), global::signer());
+    axisSettingsW_ = new AxisSettingsWidget(this);
     modbusCtrlW_ = new ModbusUnitCtrlWidget(this, global::rpc(), global::signer());
     sysSetsW_ = new SysSetsWidget(this);
     hwSetsW_ = new HardwareSetsWidget(this);
