@@ -3,7 +3,8 @@
 SRC=build-ambit-x86-64
 TARGET=$SRC/target-system
 FNAME=ambit.hm-500g1-300.tar
-DST=a@81.1.215.214:/tmp
+#DST=a@81.1.215.214:/tmp
+DST=root@192.168.2.35:/tmp
 cmake --build $SRC -j8
 
 mkdir -p $TARGET

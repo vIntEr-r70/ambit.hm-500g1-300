@@ -22,7 +22,8 @@ add_executable(${PROJECT_NAME}
     gui/EmgStopMessage.cpp
 
     gui/ManualCtrlWindow/ManualCtrlWindow.cpp
-    gui/ManualCtrlWindow/AxisCtrlWidget.cpp
+    gui/ManualCtrlWindow/AxisCtlWidget.cpp
+    gui/ManualCtrlWindow/AxisCtlItemWidget.cpp
     gui/ManualCtrlWindow/SprayerCtrlWidget.cpp
     gui/ManualCtrlWindow/ManualEngineSetDlg.cpp
     gui/ManualCtrlWindow/CenteringCfgWidget.cpp

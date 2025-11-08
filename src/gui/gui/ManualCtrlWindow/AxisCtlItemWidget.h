@@ -1,20 +1,16 @@
 #pragma once
 
-#include <array>
-
 #include <QWidget>
 
 #include <aem/types.h>
+
+#include <array>
 
 class QLabel;
 class ValueViewReal;
 class QFrame;
 
-namespace we {
-    class axis_desc;
-}
-
-class AxisCtrlWidget
+class AxisCtlItemWidget
     : public QWidget
 {
     Q_OBJECT
@@ -32,11 +28,15 @@ public:
 
 public:
 
-    AxisCtrlWidget(QWidget*, char, we::axis_desc const &);
+    AxisCtlItemWidget(QWidget*, char);
 
 signals:
 
     void onMoveToClick(char);
+
+public:
+
+    void update_name(std::string_view);
 
 public:
 
@@ -74,8 +74,7 @@ private:
 
 private:
 
-    char axisId_;
-    we::axis_desc const &axis_;
+    char axis_;
 
     QString dlgTitle_;
 

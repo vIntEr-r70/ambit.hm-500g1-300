@@ -1,4 +1,4 @@
-#include "AxisCtrlWidget.h"
+#include "AxisCtlItemWidget.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -7,7 +7,7 @@
 #include <QPainter>
 
 #include <Widgets/ValueViewReal.h>
-#include "common/Defs.h"
+// #include "common/Defs.h"
 
 #include <axis-cfg.h>
 #include <UnitsCalc.h>
@@ -16,9 +16,8 @@
 
 #define ROUND_RADIUS 20
 
-AxisCtrlWidget::AxisCtrlWidget(QWidget* parent, char axisId, we::axis_desc const &axis)
+AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis)
     : QWidget(parent)
-    , axisId_(axisId)
     , axis_(axis)
 {
 	setAttribute(Qt::WA_StyledBackground, true);
@@ -83,30 +82,34 @@ AxisCtrlWidget::AxisCtrlWidget(QWidget* parent, char axisId, we::axis_desc const
     setStatus(NotActive);
 }
 
-void AxisCtrlWidget::mousePressEvent(QMouseEvent*)
+void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
 {
     if (status_ == Active)
-        emit onMoveToClick(axisId_);
+        emit onMoveToClick(axis_);
 }
 
-void AxisCtrlWidget::apply_self_axis() noexcept
+void AxisCtlItemWidget::update_name(std::string_view name)
 {
-    lblHeader_->setText(axis_.name);
-    vvr_pos_->setPostfix(axis_.muGrads ? "°" : "мм");
-    // vvr_pos_->set_precision(axis_.muGrads ? 5 : 2);
-    vvr_pos_->set_precision(axis_.muGrads ? 2 : 2);
-    vvr_speed_->setPostfix(axis_.muGrads ? "об/мин" : "мм/c");
+    lblHeader_->setText(QString::fromStdString(std::string(name)));
+}
+
+void AxisCtlItemWidget::apply_self_axis() noexcept
+{
+    // vvr_pos_->setPostfix(axis_.muGrads ? "°" : "мм");
+    // // vvr_pos_->set_precision(axis_.muGrads ? 5 : 2);
+    // vvr_pos_->set_precision(axis_.muGrads ? 2 : 2);
+    // vvr_speed_->setPostfix(axis_.muGrads ? "об/мин" : "мм/c");
 
     updateGui();
 }
 
-void AxisCtrlWidget::nf_speed(float v) noexcept
+void AxisCtlItemWidget::nf_speed(float v) noexcept
 {
     speed_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::ls_min_max(std::size_t id, bool v) noexcept
+void AxisCtlItemWidget::ls_min_max(std::size_t id, bool v) noexcept
 {
     ls_[id] = v;
     lblLS_[id]->setStyleSheet(QString("border: 3px solid %1").arg(v ? "#0000ff" : "#ffffff"));
@@ -114,37 +117,37 @@ void AxisCtrlWidget::ls_min_max(std::size_t id, bool v) noexcept
     updateGui();
 }
 
-void AxisCtrlWidget::nf_pos(float v) noexcept
+void AxisCtlItemWidget::nf_pos(float v) noexcept
 {
     pos_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::set_sys_mode(unsigned char v) noexcept
+void AxisCtlItemWidget::set_sys_mode(unsigned char v) noexcept
 {
     sysMode_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::set_sys_ctrl(unsigned char v) noexcept
+void AxisCtlItemWidget::set_sys_ctrl(unsigned char v) noexcept
 {
     ctlMode_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::set_sys_error(unsigned int v) noexcept
+void AxisCtlItemWidget::set_sys_error(unsigned int v) noexcept
 {
     error_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::set_sys_ctrl_mode_axis(char v) noexcept
+void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept
 {
     ctrlModeAxis_ = v;
     updateGui();
 }
 
-void AxisCtrlWidget::setStatus(aem::uint8 status)
+void AxisCtlItemWidget::setStatus(aem::uint8 status)
 {
     status_ = status;
 
@@ -153,34 +156,34 @@ void AxisCtrlWidget::setStatus(aem::uint8 status)
                 "background-color: %1; color: %2;").arg(clr[0].name()).arg(clr[1].name()));
 }
 
-void AxisCtrlWidget::updateGui()
+void AxisCtlItemWidget::updateGui()
 {
-    uint8_t status = NotActive;
-
-    switch(sysMode_)
-    {
-    case Core::SysMode::Manual:
-        if (ctlMode_ == Core::CtlMode::Panel)
-            status = Active;
-        else if (ctrlModeAxis_ == axisId_)
-            status = SelectAsCtrl;
-        break;
-    }
-
-    if (Core::ErrorBits::check(error_, Core::ErrorBits::rs422Port) ||
-        Core::ErrorBits::check(error_, Core::ErrorBits::cncNoConnect))
-    {
-        status = NotActive;
-    }
-    
-    vvr_speed_->setEnabled(sysMode_ == Core::SysMode::Manual && !std::isnan(speed_));
-    vvr_speed_->set_value(std::isnan(speed_) ? speed_ : UnitsCalc::toSpeed(axis_.muGrads, speed_));
-
-    float out = UnitsCalc::toPos(axis_.muGrads, pos_);
-    if (axis_.muGrads)
-        out = out - ((static_cast<int>(out / 360)) * 360);
-    vvr_pos_->set_value(out);
-
-    setStatus(status);
+    // uint8_t status = NotActive;
+    //
+    // switch(sysMode_)
+    // {
+    // case Core::SysMode::Manual:
+    //     if (ctlMode_ == Core::CtlMode::Panel)
+    //         status = Active;
+    //     else if (ctrlModeAxis_ == axisId_)
+    //         status = SelectAsCtrl;
+    //     break;
+    // }
+    //
+    // if (Core::ErrorBits::check(error_, Core::ErrorBits::rs422Port) ||
+    //     Core::ErrorBits::check(error_, Core::ErrorBits::cncNoConnect))
+    // {
+    //     status = NotActive;
+    // }
+    //
+    // vvr_speed_->setEnabled(sysMode_ == Core::SysMode::Manual && !std::isnan(speed_));
+    // vvr_speed_->set_value(std::isnan(speed_) ? speed_ : UnitsCalc::toSpeed(axis_.muGrads, speed_));
+    //
+    // float out = UnitsCalc::toPos(axis_.muGrads, pos_);
+    // if (axis_.muGrads)
+    //     out = out - ((static_cast<int>(out / 360)) * 360);
+    // vvr_pos_->set_value(out);
+    //
+    // setStatus(status);
 }
 

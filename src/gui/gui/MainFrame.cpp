@@ -107,9 +107,9 @@ void MainFrame::on_connected() noexcept
     // NavigationPanel_->add(dw, "diag", true);
 
     sys_key_map_.add("mode",            mcw, &ManualCtrlWindow::nf_sys_mode);
-    sys_key_map_.add("ctrl",            mcw, &ManualCtrlWindow::nf_sys_ctrl);
-    sys_key_map_.add("error",           mcw, &ManualCtrlWindow::nf_sys_error);
-    sys_key_map_.add("ctrl-mode-axis",  mcw, &ManualCtrlWindow::nf_sys_ctrl_mode_axis);
+    // sys_key_map_.add("ctrl",            mcw, &ManualCtrlWindow::nf_sys_ctrl);
+    // sys_key_map_.add("error",           mcw, &ManualCtrlWindow::nf_sys_error);
+    // sys_key_map_.add("ctrl-mode-axis",  mcw, &ManualCtrlWindow::nf_sys_ctrl_mode_axis);
     sys_key_map_.add("calibrate",       mcw, &ManualCtrlWindow::nf_sys_calibrate);
     sys_key_map_.add("calibrate-step",  mcw, &ManualCtrlWindow::nf_sys_calibrate_step);
     sys_key_map_.add("centering-step",  mcw, &ManualCtrlWindow::nf_sys_centering_step);
@@ -126,17 +126,17 @@ void MainFrame::on_connected() noexcept
 
 
     // Получаем исходный список конфигурации осей
-    global::rpc().call("get", { "cnc", "axis-cfg", { } })
-        .done([this, mcw](nlohmann::json const& ret)
-        {
-            for (auto& [key, val] : ret.items())
-            {
-                char axisId = key.at(0);
-                axis_cfg_.base64(axisId, val.get<std::string_view>());
-            }
-            mcw->apply_axis_cfg();
-            auto_ctrl_window_->apply_axis_cfg();
-        });
+    // global::rpc().call("get", { "cnc", "axis-cfg", { } })
+    //     .done([this, mcw](nlohmann::json const& ret)
+    //     {
+    //         for (auto& [key, val] : ret.items())
+    //         {
+    //             char axisId = key.at(0);
+    //             axis_cfg_.base64(axisId, val.get<std::string_view>());
+    //         }
+    //         mcw->apply_axis_cfg();
+    //         auto_ctrl_window_->apply_axis_cfg();
+    //     });
 }
 
 

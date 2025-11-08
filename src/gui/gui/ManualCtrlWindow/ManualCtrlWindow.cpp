@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QPixmapCache>
 
-#include "AxisCtrlWidget.h"
+#include "AxisCtlWidget.hpp"
 #include <FcCtrlWidget/FcCtrlWidget.h>
 #include "SprayerCtrlWidget.h"
 #include "CenteringCfgWidget.h"
@@ -32,10 +32,7 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
     vL->setContentsMargins(10, 10, 10, 10);
     vL->setSpacing(10);
     {
-        // Резервируем место под виджеты состояния и управления осями
-        vL_ = new QVBoxLayout();
-        vL_->setSpacing(15);
-        vL->addLayout(vL_);
+        vL->addWidget(new AxisCtlWidget(this));
 
         vL->addStretch();
 
@@ -68,61 +65,36 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
         vL->addLayout(hL);
     }
 
-    // Создаем виджеты для всех осей
-    std::for_each(axis_cfg_.begin(), axis_cfg_.end(), [this](auto &&it)
-    {
-        AxisCtrlWidget* w = new AxisCtrlWidget(this, it.first, it.second);
-        connect(w, SIGNAL(onMoveToClick(char)), this, SLOT(onAxisWidgetMoveTo(char)));
-
-        w->setMinimumWidth(240);
-        w->setMaximumWidth(240);
-        w->setMaximumHeight(110);
-        w->setVisible(false);
-
-        axis_[it.first] = w;
-    });
-
     connect(manualEngineSetDlg_, SIGNAL(applyNewPos(char, float)), this, SLOT(engineApplyNewPos(char, float)));
     connect(manualEngineSetDlg_, SIGNAL(doCalibrate(char)), this, SLOT(onDoCalibrate(char)));
     connect(manualEngineSetDlg_, SIGNAL(doZero(char)), this, SLOT(engineMakeAsZero(char)));
 
-    global::subscribe("cnc.{}.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
-    {
-        try
-        {
-            char axisId = keys[0].get<std::string_view>()[0];
-            std::string_view kparam = keys[1].get<std::string_view>();
-
-            auto it = axis_.find(axisId);
-            if (it == axis_.end())
-                return;
-
-            cnc_map_.apply(it->second, kparam, value);
-
-            if (kparam == "pos")
-                manualEngineSetDlg_->set_position(axisId, value.get<float>());
-        }
-        catch(...)
-        {
-        }
-    });
+    // global::subscribe("cnc.{}.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
+    // {
+    //     try
+    //     {
+    //         char axisId = keys[0].get<std::string_view>()[0];
+    //         std::string_view kparam = keys[1].get<std::string_view>();
+    //
+    //         auto it = axis_.find(axisId);
+    //         if (it == axis_.end())
+    //             return;
+    //
+    //         cnc_map_.apply(it->second, kparam, value);
+    //
+    //         if (kparam == "pos")
+    //             manualEngineSetDlg_->set_position(axisId, value.get<float>());
+    //     }
+    //     catch(...)
+    //     {
+    //     }
+    // });
 
     global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
     {
         bool bki_allow = value.get<bool>();
         cCfgW_->setEnabled(bki_allow);
     });
-
-    cnc_map_.add("speed", &AxisCtrlWidget::nf_speed);
-    cnc_map_.add("lsmin", &AxisCtrlWidget::nf_ls_min);
-    cnc_map_.add("lsmax", &AxisCtrlWidget::nf_ls_max);
-    cnc_map_.add("pos", &AxisCtrlWidget::nf_pos);
-}
-
-void ManualCtrlWindow::nf_sys_error(unsigned int v) noexcept
-{
-    for (auto& item : axis_)
-        item.second->set_sys_error(v);
 }
 
 void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
@@ -132,21 +104,6 @@ void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
 
     for (auto w : spCtrlW_)
         w->nf_sys_mode(v);
-
-    for (auto& item : axis_)
-        item.second->set_sys_mode(v);
-}
-
-void ManualCtrlWindow::nf_sys_ctrl(unsigned char v) noexcept
-{
-    for (auto& item : axis_)
-        item.second->set_sys_ctrl(v);
-}
-
-void ManualCtrlWindow::nf_sys_ctrl_mode_axis(char v) noexcept
-{
-    for (auto& item : axis_)
-        item.second->set_sys_ctrl_mode_axis(v);
 }
 
 void ManualCtrlWindow::nf_sys_calibrate(char v) noexcept
@@ -162,35 +119,6 @@ void ManualCtrlWindow::nf_sys_calibrate_step(int v) noexcept
 void ManualCtrlWindow::nf_sys_centering_step(int v) noexcept
 {
     cCfgW_->set_centering_step(v);
-}
-
-void ManualCtrlWindow::apply_axis_cfg() noexcept
-{
-    std::for_each(axis_cfg_.begin(), axis_cfg_.end(), [this](auto &&it)
-    {
-        if (!it.second.use())
-            return;
-        addAxis(it.first);
-    });
-}
-
-void ManualCtrlWindow::addAxis(char axisId) noexcept
-{
-    QHBoxLayout* hL = hL_.empty() ? nullptr : hL_.back();
-
-    if (hL == nullptr || hL->count() == 4)
-    {
-        hL_.push_back(new QHBoxLayout());
-        vL_->addLayout(hL_.back());
-        hL = hL_.back();
-        hL->setSpacing(15);
-    }
-
-    AxisCtrlWidget *w = axis_[axisId];
-    w->apply_self_axis();
-    w->setVisible(true);
-
-    hL->addWidget(w);
 }
 
 void ManualCtrlWindow::onAxisWidgetMoveTo(char axisId) noexcept
@@ -231,3 +159,4 @@ void ManualCtrlWindow::engineApplyNewPos(char axisId, float pos)
 {
     rpc_.call("set", { "cnc", "axis-move-to", { axisId, pos } });
 }
+

@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
     w->setFixedSize(screenGeometry.width(), screenGeometry.height());
     w->show();
 
+    eng::sibus::client::init();
+
     eng::timer::id_t timer_id = eng::timer::add_ms(10, [&]
     {
         a.processEvents();
@@ -64,13 +66,11 @@ int main(int argc, char *argv[])
         global::nf().close();
 
         eng::timer::kill_timer(timer_id);
+
+        eng::sibus::client::destroy();
     });
 
-    eng::sibus::client::init();
-
     int result = eng::run();
-
-    eng::sibus::client::destroy();
 
     // Вызываем деструкторы окон
     delete w;
