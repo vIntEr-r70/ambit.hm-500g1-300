@@ -60,10 +60,10 @@ MainFrame::MainFrame()
         on_connected();
     };
 
-#ifndef BUILDROOT
+// #ifndef BUILDROOT
     on_connected();
     NavigationPanel_->switch_to("manual");
-#endif
+// #endif
 
     global::subscribe("sys.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
     {
