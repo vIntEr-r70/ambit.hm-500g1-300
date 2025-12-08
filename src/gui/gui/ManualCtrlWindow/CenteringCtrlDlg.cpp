@@ -177,7 +177,7 @@ void CenteringCtrlDlg::show(float H, bool v) noexcept
     static QStringList const steps { 
         "Поиск первой точки по Y", "Возвращение в исходную точку Y",
         "Поиск второй точки по Y", "Перемещение в центр по Y",
-        "Поиск впадины зубай по X", "Откат на h" };
+        "Поиск впадины зуба по X", "Откат на h" };
 
     init_from_list(lbls_, lbl_steps_, steps);
 

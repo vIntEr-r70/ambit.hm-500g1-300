@@ -79,6 +79,8 @@ CenteringCfgWidget::CenteringCfgWidget(QWidget* parent) noexcept
                     }
                     vL->addLayout(hL);
 
+                    vL->addStretch();
+
                     hL = new QHBoxLayout();
                     {
                         hL->addStretch();
@@ -86,8 +88,12 @@ CenteringCfgWidget::CenteringCfgWidget(QWidget* parent) noexcept
                         QLabel *lbl = new QLabel(this);
                         lbl->setPixmap(QPixmap(":/cnc.tooth"));
                         hL->addWidget(lbl);
+
+                        hL->addStretch();
                     }
                     vL->addLayout(hL);
+
+                    vL->addStretch();
                 }
                 stack_->addWidget(w);
 
@@ -98,7 +104,7 @@ CenteringCfgWidget::CenteringCfgWidget(QWidget* parent) noexcept
                     QLabel *lbl = new QLabel(this);
                     lbl->setPixmap(QPixmap(":/cnc.shaft"));
                     vL->addWidget(lbl);
-                    vL->setAlignment(lbl, Qt::AlignCenter | Qt::AlignRight);
+                    vL->setAlignment(lbl, Qt::AlignCenter);
                 }
                 stack_->addWidget(w);
             }

@@ -30,6 +30,8 @@
 
 #include <aem/log.h>
 
+#include <print>
+
 MainFrame::MainFrame()
     : QWidget()
 {
@@ -242,4 +244,9 @@ void MainFrame::keyPressEvent(QKeyEvent *e) noexcept
 {
     if (e->key() == Qt::Key_Escape)
         hide();
+}
+
+void MainFrame::mousePressEvent(QMouseEvent *e)
+{
+    std::println("MainFrame::mousePressEvent: {}, {}", e->pos().x(), e->pos().y());
 }

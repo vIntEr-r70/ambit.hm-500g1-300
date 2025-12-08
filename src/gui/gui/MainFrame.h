@@ -48,6 +48,8 @@ private:
 
     void keyPressEvent(QKeyEvent*) noexcept override final;
 
+    void mousePressEvent(QMouseEvent*) override final;
+
 private:
 
     NavigationPanel *NavigationPanel_;
