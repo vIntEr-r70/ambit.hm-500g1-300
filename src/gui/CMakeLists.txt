@@ -21,11 +21,11 @@ add_executable(${PROJECT_NAME}
     gui/BkiLockMessage.cpp
     gui/EmgStopMessage.cpp
 
+    gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlWidget.cpp
+    gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlItemWidget.cpp
+    gui/ManualCtrlWindow/axis-ctl-widget/manual-engine-set-dlg.cpp
     gui/ManualCtrlWindow/ManualCtrlWindow.cpp
-    gui/ManualCtrlWindow/AxisCtlWidget.cpp
-    gui/ManualCtrlWindow/AxisCtlItemWidget.cpp
     gui/ManualCtrlWindow/SprayerCtrlWidget.cpp
-    gui/ManualCtrlWindow/ManualEngineSetDlg.cpp
     gui/ManualCtrlWindow/CenteringCfgWidget.cpp
     gui/ManualCtrlWindow/CenteringCtrlDlg.cpp
 

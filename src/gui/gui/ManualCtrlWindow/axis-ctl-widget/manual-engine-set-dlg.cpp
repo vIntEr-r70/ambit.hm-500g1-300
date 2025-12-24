@@ -1,10 +1,10 @@
-#include "ManualEngineSetDlg.h"
+#include "manual-engine-set-dlg.h"
 
 #include <Widgets/RoundButton.h>
 #include <Widgets/NumberCalcField.h>
 #include <InteractWidgets/KeyboardWidget.h>
 
-#include <axis-cfg.h>
+// #include <axis-cfg.h>
 #include <UnitsCalc.h>
 
 #include <QVBoxLayout>
@@ -16,9 +16,8 @@
 
 #include <aem/log.h>
 
-ManualEngineSetDlg::ManualEngineSetDlg(QWidget* parent, we::axis_cfg const &axis_cfg)
+manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     : InteractWidget(parent)
-    , axis_cfg_(axis_cfg)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("border-radius: 20px; background-color: #c8c8c8");
@@ -34,127 +33,131 @@ ManualEngineSetDlg::ManualEngineSetDlg(QWidget* parent, we::axis_cfg const &axis
     }
 }
 
-void ManualEngineSetDlg::showEvent(QShowEvent*)
+void manual_engine_set_dlg::set_axis_name(QString const &value)
+{
+    title_[0]->setText(value);
+}
+
+void manual_engine_set_dlg::showEvent(QShowEvent*)
 {
     le_->setFocus();
     le_->selectAll();
 }
 
-void ManualEngineSetDlg::onKeyPressed(int key)
+void manual_engine_set_dlg::onKeyPressed(int key)
 {
     KeyboardWidget::sendKeyPressed(le_, key, buttons_[key]->text());
 }
 
-void ManualEngineSetDlg::onACKey()
+void manual_engine_set_dlg::onACKey()
 {
     move_to_pos_->acc();
 }
 
-void ManualEngineSetDlg::onBackspaceKey()
+void manual_engine_set_dlg::onBackspaceKey()
 {
     KeyboardWidget::sendKeyPressed(le_, Qt::Key_Backspace);
 }
 
-void ManualEngineSetDlg::set_calibrate_axis(char calibrateId) noexcept
+// void manual_engine_set_dlg::set_calibrate_axis(char calibrateId) noexcept
+// {
+//     calibrateId_ = calibrateId;
+//     update_calibrate_status();
+//
+//     if (calibrateId == 0)
+//     {
+//         if (calibrate_timer_id_ != -1)
+//         {
+//             killTimer(calibrate_timer_id_);
+//             calibrate_timer_id_ = -1;
+//         }
+//         return;
+//     }
+//
+//     if (calibrate_timer_id_ == -1)
+//         calibrate_timer_id_ = startTimer(500);
+//
+//     on_calibrate_timer();
+// }
+
+// void manual_engine_set_dlg::set_calibrate_step(int step) noexcept
+// {
+//     aem::log::warn("ManualEngineSetDlg::set_calibrate_step: {}", step);
+//
+//     // Калибровка успешно завершена, закрываем окно
+//     if (step == 0)
+//     {
+//         InteractWidget::hide();
+//         return;
+//     }
+//
+//     std::size_t ustep = std::labs(step);
+//
+//     lbl_calibrate_steps_[calibrate_step_]->setStyleSheet("color: white; font: 14pt;");
+//
+//     calibrate_step_ = ustep - 1;
+//     calibrate_blink_ = false;
+//     calibrate_error_ = step < 0;
+//
+//     if (calibrateId_ == 0)
+//     {
+//         if (calibrate_timer_id_ != -1)
+//         {
+//             killTimer(calibrate_timer_id_);
+//             calibrate_timer_id_ = -1;
+//         }
+//         return;
+//     }
+//
+//     if (calibrate_timer_id_ == -1)
+//         calibrate_timer_id_ = startTimer(500);
+//
+//     on_calibrate_timer();
+// }
+
+// void manual_engine_set_dlg::on_calibrate_timer() noexcept
+// {
+//     if (calibrate_error_)
+//     {
+//         lbl_calibrate_steps_[calibrate_step_]->setStyleSheet("color: red; font: 14pt;");
+//         return;
+//     }
+//
+//     calibrate_blink_ = !calibrate_blink_;
+//
+//     lbl_calibrate_steps_[calibrate_step_]->
+//         setStyleSheet(QString("color: %1; font: 14pt;").arg(calibrate_blink_ ? "blue" : "white"));
+// }
+
+void manual_engine_set_dlg::prepare(char axisId) noexcept
 {
-    calibrateId_ = calibrateId;
-    update_calibrate_status();
+    // axisId_ = axisId;
+    // auto &&desc = axis_cfg_.axis(axisId);
 
-    if (calibrateId == 0)
-    {
-        if (calibrate_timer_id_ != -1)
-        {
-            killTimer(calibrate_timer_id_);
-            calibrate_timer_id_ = -1;
-        }
-        return;
-    }
+    // update_calibrate_status();
 
-    if (calibrate_timer_id_ == -1)
-        calibrate_timer_id_ = startTimer(500);
 
-    on_calibrate_timer();
+    // move_to_pos_->init(QString::number(pos(), 'f', 1));
+
+    // stack_->setCurrentIndex(0);
 }
 
-void ManualEngineSetDlg::set_calibrate_step(int step) noexcept
-{
-    aem::log::warn("ManualEngineSetDlg::set_calibrate_step: {}", step);
+// void manual_engine_set_dlg::to_calibration_window() noexcept
+// {
+//     // auto &&desc = axis_cfg_.axis(axisId_);
+//
+//     // title_[1]->setText(desc.name);
+//
+//     update_calibrate_status();
+//
+//     // lbl_calibrate_info_[1]->setText(QString("Домашний концевик: %1").arg(desc.home ? "MAX" : "MIN"));
+//     // lbl_calibrate_info_[2]->setText(QString("Длинна: %1 мм").arg(desc.length, 0, 'f', 0));
+//     lbl_calibrate_info_[3]->setText("Ошибка позиционирования: --- мм");
+//
+//     stack_->setCurrentIndex(1);
+// }
 
-    // Калибровка успешно завершена, закрываем окно
-    if (step == 0)
-    {
-        InteractWidget::hide();
-        return;
-    }
-
-    std::size_t ustep = std::labs(step);
-
-    lbl_calibrate_steps_[calibrate_step_]->setStyleSheet("color: white; font: 14pt;");
-
-    calibrate_step_ = ustep - 1;
-    calibrate_blink_ = false;
-    calibrate_error_ = step < 0;
-
-    if (calibrateId_ == 0)
-    {
-        if (calibrate_timer_id_ != -1)
-        {
-            killTimer(calibrate_timer_id_);
-            calibrate_timer_id_ = -1;
-        }
-        return;
-    }
-
-    if (calibrate_timer_id_ == -1)
-        calibrate_timer_id_ = startTimer(500);
-
-    on_calibrate_timer();
-}
-
-void ManualEngineSetDlg::on_calibrate_timer() noexcept
-{
-    if (calibrate_error_)
-    {
-        lbl_calibrate_steps_[calibrate_step_]->setStyleSheet("color: red; font: 14pt;");
-        return;
-    }
-
-    calibrate_blink_ = !calibrate_blink_;
-    
-    lbl_calibrate_steps_[calibrate_step_]->
-        setStyleSheet(QString("color: %1; font: 14pt;").arg(calibrate_blink_ ? "blue" : "white"));
-}
-
-void ManualEngineSetDlg::prepare(char axisId) noexcept
-{
-    axisId_ = axisId;
-    auto &&desc = axis_cfg_.axis(axisId);
-
-    update_calibrate_status();
-
-    title_[0]->setText(desc.name);
-
-    move_to_pos_->init(QString::number(pos(), 'f', 1));
-
-    stack_->setCurrentIndex(0);
-}
-
-void ManualEngineSetDlg::to_calibration_window() noexcept
-{
-    auto &&desc = axis_cfg_.axis(axisId_);
-
-    title_[1]->setText(desc.name);
-
-    update_calibrate_status();
-
-    lbl_calibrate_info_[1]->setText(QString("Домашний концевик: %1").arg(desc.home ? "MAX" : "MIN"));
-    lbl_calibrate_info_[2]->setText(QString("Длинна: %1 мм").arg(desc.length, 0, 'f', 0));
-    lbl_calibrate_info_[3]->setText("Ошибка позиционирования: --- мм");
-
-    stack_->setCurrentIndex(1);
-}
-
-void ManualEngineSetDlg::set_position(char axisId, float pos) noexcept
+void manual_engine_set_dlg::set_position(char axisId, float pos) noexcept
 {
     axis_pos_[axisId] = pos;
 
@@ -168,51 +171,50 @@ void ManualEngineSetDlg::set_position(char axisId, float pos) noexcept
         move_to_pos_->init(QString::number(pos, 'f', 1));
 }
 
-void ManualEngineSetDlg::update_calibrate_status() noexcept
+// void manual_engine_set_dlg::update_calibrate_status() noexcept
+// {
+//     if (calibrateId_ == 0)
+//     {
+//         start_calibration_->setEnabled(true);
+//         lbl_calibrate_status_->setText("Будет выполнена калибровка данной оси");
+//         lbl_calibrate_status_->setStyleSheet("color: green; font: bold 12pt");
+//     }
+//     else if (calibrateId_ == axisId_)
+//     {
+//         start_calibration_->setEnabled(false);
+//         lbl_calibrate_status_->setText("Выполняется калибровка данной оси");
+//         lbl_calibrate_status_->setStyleSheet("color: blue; font: bold 12pt");
+//     }
+//     else
+//     {
+//         start_calibration_->setEnabled(false);
+//         lbl_calibrate_status_->setText("Выполняется калибровка другой оси");
+//         lbl_calibrate_status_->setStyleSheet("color: yellow; font: bold 12pt");
+//     }
+// }
+
+void manual_engine_set_dlg::onEnterBtn()
 {
-    if (calibrateId_ == 0)
-    {
-        start_calibration_->setEnabled(true);
-        lbl_calibrate_status_->setText("Будет выполнена калибровка данной оси");
-        lbl_calibrate_status_->setStyleSheet("color: green; font: bold 12pt");
-    }
-    else if (calibrateId_ == axisId_)
-    {
-        start_calibration_->setEnabled(false);
-        lbl_calibrate_status_->setText("Выполняется калибровка данной оси");
-        lbl_calibrate_status_->setStyleSheet("color: blue; font: bold 12pt");
-    }
-    else
-    {
-        start_calibration_->setEnabled(false);
-        lbl_calibrate_status_->setText("Выполняется калибровка другой оси");
-        lbl_calibrate_status_->setStyleSheet("color: yellow; font: bold 12pt");
-    }
+    emit apply_pos(move_to_pos_->result());
+
+    // auto &&desc = axis_cfg_.axis(axisId_);
+    // num = UnitsCalc::fromPos(desc.muGrads, num);
+    // InteractWidget::hide();
 }
 
-void ManualEngineSetDlg::onEnterBtn()
+void manual_engine_set_dlg::onCancelBtn()
 {
-    float num = move_to_pos_->result();
-    auto &&desc = axis_cfg_.axis(axisId_);
-
-    num = UnitsCalc::fromPos(desc.muGrads, num);
-    emit applyNewPos(axisId_, num);
-
+    emit apply_axis('\0');
     InteractWidget::hide();
 }
 
-void ManualEngineSetDlg::onCancelBtn()
-{
-    InteractWidget::hide();
-}
-
-float ManualEngineSetDlg::pos() const noexcept
+float manual_engine_set_dlg::pos() const noexcept
 {
     auto it = axis_pos_.find(axisId_);
     return it == axis_pos_.end() ? 0.0f : it->second; 
 }
 
-QWidget* ManualEngineSetDlg::create_move_to_page() noexcept
+QWidget* manual_engine_set_dlg::create_move_to_page() noexcept
 {
     QWidget *w = new QWidget(this);
     QVBoxLayout *vL = new QVBoxLayout(w);
@@ -228,14 +230,14 @@ QWidget* ManualEngineSetDlg::create_move_to_page() noexcept
             hL->addStretch();
 
             btn_to_zero_ = new RoundButton(w);
-            connect(btn_to_zero_, &RoundButton::clicked, [this] { emit doZero(axisId_); });
+            // connect(btn_to_zero_, &RoundButton::clicked, [this] { emit doZero(axisId_); });
             btn_to_zero_->setText("Сбросить в 0");
             btn_to_zero_->setBgColor(QColor("#29AC39"));
             btn_to_zero_->setTextColor(Qt::white);
             hL->addWidget(btn_to_zero_);
 
             btn_to_calibrate_ = new RoundButton(w);
-            connect(btn_to_calibrate_, &RoundButton::clicked, [this] { to_calibration_window(); });
+            // connect(btn_to_calibrate_, &RoundButton::clicked, [this] { to_calibration_window(); });
             btn_to_calibrate_->setText("Выполнить калибровку");
             btn_to_calibrate_->setBgColor(QColor("#29AC39"));
             btn_to_calibrate_->setTextColor(Qt::white);
@@ -328,7 +330,7 @@ QWidget* ManualEngineSetDlg::create_move_to_page() noexcept
     return w;
 }
 
-QWidget* ManualEngineSetDlg::create_calibration_page() noexcept
+QWidget* manual_engine_set_dlg::create_calibration_page() noexcept
 {
     QWidget *w = new QWidget(this);
 

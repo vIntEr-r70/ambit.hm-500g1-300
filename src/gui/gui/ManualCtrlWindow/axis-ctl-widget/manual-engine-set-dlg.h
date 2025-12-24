@@ -8,18 +8,18 @@ class RoundButton;
 class QStackedWidget;
 class NumberCalcField;
 
-namespace we {
-    class axis_cfg;
-}
-
-class ManualEngineSetDlg
+class manual_engine_set_dlg
     : public InteractWidget 
 {
     Q_OBJECT
 
 public:
 
-    ManualEngineSetDlg(QWidget*, we::axis_cfg const &);
+    manual_engine_set_dlg(QWidget *);
+
+public:
+
+    void set_axis_name(QString const &);
 
 public:
 
@@ -45,7 +45,9 @@ private slots:
 
 signals:
 
-    void applyNewPos(char, float);
+    void apply_axis(char);
+
+    void apply_pos(double);
 
     void doCalibrate(char);
 
@@ -55,15 +57,15 @@ private:
 
     void showEvent(QShowEvent*) override final;
 
-    void timerEvent(QTimerEvent*) override final { on_calibrate_timer(); }
+    // void timerEvent(QTimerEvent*) override final { on_calibrate_timer(); }
 
 private:
 
-    void to_calibration_window() noexcept;
+    // void to_calibration_window() noexcept;
 
-    void on_calibrate_timer() noexcept;
+    // void on_calibrate_timer() noexcept;
 
-    void update_calibrate_status() noexcept;
+    // void update_calibrate_status() noexcept;
 
     float pos() const noexcept;
 
@@ -75,7 +77,7 @@ private:
 
 private:
 
-    we::axis_cfg const &axis_cfg_;
+    // we::axis_cfg const &axis_cfg_;
     std::unordered_map<char, float> axis_pos_;
 
     QStackedWidget *stack_;

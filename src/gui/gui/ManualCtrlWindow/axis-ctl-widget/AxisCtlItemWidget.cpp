@@ -16,9 +16,8 @@
 
 #define ROUND_RADIUS 20
 
-AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis)
+AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent)
     : QWidget(parent)
-    , axis_(axis)
 {
 	setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet(QString("border-radius: %1px; background-color: white").arg(ROUND_RADIUS));
@@ -79,18 +78,29 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis)
     }
     layout->addLayout(hL);
 
-    setStatus(NotActive);
+    setStatus(Active);
 }
 
 void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
 {
     if (status_ == Active)
-        emit onMoveToClick(axis_);
+        emit on_move_to_click();
 }
 
 void AxisCtlItemWidget::update_name(std::string_view name)
 {
-    lblHeader_->setText(QString::fromStdString(std::string(name)));
+    name_ = QString::fromStdString(std::string(name));
+    lblHeader_->setText(name_);
+}
+
+void AxisCtlItemWidget::update_current_position(double value)
+{
+    vvr_pos_->set_value(value);
+}
+
+void AxisCtlItemWidget::update_current_speed(double value)
+{
+    vvr_speed_->set_value(value);
 }
 
 void AxisCtlItemWidget::apply_self_axis() noexcept

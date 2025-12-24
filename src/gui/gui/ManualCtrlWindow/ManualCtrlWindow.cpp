@@ -6,14 +6,12 @@
 #include <QLabel>
 #include <QPixmapCache>
 
-#include "AxisCtlWidget.hpp"
-#include <FcCtrlWidget/FcCtrlWidget.h>
+#include "axis-ctl-widget/AxisCtlWidget.hpp"
+
 #include "SprayerCtrlWidget.h"
 #include "CenteringCfgWidget.h"
 
-#include "ManualEngineSetDlg.h"
-
-#include <Interact.h>
+#include <FcCtrlWidget/FcCtrlWidget.h>
 
 #include <axis-cfg.h>
 #include <global.h>
@@ -25,9 +23,6 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
     , rpc_(global::rpc())
     , axis_cfg_(axis_cfg)
 {
-    manualEngineSetDlg_ = new ManualEngineSetDlg(this, axis_cfg_);
-    manualEngineSetDlg_->setVisible(false);
-
     QVBoxLayout* vL = new QVBoxLayout(this);
     vL->setContentsMargins(10, 10, 10, 10);
     vL->setSpacing(10);
@@ -64,10 +59,6 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
         }
         vL->addLayout(hL);
     }
-
-    connect(manualEngineSetDlg_, SIGNAL(applyNewPos(char, float)), this, SLOT(engineApplyNewPos(char, float)));
-    connect(manualEngineSetDlg_, SIGNAL(doCalibrate(char)), this, SLOT(onDoCalibrate(char)));
-    connect(manualEngineSetDlg_, SIGNAL(doZero(char)), this, SLOT(engineMakeAsZero(char)));
 
     // global::subscribe("cnc.{}.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
     // {
@@ -108,33 +99,17 @@ void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
 
 void ManualCtrlWindow::nf_sys_calibrate(char v) noexcept
 {
-    manualEngineSetDlg_->set_calibrate_axis(v);
+    // manualEngineSetDlg_->set_calibrate_axis(v);
 }
 
 void ManualCtrlWindow::nf_sys_calibrate_step(int v) noexcept
 {
-    manualEngineSetDlg_->set_calibrate_step(v);
+    // manualEngineSetDlg_->set_calibrate_step(v);
 }
 
 void ManualCtrlWindow::nf_sys_centering_step(int v) noexcept
 {
     cCfgW_->set_centering_step(v);
-}
-
-void ManualCtrlWindow::onAxisWidgetMoveTo(char axisId) noexcept
-{
-    manualEngineSetDlg_->prepare(axisId);
-
-    rpc_.call("set", { "cnc", "axis-stop-all", {} })
-        .done([this](nlohmann::json const&)
-        {
-            // Показываем диалог
-            Interact::dialog(manualEngineSetDlg_);
-        })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("ManualCtrlWindow::onAxisWidgetClick: axis-stop-all: {}", emsg);
-        });
 }
 
 void ManualCtrlWindow::onDoCalibrate(char axisId) noexcept

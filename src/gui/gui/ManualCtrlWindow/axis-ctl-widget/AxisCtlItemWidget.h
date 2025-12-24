@@ -28,15 +28,21 @@ public:
 
 public:
 
-    AxisCtlItemWidget(QWidget*, char);
+    AxisCtlItemWidget(QWidget*);
 
 signals:
 
-    void onMoveToClick(char);
+    void on_move_to_click();
 
 public:
 
     void update_name(std::string_view);
+
+    void update_current_position(double);
+
+    void update_current_speed(double);
+
+    QString const &name() const noexcept { return name_; }
 
 public:
 
@@ -74,9 +80,7 @@ private:
 
 private:
 
-    char axis_;
-
-    QString dlgTitle_;
+    QString name_;
 
     QLabel* lblHeader_;
     QFrame* lblLS_[2];

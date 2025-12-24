@@ -11,8 +11,6 @@ class FcCtrlWidget;
 class CenteringCfgWidget;
 class SprayerCtrlWidget;
 
-class ManualEngineSetDlg;
-
 namespace we {
     class axis_cfg;
 }
@@ -50,8 +48,6 @@ private:
 
 private slots:
 
-    void onAxisWidgetMoveTo(char) noexcept;
-
     void engineMakeAsZero(char);
 
     void engineApplyNewPos(char, float);
@@ -67,7 +63,5 @@ private:
     FcCtrlWidget* fcCtrlW_;
     CenteringCfgWidget *cCfgW_;
     std::array<SprayerCtrlWidget*, 3> spCtrlW_;
-
-    ManualEngineSetDlg *manualEngineSetDlg_;
 };
 
