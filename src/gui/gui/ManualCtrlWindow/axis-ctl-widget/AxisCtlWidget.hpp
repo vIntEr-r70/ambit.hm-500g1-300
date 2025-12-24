@@ -27,6 +27,9 @@ class AxisCtlWidget
     eng::sibus::output_port_id_t oport_axis_;
     eng::sibus::output_wire_id_t owire_;
 
+    bool mode_auto_{ true };
+    bool mode_rcu_{ false };
+
 public:
 
     AxisCtlWidget(QWidget*) noexcept;
@@ -38,6 +41,8 @@ private:
     void add_axis(char, bool) noexcept;
 
     void show_axis_move_dlg(char) noexcept;
+
+    void update_axis_widgets();
 
 private:
 

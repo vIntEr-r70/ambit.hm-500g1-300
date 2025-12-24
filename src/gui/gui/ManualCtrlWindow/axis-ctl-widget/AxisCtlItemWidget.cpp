@@ -7,7 +7,6 @@
 #include <QPainter>
 
 #include <Widgets/ValueViewReal.h>
-// #include "common/Defs.h"
 
 #include <axis-cfg.h>
 #include <UnitsCalc.h>
@@ -27,8 +26,6 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent)
     effect->setColor(Qt::gray);
     effect->setBlurRadius(ROUND_RADIUS);
     setGraphicsEffect(effect);
-
-    headClr_ = {{ { Qt::gray, Qt::white }, { Qt::green, Qt::black }, { Qt::blue, Qt::white } }};
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -78,13 +75,12 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent)
     }
     layout->addLayout(hL);
 
-    setStatus(Active);
+    update_gui();
 }
 
 void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
 {
-    if (status_ == Active)
-        emit on_move_to_click();
+    if (active_) emit on_move_to_click();
 }
 
 void AxisCtlItemWidget::update_name(std::string_view name)
@@ -101,6 +97,27 @@ void AxisCtlItemWidget::update_current_position(double value)
 void AxisCtlItemWidget::update_current_speed(double value)
 {
     vvr_speed_->set_value(value);
+}
+
+void AxisCtlItemWidget::set_active(bool active)
+{
+    active_ = active;
+    update_gui();
+}
+
+void AxisCtlItemWidget::update_gui()
+{
+    static std::array<QColor, 2> const colors[] = {
+        { Qt::gray, Qt::white }, { Qt::green, Qt::black }, { Qt::blue, Qt::white }
+    };
+
+    std::size_t color_scheme_id{ 0 };
+    if (active_)
+        color_scheme_id = 1;
+
+    auto const& clr = colors[color_scheme_id];
+    lblHeader_->setStyleSheet(QString("border-bottom-left-radius: 0; border-bottom-right-radius: 0;"
+                "background-color: %1; color: %2;").arg(clr[0].name()).arg(clr[1].name()));
 }
 
 void AxisCtlItemWidget::apply_self_axis() noexcept
@@ -155,15 +172,6 @@ void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept
 {
     ctrlModeAxis_ = v;
     updateGui();
-}
-
-void AxisCtlItemWidget::setStatus(aem::uint8 status)
-{
-    status_ = status;
-
-    auto const& clr = headClr_[status];
-    lblHeader_->setStyleSheet(QString("border-bottom-left-radius: 0; border-bottom-right-radius: 0;"
-                "background-color: %1; color: %2;").arg(clr[0].name()).arg(clr[1].name()));
 }
 
 void AxisCtlItemWidget::updateGui()

@@ -58,6 +58,13 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
             });
     }
 
+    // Состояние автоматического режима
+    node::add_input_port("auto", [this](eng::abc::pack args)
+    {
+        mode_auto_ = eng::abc::get<bool>(args, 0);
+        update_axis_widgets();
+    });
+
     // Текущая управляемая ось
     oport_axis_ = node::add_output_port("axis");
 
@@ -216,6 +223,13 @@ void AxisCtlWidget::apply_pos(double pos)
     // Отправляем команду на задание позиции для захваченной оси
     // eng::abc::pack args{ *target_axis_, "pos", pos };
     // apply_id_ = node::apply(capture_axis_id_, std::move(args))
+}
+
+void AxisCtlWidget::update_axis_widgets()
+{
+    std::ranges::for_each(axis_, [this](auto &pair) {
+        pair.second->set_active(!(mode_auto_ || mode_rcu_));
+    });
 }
 
 // void ManualCtrlWindow::nf_sys_error(unsigned int v) noexcept

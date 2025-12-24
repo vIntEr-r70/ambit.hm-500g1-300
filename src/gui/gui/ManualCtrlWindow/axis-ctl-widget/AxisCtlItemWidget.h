@@ -17,17 +17,6 @@ class AxisCtlItemWidget
 
 public:
 
-    enum
-    {
-        NotActive,
-        Active,
-        SelectAsCtrl,
-
-        Count
-    };
-
-public:
-
     AxisCtlItemWidget(QWidget*);
 
 signals:
@@ -43,6 +32,12 @@ public:
     void update_current_speed(double);
 
     QString const &name() const noexcept { return name_; }
+
+    void set_active(bool);
+
+private:
+
+    void update_gui();
 
 public:
 
@@ -74,8 +69,6 @@ private:
 
     void ls_min_max(std::size_t, bool) noexcept;
 
-    void setStatus(uint8_t);
-
     void updateGui();
 
 private:
@@ -88,7 +81,7 @@ private:
     ValueViewReal *vvr_speed_;
     ValueViewReal *vvr_pos_;
 
-    std::array<std::array<QColor, 2>, Count> headClr_;
+    bool active_{ false };
 
     float pos_{0.0f};
     float speed_{0.0f};
@@ -99,6 +92,5 @@ private:
 
     char ctrlModeAxis_ = 0;
     aem::uint32 error_ = 0;
-    aem::uint8 status_ = NotActive;
 };
 
