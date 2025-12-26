@@ -1,7 +1,7 @@
 #include "AxisCtlWidget.hpp"
 #include "AxisCtlItemWidget.h"
 #include "eng/utils.hpp"
-#include "manual-engine-set-dlg.h"
+#include "manual-engine-set-dlg/manual-engine-set-dlg.h"
 
 #include <Interact.h>
 
@@ -15,6 +15,11 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
 {
     manual_engine_set_dlg_ = new manual_engine_set_dlg(this);
     manual_engine_set_dlg_->setVisible(false);
+
+    connect(manual_engine_set_dlg_, &manual_engine_set_dlg::axis_command,
+            [this](eng::abc::pack args) {
+                node::send_wire_signal(owire_, std::move(args));
+            });
 
     connect(manual_engine_set_dlg_, &manual_engine_set_dlg::apply_axis,
             [this](char axis) { apply_axis(axis); });
@@ -38,8 +43,18 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
     node::add_config_listener("axis")
         .on(".{}.name", [this](char axis, eng::abc::pack const &value)
         {
-            add_axis(axis, eng::abc::get<std::string_view>(value));
+            std::string_view name{ eng::abc::get<std::string_view>(value, 0) };
+            add_axis(axis, name);
+            manual_engine_set_dlg_->set_axis(axis, name); 
         });
+
+    add_input_port("speed", [this](eng::abc::pack value)
+    {
+        double speed = eng::abc::get<double>(value, 0);
+        // speed_limit_cfg_ = speed;
+        // eng::log::info("axis_motion_node[{}]: config speed = {}", axis_, speed);
+        // by_position_.update_speed_limit(speed);
+    });
 
     for (auto axis : { 'X', 'Y', 'Z', 'V' })
     {
@@ -66,7 +81,7 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
     });
 
     // Текущая управляемая ось
-    oport_axis_ = node::add_output_port("axis");
+    // oport_axis_ = node::add_output_port("axis");
 
     // Канал для управления драйверами
     owire_ = node::add_output_wire();
@@ -80,16 +95,30 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
     });
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_online_handler(owire_, [this]
-    {
-        std::println("node::set_wire_online_handler");
-        manual_engine_set_dlg_->set_axis_name(axis_[target_axis_]->name());
+    node::set_wire_online_handler(owire_, [this] {
+        update_axis_ctl_access(true);
     });
-    node::set_wire_offline_handler(owire_, [this]
-    {
-        std::println("node::set_wire_offline_handler");
-        manual_engine_set_dlg_->set_axis_name("");
+    node::set_wire_offline_handler(owire_, [this] {
+        update_axis_ctl_access(false);
     });
+}
+
+void AxisCtlWidget::update_axis_ctl_access(bool active)
+{
+    std::ranges::for_each(axis_, [active](auto &pair) {
+        pair.second->set_active(active);
+    });
+}
+
+void AxisCtlWidget::register_on_bus_done()
+{
+    node::wire_activate(owire_);
+}
+
+void AxisCtlWidget::grab_axis(char axis)
+{
+    // std::println("AxisCtlWidget::grab_axis: {}", axis);
+    // if (node::is_wire_online(owire_))
 }
 
 // // Захват либо удачен сразу либо будет ожидать на шине пока не станет удачен
@@ -124,21 +153,19 @@ void AxisCtlWidget::add_axis(char axis, std::string_view name)
         w->setVisible(false);
 
         axis_[axis] = w;
+
+        w->set_active(!(mode_auto_ || mode_rcu_));
     }
 
-    axis_[axis]->update_name(name);
-
-    add_axis(axis, !name.empty());
-}
-
-void AxisCtlWidget::add_axis(char axis, bool append) noexcept
-{
     AxisCtlItemWidget *w = axis_[axis];
 
-    if (w->isVisibleTo(this) == append)
+    w->update_name(name);
+    w->set_active(node::is_wire_online(owire_));
+
+    if (w->isVisibleTo(this) == !name.empty())
         return;
 
-    if (append)
+    if (!name.empty())
     {
         QHBoxLayout* hL = hL_.empty() ? nullptr : hL_.back();
 
@@ -171,7 +198,7 @@ void AxisCtlWidget::add_axis(char axis, bool append) noexcept
             (*it)->removeWidget(w);
     }
 
-    w->setVisible(append);
+    w->setVisible(!name.empty());
 }
 
 void AxisCtlWidget::show_axis_move_dlg(char axis) noexcept
@@ -201,8 +228,8 @@ void AxisCtlWidget::apply_axis(char axis)
 {
     // Выставляем желаемую для контроля ось
     // Ждем появления связи с драйвером выбранной оси
-    node::set_port_value(oport_axis_, { axis });
-    target_axis_ = axis;
+    // node::set_port_value(oport_axis_, { axis });
+    // target_axis_ = axis;
 
     // // Если в данный момент обрабатывается команда на захват оси, отменяем данную команду
     // if (capture_axis_id_)
@@ -218,8 +245,8 @@ void AxisCtlWidget::apply_axis(char axis)
 // Отправляем новую позицию двигателю
 void AxisCtlWidget::apply_pos(double pos)
 {
-    std::println("AxisCtlWidget::apply_pos: pos = {}", pos);
-    node::send_wire_signal(owire_, { 'P', 'a', pos });
+    // std::println("AxisCtlWidget::apply_pos: pos = {}", pos);
+    // node::send_wire_signal(owire_, { 'P', 'a', pos });
     // Отправляем команду на задание позиции для захваченной оси
     // eng::abc::pack args{ *target_axis_, "pos", pos };
     // apply_id_ = node::apply(capture_axis_id_, std::move(args))

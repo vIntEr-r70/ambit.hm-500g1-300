@@ -4,8 +4,6 @@
 
 #include <aem/types.h>
 
-#include <array>
-
 class QLabel;
 class ValueViewReal;
 class QFrame;

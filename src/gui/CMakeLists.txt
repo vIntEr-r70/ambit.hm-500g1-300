@@ -23,7 +23,8 @@ add_executable(${PROJECT_NAME}
 
     gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlWidget.cpp
     gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlItemWidget.cpp
-    gui/ManualCtrlWindow/axis-ctl-widget/manual-engine-set-dlg.cpp
+    gui/ManualCtrlWindow/axis-ctl-widget/manual-engine-set-dlg/manual-engine-set-dlg.cpp
+    gui/ManualCtrlWindow/axis-ctl-widget/manual-engine-set-dlg/axis-ctl-widget.cpp
     gui/ManualCtrlWindow/ManualCtrlWindow.cpp
     gui/ManualCtrlWindow/SprayerCtrlWidget.cpp
     gui/ManualCtrlWindow/CenteringCfgWidget.cpp

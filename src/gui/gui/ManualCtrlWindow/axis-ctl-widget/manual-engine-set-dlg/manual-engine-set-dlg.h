@@ -1,23 +1,29 @@
 #pragma once
 
 #include <InteractWidgets/InteractWidget.h>
+#include <eng/abc/pack.hpp>
 
 class QLabel;
 class QLineEdit;
 class RoundButton;
 class QStackedWidget;
 class NumberCalcField;
+class axis_ctl_widget;
 
 class manual_engine_set_dlg
     : public InteractWidget 
 {
     Q_OBJECT
 
+    axis_ctl_widget *axis_ctl_;
+
 public:
 
     manual_engine_set_dlg(QWidget *);
 
 public:
+
+    void set_axis(char, std::string_view);
 
     void set_axis_name(QString const &);
 
@@ -45,6 +51,10 @@ private slots:
 
 signals:
 
+    void axis_command(eng::abc::pack);
+
+    void grab_axis(char);
+
     void apply_axis(char);
 
     void apply_pos(double);
@@ -70,8 +80,6 @@ private:
     float pos() const noexcept;
 
 private:
-
-    QWidget* create_move_to_page() noexcept;
 
     QWidget* create_calibration_page() noexcept;
 

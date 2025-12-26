@@ -27,7 +27,8 @@ class AxisCtlWidget
     eng::sibus::output_port_id_t oport_axis_;
     eng::sibus::output_wire_id_t owire_;
 
-    bool mode_auto_{ true };
+    // TODO: Исходные значения должны быть true, true
+    bool mode_auto_{ false };
     bool mode_rcu_{ false };
 
 public:
@@ -36,9 +37,19 @@ public:
 
 private:
 
-    void add_axis(char, std::string_view);
+    void register_on_bus_done() override final;
 
-    void add_axis(char, bool) noexcept;
+private:
+
+    void update_axis_ctl_access(bool);
+
+private:
+
+    void grab_axis(char);
+
+private:
+
+    void add_axis(char, std::string_view);
 
     void show_axis_move_dlg(char) noexcept;
 
