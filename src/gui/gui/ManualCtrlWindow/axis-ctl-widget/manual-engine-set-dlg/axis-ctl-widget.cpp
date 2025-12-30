@@ -87,8 +87,11 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         QHBoxLayout *hL = new QHBoxLayout();
                         {
                             auto btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this] {
-                                execute_axis_command("move-to", vsr_abs_value_->value());
+                            connect(btn, &RoundButton::clicked, [this]
+                            {
+                                auto axis = get_selected_axis();
+                                auto pos = vsr_abs_value_->value();
+                                emit axis_command({ axis, "move-to", pos, axis_[axis].speed });
                             });
                             btn->setText("▶");
                             btn->setBgColor(QColor("#29AC39"));
@@ -97,8 +100,10 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             hL->addWidget(btn);
 
                             btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this] {
-                                execute_axis_command("stop");
+                            connect(btn, &RoundButton::clicked, [this]
+                            {
+                                auto axis = get_selected_axis();
+                                emit axis_command({ axis, "stop" });
                             });
                             btn->setText("⏹");
                             btn->setBgColor(QColor("#29AC39"));
@@ -128,8 +133,11 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         QHBoxLayout *hL = new QHBoxLayout();
                         {
                             auto btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this] {
-                                execute_axis_command("shift", vsr_dx_value_->value());
+                            connect(btn, &RoundButton::clicked, [this]
+                            {
+                                auto axis = get_selected_axis();
+                                auto pos = vsr_dx_value_->value();
+                                emit axis_command({ axis, "shift", pos, axis_[axis].speed });
                             });
                             btn->setText("▶");
                             btn->setBgColor(QColor("#29AC39"));
@@ -138,8 +146,10 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             hL->addWidget(btn);
 
                             btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this] {
-                                execute_axis_command("stop");
+                            connect(btn, &RoundButton::clicked, [this]
+                            {
+                                auto axis = get_selected_axis();
+                                emit axis_command({ axis, "stop" });
                             });
                             btn->setText("⏹");
                             btn->setBgColor(QColor("#29AC39"));
@@ -157,8 +167,10 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                     QHBoxLayout *hL = new QHBoxLayout(w);
                     {
                         auto btn = new RoundButton(w);
-                        connect(btn, &RoundButton::clicked, [this] {
-                            execute_axis_command("spin", -1.0);
+                        connect(btn, &RoundButton::clicked, [this]
+                        {
+                            auto axis = get_selected_axis();
+                            emit axis_command({ axis, "spin", -axis_[axis].speed });
                         });
                         btn->setText("↩");
                         btn->setBgColor(QColor("#29AC39"));
@@ -167,8 +179,10 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         hL->addWidget(btn);
 
                         btn = new RoundButton(w);
-                        connect(btn, &RoundButton::clicked, [this] {
-                            execute_axis_command("stop");
+                        connect(btn, &RoundButton::clicked, [this]
+                        {
+                            auto axis = get_selected_axis();
+                            emit axis_command({ axis, "stop" });
                         });
                         btn->setText("⏹");
                         btn->setBgColor(QColor("#29AC39"));
@@ -177,8 +191,10 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         hL->addWidget(btn);
 
                         btn = new RoundButton(w);
-                        connect(btn, &RoundButton::clicked, [this] {
-                            execute_axis_command("spin", +1.0);
+                        connect(btn, &RoundButton::clicked, [this]
+                        {
+                            auto axis = get_selected_axis();
+                            emit axis_command({ axis, "spin", axis_[axis].speed });
                         });
                         btn->setText("↪");
                         btn->setBgColor(QColor("#29AC39"));
@@ -212,23 +228,17 @@ void axis_ctl_widget::set_axis(char axis, std::string_view name)
     twi = new QTableWidgetItem();
     axis_table_->setItem(rows, 1, twi);
 
-    // Если имя указано, добавляем запись, иначе удаляем
-    // axis_table_.
-
+    axis_[axis].irow = rows;
 }
 
-void axis_ctl_widget::execute_axis_command(std::string_view cmd, double value)
+void axis_ctl_widget::select_axis(char axis)
 {
-    char axis = get_selected_axis();
-    if (axis != '\0')
-        emit axis_command({ cmd, axis, value });
+    axis_table_->selectRow(axis_[axis].irow);
 }
 
-void axis_ctl_widget::execute_axis_command(std::string_view cmd)
+void axis_ctl_widget::set_axis_speed(char axis, double value)
 {
-    char axis = get_selected_axis();
-    if (axis != '\0')
-        emit axis_command({ cmd, axis });
+    axis_[axis].speed = value;
 }
 
 char axis_ctl_widget::get_selected_axis() const
@@ -245,7 +255,6 @@ void axis_ctl_widget::on_axis_selected(QTableWidgetItem *current, QTableWidgetIt
     if (twi != nullptr)
     {
         char axis = twi->data(Qt::UserRole).toChar().toLatin1();
-        // emit grab(axis);
 
         tab_->setTabVisible(0, true);
         tab_->setTabVisible(1, true);
@@ -259,11 +268,3 @@ void axis_ctl_widget::on_axis_selected(QTableWidgetItem *current, QTableWidgetIt
     }
 }
 
-// void axis_ctl_widget::change_move_mode(bool value)
-// {
-//     absolute_move_ = value;
-//     btn_absolute_move_->setBgColor(value ? Qt::white : QColor("#29AC39"));
-//     btn_absolute_move_->setTextColor(value ? Qt::black : Qt::white);
-//
-//     vsr_value_->setTitle(value ? "Переместиться в ..." : "Сместиться на ...");
-// }

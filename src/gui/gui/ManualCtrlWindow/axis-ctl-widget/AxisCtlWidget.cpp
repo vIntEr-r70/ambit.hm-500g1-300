@@ -1,9 +1,8 @@
 #include "AxisCtlWidget.hpp"
 #include "AxisCtlItemWidget.h"
-#include "eng/utils.hpp"
 #include "manual-engine-set-dlg/manual-engine-set-dlg.h"
 
-#include <Interact.h>
+#include <eng/log.hpp>
 
 #include <QVBoxLayout>
 
@@ -11,21 +10,18 @@
 
 AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
     : QWidget(parent)
-    , eng::sibus::node("AXIS-CTL")
 {
     manual_engine_set_dlg_ = new manual_engine_set_dlg(this);
     manual_engine_set_dlg_->setVisible(false);
 
-    connect(manual_engine_set_dlg_, &manual_engine_set_dlg::axis_command,
-            [this](eng::abc::pack args) {
-                node::send_wire_signal(owire_, std::move(args));
-            });
+    connect(manual_engine_set_dlg_, &manual_engine_set_dlg::axis_ctl_access,
+            [this](bool access) { update_axis_ctl_access(access); });
 
-    connect(manual_engine_set_dlg_, &manual_engine_set_dlg::apply_axis,
-            [this](char axis) { apply_axis(axis); });
+    // connect(manual_engine_set_dlg_, &manual_engine_set_dlg::apply_axis,
+    //         [this](char axis) { apply_axis(axis); });
 
-    connect(manual_engine_set_dlg_, &manual_engine_set_dlg::apply_pos,
-            [this](double pos) { apply_pos(pos); });
+    // connect(manual_engine_set_dlg_, &manual_engine_set_dlg::apply_pos,
+    //         [this](double pos) { apply_pos(pos); });
 
 
     // connect(manualEngineSetDlg_, SIGNAL(doCalibrate(char)), this, SLOT(onDoCalibrate(char)));
@@ -40,67 +36,32 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
         vL->addLayout(vL_);
     }
 
-    node::add_config_listener("axis")
-        .on(".{}.name", [this](char axis, eng::abc::pack const &value)
-        {
-            std::string_view name{ eng::abc::get<std::string_view>(value, 0) };
-            add_axis(axis, name);
-            manual_engine_set_dlg_->set_axis(axis, name); 
-        });
-
-    add_input_port("speed", [this](eng::abc::pack value)
+    for (auto axis : { 'X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'E' })
     {
-        double speed = eng::abc::get<double>(value, 0);
-        // speed_limit_cfg_ = speed;
-        // eng::log::info("axis_motion_node[{}]: config speed = {}", axis_, speed);
-        // by_position_.update_speed_limit(speed);
-    });
+        AxisCtlItemWidget* w = new AxisCtlItemWidget(this, axis);
 
-    for (auto axis : { 'X', 'Y', 'Z', 'V' })
-    {
-        node::add_input_port(std::format("{}", axis),
-            [this, axis](eng::abc::pack const &args)
-            {
-                double position = eng::abc::get<double>(args, 0);
-                double speed = eng::abc::get<double>(args, 1);
+        connect(w, &AxisCtlItemWidget::on_move_to_click,
+                [this, axis] { show_axis_move_dlg(axis); });
 
-                auto it = axis_.find(axis);
-                if (it != axis_.end())
+        connect(w, &AxisCtlItemWidget::axis_view,
+                [this, axis](std::string_view name)
                 {
-                    it->second->update_current_position(position);
-                    it->second->update_current_speed(speed);
-                }
-            });
+                    update_axis_view(axis, name);
+                    manual_engine_set_dlg_->set_axis(axis, name);
+                });
+
+        connect(w, &AxisCtlItemWidget::axis_speed,
+                [this, axis](double value) {
+                    manual_engine_set_dlg_->set_axis_speed(axis, value);
+                });
+
+        w->setMinimumWidth(240);
+        w->setMaximumWidth(240);
+        w->setMaximumHeight(110);
+        w->setVisible(false);
+
+        axis_[axis] = w;
     }
-
-    // Состояние автоматического режима
-    node::add_input_port("auto", [this](eng::abc::pack args)
-    {
-        mode_auto_ = eng::abc::get<bool>(args, 0);
-        update_axis_widgets();
-    });
-
-    // Текущая управляемая ось
-    // oport_axis_ = node::add_output_port("axis");
-
-    // Канал для управления драйверами
-    owire_ = node::add_output_wire();
-    // Успешный ответ на вызов с аргументами
-    node::set_wire_signal_done_handler(owire_, [](eng::abc::pack args) {
-        std::println("node::set_wire_signal_done_handler: {}", eng::utils::to_hex(args.to_span()));
-    });
-    // Системная ошибка на вызов
-    node::set_wire_signal_failed_handler(owire_, [](std::string_view emsg) {
-        std::println("node::set_wire_signal_failed_handler: {}", emsg);
-    });
-
-    // Обработчик состояния связи с требуемой осью
-    node::set_wire_online_handler(owire_, [this] {
-        update_axis_ctl_access(true);
-    });
-    node::set_wire_offline_handler(owire_, [this] {
-        update_axis_ctl_access(false);
-    });
 }
 
 void AxisCtlWidget::update_axis_ctl_access(bool active)
@@ -110,57 +71,13 @@ void AxisCtlWidget::update_axis_ctl_access(bool active)
     });
 }
 
-void AxisCtlWidget::register_on_bus_done()
-{
-    node::wire_activate(owire_);
-}
-
-void AxisCtlWidget::grab_axis(char axis)
-{
-    // std::println("AxisCtlWidget::grab_axis: {}", axis);
-    // if (node::is_wire_online(owire_))
-}
-
-// // Захват либо удачен сразу либо будет ожидать на шине пока не станет удачен
-// // Захвачено может быть несколько ресурсов
-// void AxisCtlWidget::capture_success(eng::sibus::capture_id_t)
-// {
-//     // Ось захвачена для управления
-// }
-
-
-// Либо мы либо шина либо клиент инициировал разрыв
-// void AxisCtlWidget::capture_done(eng::sibus::capture_id_t)
-// {
-//     // Не удалось захватить ось для управления
-//     manual_engine_set_dlg_->set_axis_name("");
-//     // Больше он не актуален для нас
-//     capture_axis_id_.reset();
-// }
-
-void AxisCtlWidget::add_axis(char axis, std::string_view name)
+void AxisCtlWidget::update_axis_view(char axis, std::string_view name)
 {
     // Если такой оси еще нету, сначала создаем ее
     if (axis_.find(axis) == axis_.end())
-    {
-        AxisCtlItemWidget* w = new AxisCtlItemWidget(this);
-        connect(w, &AxisCtlItemWidget::on_move_to_click,
-                [this, axis] { show_axis_move_dlg(axis); });
-
-        w->setMinimumWidth(240);
-        w->setMaximumWidth(240);
-        w->setMaximumHeight(110);
-        w->setVisible(false);
-
-        axis_[axis] = w;
-
-        w->set_active(!(mode_auto_ || mode_rcu_));
-    }
+        return;
 
     AxisCtlItemWidget *w = axis_[axis];
-
-    w->update_name(name);
-    w->set_active(node::is_wire_online(owire_));
 
     if (w->isVisibleTo(this) == !name.empty())
         return;
@@ -176,8 +93,6 @@ void AxisCtlWidget::add_axis(char axis, std::string_view name)
             hL = hL_.back();
             hL->setSpacing(15);
         }
-
-        w->apply_self_axis();
 
         hL->addWidget(w);
     }
@@ -203,94 +118,7 @@ void AxisCtlWidget::add_axis(char axis, std::string_view name)
 
 void AxisCtlWidget::show_axis_move_dlg(char axis) noexcept
 {
-    // Активируем управление осью
-    apply_axis(axis);
-
     // Показываем диалог управления
-    Interact::dialog(manual_engine_set_dlg_);
-
-    // manualEngineSetDlg_->show(axis);
-
-    // rpc_.call("set", { "cnc", "axis-stop-all", {} })
-    //     .done([this](nlohmann::json const&)
-    //     {
-    //         // Показываем диалог
-           // Interact::dialog(manualEngineSetDlg_);
-    //     })
-    //     .error([this](std::string_view emsg)
-    //     {
-    //         aem::log::error("ManualCtrlWindow::onAxisWidgetClick: axis-stop-all: {}", emsg);
-    //     });
+    manual_engine_set_dlg_->select_axis(axis);
 }
-
-// Захватываем ось для работы
-void AxisCtlWidget::apply_axis(char axis)
-{
-    // Выставляем желаемую для контроля ось
-    // Ждем появления связи с драйвером выбранной оси
-    // node::set_port_value(oport_axis_, { axis });
-    // target_axis_ = axis;
-
-    // // Если в данный момент обрабатывается команда на захват оси, отменяем данную команду
-    // if (capture_axis_id_)
-    //     node::release_capture(capture_axis_id_);
-    //
-    // // Запоминаем, какую ось хотим захватить
-    // target_axis_ = axis;
-    //
-    // // Отправляем команду на захват ресурса
-    // capture_axis_id_ = node::capture({ axis });
-}
-
-// Отправляем новую позицию двигателю
-void AxisCtlWidget::apply_pos(double pos)
-{
-    // std::println("AxisCtlWidget::apply_pos: pos = {}", pos);
-    // node::send_wire_signal(owire_, { 'P', 'a', pos });
-    // Отправляем команду на задание позиции для захваченной оси
-    // eng::abc::pack args{ *target_axis_, "pos", pos };
-    // apply_id_ = node::apply(capture_axis_id_, std::move(args))
-}
-
-void AxisCtlWidget::update_axis_widgets()
-{
-    std::ranges::for_each(axis_, [this](auto &pair) {
-        pair.second->set_active(!(mode_auto_ || mode_rcu_));
-    });
-}
-
-// void ManualCtrlWindow::nf_sys_error(unsigned int v) noexcept
-// {
-//     for (auto& item : axis_)
-//         item.second->set_sys_error(v);
-// }
-
-// void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
-// {
-//     for (auto& item : axis_)
-//         item.second->set_sys_mode(v);
-// }
-
-// void ManualCtrlWindow::nf_sys_ctrl(unsigned char v) noexcept
-// {
-//     for (auto& item : axis_)
-//         item.second->set_sys_ctrl(v);
-// }
-
-// void ManualCtrlWindow::nf_sys_ctrl_mode_axis(char v) noexcept
-// {
-//     for (auto& item : axis_)
-//         item.second->set_sys_ctrl_mode_axis(v);
-// }
-
-// void ManualCtrlWindow::apply_axis_cfg() noexcept
-// {
-//     std::for_each(axis_cfg_.begin(), axis_cfg_.end(), [this](auto &&it)
-//     {
-//         if (!it.second.use())
-//             return;
-//         addAxis(it.first);
-//     });
-// }
-
 

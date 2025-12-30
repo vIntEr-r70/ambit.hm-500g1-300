@@ -73,9 +73,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     we::we
     gui-core::gui-core
     -lfmt
+    stdc++exp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE
     cxx_std_26
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -Wno-deprecated-declarations
 )
 

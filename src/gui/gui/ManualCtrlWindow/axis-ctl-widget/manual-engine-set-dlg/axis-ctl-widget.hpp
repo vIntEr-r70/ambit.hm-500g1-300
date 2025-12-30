@@ -21,26 +21,30 @@ class axis_ctl_widget final
     ValueSetReal *vsr_abs_value_;
     ValueSetReal *vsr_dx_value_;
 
-    // RoundButton *btn_absolute_move_;
-    // bool absolute_move_{ true };
-
     QTabWidget *tab_;
+
+    struct axis_t
+    {
+        int irow{ -1 };
+        double speed{ 0.0 };
+    };
+    std::unordered_map<char, axis_t> axis_;
 
 public:
 
     axis_ctl_widget(InteractWidget *);
 
-private:
-
-    void execute_axis_command(std::string_view, double);
-
-    void execute_axis_command(std::string_view);
-
-    char get_selected_axis() const;
-
 public:
 
     void set_axis(char, std::string_view);
+
+    void set_axis_speed(char, double);
+
+    void select_axis(char);
+
+private:
+
+    char get_selected_axis() const;
 
 private slots:
 

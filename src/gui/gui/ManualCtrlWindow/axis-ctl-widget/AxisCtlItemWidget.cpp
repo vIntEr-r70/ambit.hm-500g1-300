@@ -15,8 +15,9 @@
 
 #define ROUND_RADIUS 20
 
-AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent)
+AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis)
     : QWidget(parent)
+    , eng::sibus::node(std::format("axis-gui-ctl-{}", axis))
 {
 	setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet(QString("border-radius: %1px; background-color: white").arg(ROUND_RADIUS));
@@ -75,6 +76,29 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent)
     }
     layout->addLayout(hL);
 
+    node::add_config_listener(std::format("axis.{}", axis))
+        .on(".name", [this](eng::abc::pack const &value)
+        {
+            std::string_view name{ eng::abc::get<std::string_view>(value, 0) };
+            update_name(name);
+            emit axis_view(name);
+        });
+
+    node::add_input_port("axis",
+        [this](eng::abc::pack const &args)
+        {
+            double position = eng::abc::get<double>(args, 0);
+            vvr_pos_->set_value(position);
+        });
+
+    node::add_input_port("speed",
+        [this](eng::abc::pack const &args)
+        {
+            double speed = eng::abc::get<double>(args, 0);
+            vvr_speed_->set_value(speed);
+            emit axis_speed(speed);
+        });
+
     update_gui();
 }
 
@@ -87,16 +111,6 @@ void AxisCtlItemWidget::update_name(std::string_view name)
 {
     name_ = QString::fromStdString(std::string(name));
     lblHeader_->setText(name_);
-}
-
-void AxisCtlItemWidget::update_current_position(double value)
-{
-    vvr_pos_->set_value(value);
-}
-
-void AxisCtlItemWidget::update_current_speed(double value)
-{
-    vvr_speed_->set_value(value);
 }
 
 void AxisCtlItemWidget::set_active(bool active)
@@ -152,20 +166,20 @@ void AxisCtlItemWidget::nf_pos(float v) noexcept
 
 void AxisCtlItemWidget::set_sys_mode(unsigned char v) noexcept
 {
-    sysMode_ = v;
-    updateGui();
+    // sysMode_ = v;
+    // updateGui();
 }
 
 void AxisCtlItemWidget::set_sys_ctrl(unsigned char v) noexcept
 {
-    ctlMode_ = v;
-    updateGui();
+    // ctlMode_ = v;
+    // updateGui();
 }
 
 void AxisCtlItemWidget::set_sys_error(unsigned int v) noexcept
 {
-    error_ = v;
-    updateGui();
+    // error_ = v;
+    // updateGui();
 }
 
 void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept

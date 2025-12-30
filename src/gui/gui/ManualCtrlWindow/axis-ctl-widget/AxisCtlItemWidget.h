@@ -2,7 +2,9 @@
 
 #include <QWidget>
 
-#include <aem/types.h>
+#include <eng/sibus/node.hpp>
+
+// #include <aem/types.h>
 
 class QLabel;
 class ValueViewReal;
@@ -10,30 +12,31 @@ class QFrame;
 
 class AxisCtlItemWidget
     : public QWidget
+    , public eng::sibus::node
 {
     Q_OBJECT
 
 public:
 
-    AxisCtlItemWidget(QWidget*);
+    AxisCtlItemWidget(QWidget*, char);
 
 signals:
 
     void on_move_to_click();
 
+    void axis_view(std::string_view);
+
+    void axis_speed(double);
+
 public:
-
-    void update_name(std::string_view);
-
-    void update_current_position(double);
-
-    void update_current_speed(double);
 
     QString const &name() const noexcept { return name_; }
 
     void set_active(bool);
 
 private:
+
+    void update_name(std::string_view);
 
     void update_gui();
 
@@ -84,11 +87,11 @@ private:
     float pos_{0.0f};
     float speed_{0.0f};
 
-    aem::uint8 sysMode_;
-    aem::uint8 ctlMode_;
+    // aem::uint8 sysMode_;
+    // aem::uint8 ctlMode_;
     bool ls_[2] = {false, false};
 
     char ctrlModeAxis_ = 0;
-    aem::uint32 error_ = 0;
+    // aem::uint32 error_ = 0;
 };
 
