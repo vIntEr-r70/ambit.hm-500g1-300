@@ -4,8 +4,8 @@
 
 class QLabel;
 
-class CenteringCtrlDlg 
-    : public InteractWidget 
+class CenteringCtrlDlg
+    : public InteractWidget
 {
 public:
 
@@ -16,7 +16,7 @@ public:
     void show(float, bool) noexcept;
 
     void show() noexcept;
- 
+
     void set_centering_step(int) noexcept;
 
 private:
@@ -37,8 +37,8 @@ private:
 
     QLabel *lbl_title_;
 
-    std::vector<QLabel*> lbls_; 
-    std::vector<QLabel*> lbl_steps_; 
+    std::vector<QLabel*> lbls_;
+    std::vector<QLabel*> lbl_steps_;
 
     bool step_error_{ false };
     std::size_t step_{ 0 };
