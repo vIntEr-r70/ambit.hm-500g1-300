@@ -1,4 +1,4 @@
-#include "ProgramListDlg.h"
+#include "programs-list-widget.hpp"
 
 #include <QVBoxLayout>
 #include <QTableWidget>
@@ -12,8 +12,8 @@
 
 #include <aem/environment.h>
 
-ProgramListDlg::ProgramListDlg(QWidget* parent)
-    : InteractWidget(parent)
+programs_list_widget::programs_list_widget(QWidget* parent)
+    : QWidget(parent)
     , path_(aem::getenv("LIAEM_RW_PATH", "./home-root"))
 {
     path_ /= "programs";
@@ -21,12 +21,9 @@ ProgramListDlg::ProgramListDlg(QWidget* parent)
     if (!std::filesystem::exists(path_))
         std::filesystem::create_directories(path_);
 
-    setMinimumWidth(600);
-    setMinimumHeight(600);
-
-    setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheet("border-radius: 20px; background-color: #ffffff");
-
+    // setAttribute(Qt::WA_StyledBackground, true);
+    // setStyleSheet("border-radius: 20px; background-color: #ffffff");
+    //
     QFont f(QWidget::font());
     f.setPointSize(16);
 
@@ -67,42 +64,42 @@ ProgramListDlg::ProgramListDlg(QWidget* parent)
         }
         vL->addLayout(hL);
 
-        hL = new QHBoxLayout();
-        {
-            btn_remove_ = new RoundButton(this);
-            connect(btn_remove_, &RoundButton::clicked, [this] { make_delete_file(); });
-            btn_remove_->setIcon(":/file.delete");
-            btn_remove_->setBgColor("#e55056");
-            hL->addWidget(btn_remove_);
-
-            hL->addStretch();
-            
-            RoundButton *btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { make_load_file(); });
-            btn->setText("Загрузить");
-            btn->setBgColor("#29AC39");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
-            hL->addWidget(btn);
-
-            btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { InteractWidget::hide(); });
-            btn->setText("Закрыть");
-            btn->setBgColor("#E55056");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
-            hL->addWidget(btn);
-        }
-        vL->addLayout(hL);
+    //     hL = new QHBoxLayout();
+    //     {
+    //         btn_remove_ = new RoundButton(this);
+    //         connect(btn_remove_, &RoundButton::clicked, [this] { make_delete_file(); });
+    //         btn_remove_->setIcon(":/file.delete");
+    //         btn_remove_->setBgColor("#e55056");
+    //         hL->addWidget(btn_remove_);
+    //
+    //         hL->addStretch();
+    //
+    //         RoundButton *btn = new RoundButton(this);
+    //         connect(btn, &RoundButton::clicked, [this] { make_load_file(); });
+    //         btn->setText("Загрузить");
+    //         btn->setBgColor("#29AC39");
+    //         btn->setTextColor(Qt::white);
+    //         btn->setMinimumWidth(100);
+    //         hL->addWidget(btn);
+    //
+    //         btn = new RoundButton(this);
+    //         connect(btn, &RoundButton::clicked, [this] { InteractWidget::hide(); });
+    //         btn->setText("Закрыть");
+    //         btn->setBgColor("#E55056");
+    //         btn->setTextColor(Qt::white);
+    //         btn->setMinimumWidth(100);
+    //         hL->addWidget(btn);
+    //     }
+    //     vL->addLayout(hL);
     }
 }
 
-void ProgramListDlg::set_guid(int guid)
-{
-    btn_remove_->setVisible(guid != auth_user);
-}
+// void ProgramListDlg::set_guid(int guid)
+// {
+//     btn_remove_->setVisible(guid != auth_user);
+// }
 
-void ProgramListDlg::make_scroll(int shift)
+void programs_list_widget::make_scroll(int shift)
 {
     auto bar = local_list_->verticalScrollBar();
     int pos = bar->sliderPosition();
@@ -112,10 +109,10 @@ void ProgramListDlg::make_scroll(int shift)
 //! Необходимо загрузить список программ из базы
 //! Так-же диалог должен позволять загружать программы из файловой системы
 
-void ProgramListDlg::show()
+void programs_list_widget::showEvent(QShowEvent *)
 {
     std::vector<std::pair<std::string, std::string>> files;
-    for (auto const& dir_entry : std::filesystem::directory_iterator{path_}) 
+    for (auto const& dir_entry : std::filesystem::directory_iterator{path_})
     {
         if (!dir_entry.is_regular_file())
             continue;
@@ -136,42 +133,41 @@ void ProgramListDlg::show()
         local_list_->setItem(i, 0, new QTableWidgetItem(files[i].first.c_str()));
         local_list_->setItem(i, 1, new QTableWidgetItem(files[i].second.c_str()));
     }
-
-    InteractWidget::show();
 }
 
-void ProgramListDlg::onSelectInLocal(QModelIndex index)
+void programs_list_widget::onSelectInLocal(QModelIndex index)
 {
     if (!index.isValid())
         return;
     make_load_file();
 }
 
-void ProgramListDlg::make_load_file()
+void programs_list_widget::make_load_file()
 {
-    int row = local_list_->currentRow();
-    if (row < 0) return;
-
-    QTableWidgetItem* item = local_list_->item(row, 0);
-    InteractWidget::hide();
-
-    emit makeLoadFromLocalFile(item->text());
+    // int row = local_list_->currentRow();
+    // if (row < 0) return;
+    //
+    // QTableWidgetItem* item = local_list_->item(row, 0);
+    // InteractWidget::hide();
+    //
+    // emit makeLoadFromLocalFile(item->text());
 }
 
-void ProgramListDlg::make_delete_file()
-{
-    int row = local_list_->currentRow();
-    if (row < 0) return;
+// void ProgramListDlg::make_delete_file()
+// {
+//     int row = local_list_->currentRow();
+//     if (row < 0) return;
+//
+//     QTableWidgetItem* item = local_list_->item(row, 0);
+//     std::string fname(item->text().toUtf8().constData());
+//
+//     try 
+//     {
+//         std::filesystem::remove(path_ / fname);
+//         local_list_->removeRow(row);
+//     }
+//     catch(...) 
+//     { 
+//     }
+// }
 
-    QTableWidgetItem* item = local_list_->item(row, 0);
-    std::string fname(item->text().toUtf8().constData());
-
-    try 
-    {
-        std::filesystem::remove(path_ / fname);
-        local_list_->removeRow(row);
-    }
-    catch(...) 
-    { 
-    }
-}

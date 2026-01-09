@@ -30,14 +30,16 @@ add_executable(${PROJECT_NAME}
     gui/ManualCtrlWindow/CenteringCfgWidget.cpp
     gui/ManualCtrlWindow/CenteringCtrlDlg.cpp
 
-    gui/AutoCtrlWindow/AutoCtrlWindow.cpp
-    gui/AutoCtrlWindow/AutoCtrlWidget.cpp
-    gui/AutoCtrlWindow/AutoEditWidget.cpp
+    gui/AutoCtrlWindow/auto-mode-window.cpp
+    gui/AutoCtrlWindow/common-page.cpp
+    gui/AutoCtrlWindow/common-page-header-widget.cpp
+    gui/AutoCtrlWindow/auto-ctl-page.cpp
+    gui/AutoCtrlWindow/editor-page.cpp
+    gui/AutoCtrlWindow/editor-page-header-widget.cpp
     gui/AutoCtrlWindow/ProgramModel.cpp
+    gui/AutoCtrlWindow/program-widget.cpp
     gui/AutoCtrlWindow/ProgramModelHeader.cpp
-    gui/AutoCtrlWindow/ProgramStateCtrlWidget.cpp
-    # gui/AutoCtrlWindow/ProgramOpFactory.cpp
-    gui/AutoCtrlWindow/ProgramListDlg.cpp
+    gui/AutoCtrlWindow/programs-list-widget.cpp
     gui/AutoCtrlWindow/AutoParamKeyboard.cpp
     gui/AutoCtrlWindow/EditorMessageBox.cpp
 

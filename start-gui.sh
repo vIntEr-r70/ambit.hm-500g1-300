@@ -3,7 +3,7 @@
 SPWD=`pwd`
 
 export LIAEM_RO_PATH=$SPWD/hm-500g1-300
-export LIAEM_RW_PATH=$SPWD/home-root
+export LIAEM_RW_PATH=$SPWD/hm-500g1-300/home-root
 
 cmake --build ./build -j8
 

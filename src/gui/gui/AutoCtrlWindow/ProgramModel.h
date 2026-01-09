@@ -9,14 +9,12 @@
 
 #include <aem/types.h>
 
-class QTableView;
-
 class ProgramModel
     : public QAbstractTableModel
 {
 public:
 
-    ProgramModel(QTableView&);
+    ProgramModel();
 
 public:
 
@@ -87,8 +85,6 @@ private:
 private:
 
     program program_;
-
-    QTableView &table_;
 
     QString name_;
     QString comments_;

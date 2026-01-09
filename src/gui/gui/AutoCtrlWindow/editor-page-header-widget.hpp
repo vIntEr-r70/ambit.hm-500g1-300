@@ -4,13 +4,12 @@
 #include <QModelIndex>
 
 class ProgramModel;
-class AutoParamKeyboard;
 class QTableView;
 class ValueSetString;
 class EditorMessageBox;
 class IconButton;
 
-class AutoEditWidget final
+class editor_page_header_widget final
     : public QWidget
 {
     Q_OBJECT
@@ -28,23 +27,17 @@ class AutoEditWidget final
 
 public:
 
-    AutoEditWidget(QWidget*, ProgramModel&) noexcept;
+    editor_page_header_widget(QWidget *, ProgramModel &) noexcept;
 
 public:
 
     void init();
 
-    void set_position(char, float);
+    void need_save(bool) noexcept;
 
 signals:
 
     void make_done();
-
-public slots:
-
-    void tableCellSelect(QModelIndex) noexcept;
-
-    void tableCellClicked(QModelIndex) noexcept; 
 
 private:
 
@@ -58,8 +51,6 @@ private:
 
 private:
 
-    void need_save(bool) noexcept;
-
     void make_table_op(TableAc) noexcept;
 
     void do_exit() noexcept;
@@ -70,8 +61,6 @@ private:
 
     ProgramModel &model_;
 
-    AutoParamKeyboard *kb_;
-
     ValueSetString *name_;
     ValueSetString *comments_;
 
@@ -80,7 +69,5 @@ private:
     bool need_save_{ false };
 
     EditorMessageBox *msg_;
-
-    std::unordered_map<char, float> real_pos_;
 };
 

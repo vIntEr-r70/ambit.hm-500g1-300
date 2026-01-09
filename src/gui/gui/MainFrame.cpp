@@ -10,7 +10,7 @@
 
 #include <WelcomeWindow/WelcomeWindow.h>
 #include "ManualCtrlWindow/ManualCtrlWindow.h"
-#include "AutoCtrlWindow/AutoCtrlWindow.h"
+#include "AutoCtrlWindow/auto-mode-window.hpp"
 #include "SysCfgWindow/SysCfgWindow.h"
 #include "ArcsWindow/ArcsWindow.h"
 #include <NotifyWindow/NotifyWindow.h>
@@ -64,7 +64,7 @@ MainFrame::MainFrame()
 
 // #ifndef BUILDROOT
     on_connected();
-    NavigationPanel_->switch_to("manual");
+    NavigationPanel_->switch_to("auto");
 // #endif
 
     global::subscribe("sys.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
@@ -90,8 +90,8 @@ void MainFrame::on_connected() noexcept
     LiquidSystemWindow* lsw = new LiquidSystemWindow(this);
     NavigationPanel_->add(lsw, "lsw",   true);
 
-    auto_ctrl_window_ = new AutoCtrlWindow(this, axis_cfg_);
-    NavigationPanel_->add(auto_ctrl_window_, "auto", true);
+    auto_mode_window_ = new auto_mode_window(this/*, axis_cfg_*/);
+    NavigationPanel_->add(auto_mode_window_, "auto", true);
 
     // NavigationPanel_->add(new ArcsWindow(this), "arcs", true);
 
@@ -124,7 +124,7 @@ void MainFrame::on_connected() noexcept
     sys_key_map_.add("emg-stop",        this, &MainFrame::nf_sys_emg_stop);
     sys_key_map_.add("locker",          this, &MainFrame::nf_sys_locker);
 
-    sys_key_map_.add("mode",            auto_ctrl_window_, &AutoCtrlWindow::nf_sys_mode);
+    // sys_key_map_.add("mode",            auto_ctrl_window_, &AutoCtrlWindow::nf_sys_mode);
 
 
     // Получаем исходный список конфигурации осей
@@ -153,7 +153,7 @@ void MainFrame::on_login(int guid) noexcept
                 bki_lock_msg_->show();
 
             sys_cfg_window_->set_guid(guid);
-            auto_ctrl_window_->set_guid(guid);
+            // auto_ctrl_window_->set_guid(guid);
             NavigationPanel_->hide("scfg", !sys_cfg_window_->have_tabs());
 
             NavigationPanel_->switch_to("manual");
@@ -250,3 +250,4 @@ void MainFrame::mousePressEvent(QMouseEvent *e)
 {
     std::println("MainFrame::mousePressEvent: {}, {}", e->pos().x(), e->pos().y());
 }
+

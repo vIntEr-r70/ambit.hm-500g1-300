@@ -11,7 +11,7 @@ class BkiLockMessage;
 class EmgStopMessage;
 class NavigationPanel;
 class SysCfgWindow;
-class AutoCtrlWindow;
+class auto_mode_window;
 
 class MainFrame
     : public QWidget
@@ -54,7 +54,7 @@ private:
 
     NavigationPanel *NavigationPanel_;
     SysCfgWindow *sys_cfg_window_;
-    AutoCtrlWindow *auto_ctrl_window_;
+    auto_mode_window *auto_mode_window_;
 
     func_multi_map sys_key_map_;
     we::axis_cfg axis_cfg_;

@@ -3,7 +3,6 @@
 #include "UnitsCalc.h"
 
 #include <QColor>
-#include <QTableView>
 #include <QFile>
 
 #include <aem/utils/crc.h>
@@ -11,9 +10,8 @@
 #include <aem/log.h>
 #include <aem/environment.h>
 
-ProgramModel::ProgramModel(QTableView &tref)
+ProgramModel::ProgramModel()
     : QAbstractTableModel()
-    , table_(tref)
     , path_(aem::getenv("LIAEM_RW_PATH", "./home-root"))
 {
     path_ /= "programs";
@@ -176,7 +174,7 @@ void ProgramModel::add_op(program::op_type type) noexcept
     program_.phases.insert(program_.phases.begin() + irow, type);
     endInsertRows();
 
-    table_.setSpan(irow, 1, 1, ProgramModelHeader::column_count(program_) - 1);
+    // table_.setSpan(irow, 1, 1, ProgramModelHeader::column_count(program_) - 1);
 }
 
 void ProgramModel::add_main_op(bool absolute) noexcept
@@ -533,13 +531,13 @@ bool ProgramModel::load_from_file(QString const& fname) noexcept
         endInsertRows();
     }
 
-    std::size_t i = 0;
-    for (auto const& type : program_.phases)
-    {
-        if (type != program::op_type::main)
-            table_.setSpan(i, 1, 1, ProgramModelHeader::column_count(program_) - 1);
-        i += 1;
-    }
+    // std::size_t i = 0;
+    // for (auto const& type : program_.phases)
+    // {
+    //     if (type != program::op_type::main)
+    //         table_.setSpan(i, 1, 1, ProgramModelHeader::column_count(program_) - 1);
+    //     i += 1;
+    // }
 
     return true;
 }
