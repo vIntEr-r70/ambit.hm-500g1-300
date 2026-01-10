@@ -29,7 +29,7 @@ public:
 
     static std::size_t column_count(program const&) noexcept;
 
-    static void create_header(program const&, QTableWidget&) noexcept;
+    static void create_header(program const&, QTableWidget&, int) noexcept;
 
     static QString title(program const&, std::size_t, std::size_t) noexcept;
 };

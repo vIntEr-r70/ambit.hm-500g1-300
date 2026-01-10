@@ -51,24 +51,26 @@ std::size_t ProgramModelHeader::column_count(program const& p) noexcept
     return 1 + (p.fc_count * 2) + p.sprayer_count + p.s_axis.size() + (p.t_axis.size() + 2);
 }
 
-void ProgramModelHeader::create_header(program const& p, QTableWidget& header) noexcept
+void ProgramModelHeader::create_header(program const& p, QTableWidget& header, int width) noexcept
 {
     header.setWordWrap(true);
     header.setColumnCount(column_count(p));
-    header.setRowCount(2);
+    header.setRowCount(3);
 
-    auto new_item = [](QString const& title) {
+    auto new_item = [](QString const& title)
+    {
         auto item = new QTableWidgetItem(title);
         item->setTextAlignment(Qt::AlignCenter);
-        return item; 
+        return item;
     };
 
     std::size_t idx = 0;
 
     // Индекс
-    header.setSpan(0, idx, 2, 1);
+    header.setSpan(0, idx, 3, 1);
     header.setItem(0, idx, new_item("№"));
     header.setColumnWidth(idx, 50);
+    width -= 50;
     idx += 1;
 
     // Сначала ПЧ
@@ -76,10 +78,14 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header) n
     {
         header.setSpan(0, idx, 1, 2);
         header.setItem(0, idx, new_item(QString("ПЧ №%1").arg(i + 1)));
+        header.setSpan(1, idx + 0, 2, 1);
         header.setItem(1, idx + 0, new_item("Мощность\nкВт"));
+        header.setSpan(1, idx + 1, 2, 1);
         header.setItem(1, idx + 1, new_item("Ток\nА"));
         header.setColumnWidth(idx + 0, 85);
+        width -= 85;
         header.setColumnWidth(idx + 1, 75);
+        width -= 75;
         idx += 2;
     }
 
@@ -90,8 +96,10 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header) n
         header.setItem(0, idx, new_item("Спрейер"));
         for (std::size_t i = 0; i < p.sprayer_count; ++i)
         {
+            header.setSpan(1, idx + i, 2, 1);
             header.setItem(1, idx + i, new_item(QString("№%1").arg(i + 1)));
             header.setColumnWidth(idx + i, 50);
+            width -= 50;
         }
         idx += p.sprayer_count;
     }
@@ -101,10 +109,13 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header) n
     {
         header.setSpan(0, idx, 1, p.s_axis.size());
         header.setItem(0, idx, new_item("Вращение"));
+        header.setSpan(1, idx, 1, p.s_axis.size());
+        header.setItem(1, idx, new_item("Скорость, об/мин"));
         for (std::size_t i = 0; i < p.s_axis.size(); ++i)
         {
-            header.setItem(1, idx + i, new_item(QString("%1\nоб/мин").arg(p.s_axis[i])));
+            header.setItem(2, idx + i, new_item(QString("%1").arg(p.s_axis[i])));
             header.setColumnWidth(idx + i, 70);
+            width -= 70;
         }
         idx += p.s_axis.size();
     }
@@ -112,30 +123,33 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header) n
     // Теперь позиционирование
     if (!p.t_axis.empty())
     {
-        header.setSpan(0, idx, 1, p.t_axis.size());
+        header.setSpan(0, idx, 1, p.t_axis.size() + 2);
         header.setItem(0, idx, new_item("Позиционирование"));
 
         for (std::size_t i = 0; i < p.t_axis.size(); ++i)
         {
             char axis = p.t_axis[i];
             bool spin = std::find(p.s_axis.begin(), p.s_axis.end(), axis) != p.s_axis.end();
+            header.setSpan(1, idx + i, 2, 1);
             header.setItem(1, idx + i, new_item(QString("%1\n%2").arg(axis).arg(spin ? "град" : "мм")));
             header.setColumnWidth(idx + i, 68);
+            width -= 68;
         }
+        idx += p.t_axis.size();
 
-        idx += p.t_axis.size(); 
+        header.setSpan(1, idx, 1, 2);
+        header.setItem(1, idx, new_item("Скорость"));
 
-        header.setSpan(0, idx, 1, 2);
-        header.setItem(0, idx, new_item("Скорость"));
-
-        header.setItem(1, idx + 0, new_item("мм/сек"));
+        header.setItem(2, idx + 0, new_item("Значение"));
         header.setColumnWidth(idx + 0, 65);
-        header.setItem(1, idx + 1, new_item("об/мин"));
-        header.setColumnWidth(idx + 1, 65);
+        width -= 65;
+        header.setItem(2, idx + 1, new_item("Единицы"));
+        header.setColumnWidth(idx + 1, width);
     }
 
-    header.setRowHeight(0, 27);
-    header.setRowHeight(1, 50);
+    header.setRowHeight(0, 25);
+    header.setRowHeight(1, 25);
+    header.setRowHeight(1, 25);
 }
 
 QString ProgramModelHeader::title(program const& p, std::size_t type, std::size_t id) noexcept

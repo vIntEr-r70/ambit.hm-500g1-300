@@ -11,7 +11,6 @@ class RoundButton;
 class QStackedWidget;
 class QDoubleValidator;
 class ValueSetBool;
-class NumberCalcField;
 
 class AutoParamKeyboard 
     : public InteractWidget 
@@ -94,12 +93,17 @@ private:
 
     QLabel *title_;
 
-    NumberCalcField *main_page_;
+    struct
+    {
+        QWidget *w;
+        QDoubleValidator *validator;
+        QLineEdit* le;
+
+    } main_page_;
 
     struct
     {
         QWidget *w;
-        QLabel *hint;
         QDoubleValidator *validator[3];
         QLineEdit* le[3];
 
@@ -108,7 +112,6 @@ private:
     struct
     {
         QWidget *w;
-        QLabel *hint;
         QDoubleValidator *validator[3];
         QLineEdit* le[3];
 
@@ -117,7 +120,6 @@ private:
     struct
     {
         QWidget *w;
-        QLabel *hint;
         QDoubleValidator *validator[2];
         QLineEdit* le[2];
 

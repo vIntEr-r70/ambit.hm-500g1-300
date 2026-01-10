@@ -3,7 +3,6 @@
 #include <Widgets/RoundButton.h>
 #include <InteractWidgets/KeyboardWidget.h>
 #include <Widgets/ValueSetBool.h>
-#include <Widgets/NumberCalcField.h>
 
 #include <QVBoxLayout>
 #include <QGroupBox>
@@ -13,6 +12,8 @@
 #include <UnitsCalc.h>
 
 #include <aem/log.h>
+#include <qboxlayout.h>
+#include <qvalidator.h>
 
 AutoParamKeyboard::AutoParamKeyboard(QWidget* parent)
     : InteractWidget(parent)
@@ -24,80 +25,59 @@ AutoParamKeyboard::AutoParamKeyboard(QWidget* parent)
     vL->setContentsMargins(20, 20, 20, 20);
     vL->setSpacing(30);
     {
-        QHBoxLayout *hL = new QHBoxLayout();
-        {
-            title_ = new QLabel(this);
-            title_->setStyleSheet("color: white; font: bold 20pt");
-            hL->addWidget(title_);
+        title_ = new QLabel(this);
+        title_->setStyleSheet("color: white; font: bold 20pt");
+        vL->addWidget(title_);
 
-            hL->addStretch();
-        }
-        vL->addLayout(hL);
-
-        hL = new QHBoxLayout();
+        QVBoxLayout* vvL = new QVBoxLayout();
+        vvL->setSpacing(5);
         {
-            QVBoxLayout* vL = new QVBoxLayout();
-            vL->setSpacing(5);
+            vvL->addStretch();
+
+            stack_ = new QStackedWidget(this);
             {
-                vL->addStretch();
-
-                stack_ = new QStackedWidget(this);
-                {
-                    stack_->addWidget(create_main_page());
-                    stack_->addWidget(create_pause_page());
-                    stack_->addWidget(create_loop_page());
-                    stack_->addWidget(create_fc_page());
-                    stack_->addWidget(create_center_page());
-                }
-                vL->addWidget(stack_);
-
-                vL->addStretch();
-
-                btn_accept_ = new RoundButton(this);
-                connect(btn_accept_, &RoundButton::clicked, [this] 
-                { 
-                    InteractWidget::hide();
-                    std::invoke(on_accept_handler_, this);
-                });
-                btn_accept_->setBgColor(QColor("#29AC39"));
-                btn_accept_->setIcon(":/check-mark");
-                vL->addWidget(btn_accept_);
+                stack_->addWidget(create_main_page());
+                stack_->addWidget(create_pause_page());
+                stack_->addWidget(create_loop_page());
+                stack_->addWidget(create_fc_page());
+                stack_->addWidget(create_center_page());
             }
-            hL->addLayout(vL);
+            vvL->addWidget(stack_);
 
-            vL = new QVBoxLayout();
+            vvL->addStretch();
+        }
+        vL->addLayout(vvL);
+
+        auto hL = new QHBoxLayout();
+        {
+            std::array<QPair<QString, int>, 12> const syms = {{
+                { "7", Qt::Key_7 },     { "8", Qt::Key_8 }, { "9", Qt::Key_9 },
+                { "4", Qt::Key_4 },     { "5", Qt::Key_5 }, { "6", Qt::Key_6 },
+                { "1", Qt::Key_1 },     { "2", Qt::Key_2 }, { "3", Qt::Key_3 },
+                { ".", Qt::Key_Period}, { "0", Qt::Key_0 }, { "−", Qt::Key_Minus }
+            }};
+
+            QGridLayout* gL = new QGridLayout();
+            gL->setSpacing(20);
+            {
+                for (std::size_t i = 0; i < syms.size(); ++i)
+                {
+                    auto const& sym = syms[i];
+                    if (sym.second == 0)
+                        continue;
+
+                    RoundButton *btn = KeyboardWidget::createKeyBtn(this, sym.second);
+                    connect(btn, SIGNAL(clickedId(int)), this, SLOT(onKeyPressed(int)));
+                    btn->setText(sym.first);
+                    buttons_[sym.second] = btn;
+                    gL->addWidget(btn, i / 3, i % 3);
+                }
+            }
+            hL->addLayout(gL);
+
+            auto vL = new QVBoxLayout();
             vL->setSpacing(20);
             {
-                std::array<QPair<QString, int>, 12> const syms = {{
-	                { "7", Qt::Key_7 },     { "8", Qt::Key_8 }, { "9", Qt::Key_9 },
-	                { "4", Qt::Key_4 },     { "5", Qt::Key_5 }, { "6", Qt::Key_6 },
-	                { "1", Qt::Key_1 },     { "2", Qt::Key_2 }, { "3", Qt::Key_3 },
-                    { ".", Qt::Key_Period}, { "0", Qt::Key_0 }, { "-", Qt::Key_Minus }
-	            }};
-
-	            QGridLayout* gL = new QGridLayout();
-	            gL->setSpacing(20);
-	            {
-	                for (std::size_t i = 0; i < syms.size(); ++i)
-	                {
-				        auto const& sym = syms[i];
-				        if (sym.second == 0)
-					        continue;
-
-	                    RoundButton *btn = KeyboardWidget::createKeyBtn(this, sym.second);
-				        connect(btn, SIGNAL(clickedId(int)), this, SLOT(onKeyPressed(int)));
-	                    btn->setText(sym.first);
-	                    buttons_[sym.second] = btn;
-	                    gL->addWidget(btn, i / 3, i % 3);
-	                }
-	            }
-	            vL->addLayout(gL);
-	        }
-	        hL->addLayout(vL);
-
-	        vL = new QVBoxLayout();
-	        vL->setSpacing(20);
-	        {
                 RoundButton* btn = KeyboardWidget::createKeyBtn(this);
                 btn->setText("AC");
                 connect(btn, SIGNAL(clicked()), this, SLOT(onACKey()));
@@ -111,15 +91,29 @@ AutoParamKeyboard::AutoParamKeyboard(QWidget* parent)
                 vL->addWidget(btn);
 
                 vL->addStretch();
+            }
+            hL->addLayout(vL);
+        }
+        vL->addLayout(hL);
 
-                btn = new RoundButton(this);
-                connect(btn, &RoundButton::clicked, [this] { InteractWidget::hide(); });
-                btn->setIcon(":/kbd.dlg.cancel");
-                btn->setBgColor("#E55056");
-                btn->setMinimumWidth(90);
-                vL->addWidget(btn);
-	        }
-	        hL->addLayout(vL);
+        hL = new QHBoxLayout();
+        {
+            btn_accept_ = new RoundButton(this);
+            connect(btn_accept_, &RoundButton::clicked, [this] 
+            {
+                InteractWidget::hide();
+                std::invoke(on_accept_handler_, this);
+            });
+            btn_accept_->setBgColor(QColor("#29AC39"));
+            btn_accept_->setIcon(":/check-mark");
+            hL->addWidget(btn_accept_);
+
+            auto btn = new RoundButton(this);
+            connect(btn, &RoundButton::clicked, [this] { InteractWidget::hide(); });
+            btn->setIcon(":/kbd.dlg.cancel");
+            btn->setBgColor("#E55056");
+            btn->setMinimumWidth(90);
+            hL->addWidget(btn);
         }
         vL->addLayout(hL);
     }
@@ -130,15 +124,15 @@ void AutoParamKeyboard::show_main(QString const& title, QString const &v, float 
     title_->setText(title);
 
     main_accept_cb_ = std::move(cb);
-    stack_->setCurrentWidget(main_page_);
+    stack_->setCurrentWidget(main_page_.w);
     on_accept_handler_ = &AutoParamKeyboard::main_accept_handler;
     on_focus_handler_ = nullptr;
     on_acc_handler_ = &AutoParamKeyboard::main_acc_handler;
 
-    main_page_->init(v);
+    main_page_.le->setText(v);
 
     le_.clear();
-    le_.push_back(main_page_->le_);
+    le_.push_back(main_page_.le);
 
     InteractWidget::show();
 }
@@ -146,7 +140,7 @@ void AutoParamKeyboard::show_main(QString const& title, QString const &v, float 
 void AutoParamKeyboard::show_main(QString const& title, QString const& v, float pos, float min, float max, main_accept_cb_t &&cb)
 {
     show_main(title, v, min, max, std::move(cb));
-    main_page_->update_pos_value(pos);
+    // main_page_->update_pos_value(pos);
 }
 
 void AutoParamKeyboard::show_pause(aem::uint64 msec, pause_accept_cb_t &&cb)
@@ -240,6 +234,8 @@ void AutoParamKeyboard::show_center(centering_type type, float shift, center_acc
         center_page_.tooth->set_value(type == centering_type::tooth_in);
         center_page_.le->setText(QString::number(shift, 'f', 1));
         break;
+    case centering_type::not_active:
+        break;
     }
 
     update_center_type();
@@ -315,10 +311,31 @@ void AutoParamKeyboard::onBackspaceKey()
 
 QWidget* AutoParamKeyboard::create_main_page()
 {
-    main_page_ = new NumberCalcField(nullptr);
-    connect(main_page_, &NumberCalcField::result_changed, 
-        [this] (bool allow) { update_accept_button(allow); });
-    return main_page_;
+    QWidget *w = new QWidget();
+    main_page_.w = w;
+
+    main_page_.validator = new QDoubleValidator(w);
+    main_page_.validator->setDecimals(3);
+
+    {
+        QVBoxLayout *vL = new QVBoxLayout(w);
+        {
+            QHBoxLayout *hL = new QHBoxLayout();
+            {
+                hL->addStretch();
+
+                auto vsb = new ValueSetBool(w);
+                vsb->setValueView("Относительно", "Абсолютно");
+                hL->addWidget(vsb);
+            }
+            vL->addLayout(hL);
+
+            main_page_.le = create_line_edit(w);
+            main_page_.le->setValidator(main_page_.validator);
+            vL->addWidget(main_page_.le);
+        }
+    }
+    return w;
 }
 
 QWidget* AutoParamKeyboard::create_pause_page()
@@ -327,12 +344,7 @@ QWidget* AutoParamKeyboard::create_pause_page()
     pause_page_.w = w;
 
     QVBoxLayout *vL = new QVBoxLayout(w);
-    vL->setContentsMargins(0, 0, 0, 0);
     {
-        pause_page_.hint = new QLabel(w);
-        pause_page_.hint->setStyleSheet("color: white;");
-        vL->addWidget(pause_page_.hint);
-
         QHBoxLayout *hL = new QHBoxLayout();
         {
             QStringList ttl{ "ЧАС", "МИН", "СЕК" };
@@ -367,12 +379,7 @@ QWidget* AutoParamKeyboard::create_fc_page()
     fc_page_.w = w;
 
     QVBoxLayout *vL = new QVBoxLayout(w);
-    vL->setContentsMargins(0, 0, 0, 0);
     {
-        fc_page_.hint = new QLabel(w);
-        fc_page_.hint->setStyleSheet("color: white;");
-        vL->addWidget(fc_page_.hint);
-
         QHBoxLayout *hL = new QHBoxLayout();
         {
             QStringList ttl{ "кВт", "А", "сек" };
@@ -407,12 +414,7 @@ QWidget* AutoParamKeyboard::create_loop_page()
     loop_page_.w = w;
 
     QVBoxLayout *vL = new QVBoxLayout(w);
-    vL->setContentsMargins(0, 0, 0, 0);
     {
-        loop_page_.hint = new QLabel(w);
-        loop_page_.hint->setStyleSheet("color: white;");
-        vL->addWidget(loop_page_.hint);
-
         QHBoxLayout *hL = new QHBoxLayout();
         {
             QStringList ttl{ "Переход на", "Повторов" };
@@ -447,7 +449,6 @@ QWidget* AutoParamKeyboard::create_center_page()
     center_page_.w = w;
 
     QVBoxLayout *vL = new QVBoxLayout(w);
-    vL->setContentsMargins(0, 0, 0, 0);
     {
         QHBoxLayout *hL = new QHBoxLayout();
         {
@@ -500,12 +501,14 @@ QLineEdit* AutoParamKeyboard::create_line_edit(QWidget* w)
 
 void AutoParamKeyboard::main_accept_handler()
 {
-    main_accept_cb_(main_page_->result()); 
+    float cv = main_page_.le->text().toFloat();
+    main_accept_cb_(cv);
 }
 
 void AutoParamKeyboard::main_acc_handler()
 {
-    main_page_->acc();
+    main_page_.le->setText("0");
+    main_page_.le->selectAll();
 }
 
 void AutoParamKeyboard::pause_accept_handler()

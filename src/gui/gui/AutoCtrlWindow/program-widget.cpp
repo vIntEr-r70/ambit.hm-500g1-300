@@ -14,17 +14,15 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
     , model_(model)
 {
     QHBoxLayout *hL = new QHBoxLayout(this);
+    hL->setContentsMargins(0, 0, 0, 0);
     hL->setSpacing(0);
     {
         QVBoxLayout *vL = new QVBoxLayout();
         {
             thead_ = new QTableWidget(this);
             thead_->setStyleSheet("font-size: 9pt; color: #ffffff; background-color: #696969; font-weight: 500");
-            thead_->setMaximumHeight(79);
-            thead_->setMinimumHeight(79);
             thead_->verticalHeader()->hide();
             thead_->horizontalHeader()->hide();
-            thead_->horizontalHeader()->setStretchLastSection(true);
             thead_->setFocusPolicy(Qt::NoFocus);
             thead_->setSelectionMode(QAbstractItemView::NoSelection);
             thead_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -44,13 +42,9 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
             tbody_->setSelectionMode(QAbstractItemView::NoSelection);
             tbody_->setSortingEnabled(false);
             tbody_->setFocusPolicy(Qt::NoFocus);
-            tbody_->horizontalHeader()->setStretchLastSection(true);
             tbody_->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
             tbody_->setModel(&model_);
             vL->addWidget(tbody_);
-
-            vL->setStretch(0, 0);
-            vL->setStretch(1, 1);
         }
         hL->addLayout(vL);
 
@@ -62,9 +56,15 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
 
 void program_widget::resizeEvent(QResizeEvent *)
 {
-    ProgramModelHeader::create_header(model_.prog(), *thead_);
+    vscroll_->setVisible(tbody_->verticalScrollBar()->maximum() > 0);
+
+    int ww = width() - (vscroll_->isVisible() ? vscroll_->width() : 0);
+    thead_->setFixedSize(QSize(ww, 75 + 7));
+
+    ProgramModelHeader::create_header(model_.prog(), *thead_, ww);
     for (std::size_t i = 0; i < thead_->columnCount(); ++i)
         tbody_->setColumnWidth(i, thead_->columnWidth(i));
+
 }
 
 void program_widget::make_scroll(int shift)
