@@ -9,15 +9,15 @@
 #include <cmath>
 
 struct program
-{    
-    enum 
+{
+    enum
     {
         fcp_current = 0,
         fcp_power,
         fcp_count
     };
 
-    enum class op_type : aem::uint8 
+    enum class op_type : aem::uint8
     {
         main,
         pause,
@@ -36,7 +36,7 @@ struct program
     {
         union
         {
-            struct 
+            struct
             {
                 float P;
                 float I;
@@ -46,12 +46,12 @@ struct program
         };
 
         bool operator ==(fc_item_t const& other) const noexcept
-        { 
+        {
             if (&other == this) return true;
-            return 
-                (std::lround(P * 100) == std::lround(other.P * 100)) && 
+            return
+                (std::lround(P * 100) == std::lround(other.P * 100)) &&
                 (std::lround(I * 100) == std::lround(other.I * 100));
-        } 
+        }
 
         void save(aem::buffer &b) const
         {
@@ -66,7 +66,7 @@ struct program
         }
     };
 
-    struct main_op 
+    struct main_op
     {
         bool absolute{ false };
         std::vector<fc_item_t> fc;
@@ -78,9 +78,9 @@ struct program
             tspeed_t set_in;
             std::vector<float> pos;
 
-            void save(aem::buffer &b) const 
+            void save(aem::buffer &b) const
             {
-                b.append(speed); 
+                b.append(speed);
                 b.append(static_cast<aem::uint8>(set_in));
                 std::for_each(pos.begin(), pos.end(), [&b](float pos) { b.append(pos); });
             }
@@ -140,8 +140,8 @@ struct program
 
         void save(aem::buffer &b) const
         {
-            b.append(opid); 
-            b.append(N); 
+            b.append(opid);
+            b.append(N);
         }
 
         void load(aem::buffer &b)
@@ -159,16 +159,16 @@ struct program
 
         void save(aem::buffer &b) const
         {
-            b.append(p); 
-            b.append(i); 
-            b.append(tv); 
+            b.append(p);
+            b.append(i);
+            b.append(tv);
         }
 
         void load(aem::buffer &b)
         {
-            p = b.read_cast<float>(); 
-            i = b.read_cast<float>(); 
-            tv = b.read_cast<float>(); 
+            p = b.read_cast<float>();
+            i = b.read_cast<float>();
+            tv = b.read_cast<float>();
         }
     };
 
@@ -196,7 +196,7 @@ struct program
     {
         main_ops.push_back({
                 false,
-                std::vector<fc_item_t>(fc_count, fc_item_t{ 0.0f, 0.0f }), 
+                std::vector<fc_item_t>(fc_count, fc_item_t{ 0.0f, 0.0f }),
                 std::vector<bool>(sprayer_count, false), 
                 std::vector<float>(s_axis.size(), 0.0f), 
                 { 0.0f, tspeed_t::mm_sec, std::vector<float>(t_axis.size(), 0.0f) }
@@ -302,7 +302,7 @@ struct program
 
         count = b.read_cast<aem::uint32>();
         main_ops.resize(count);
-        std::for_each(main_ops.begin(), main_ops.end(), [this, &b](main_op &op) 
+        std::for_each(main_ops.begin(), main_ops.end(), [this, &b](main_op &op)
         { 
             op.fc.resize(fc_count);
             op.sprayer.resize(sprayer_count);
@@ -330,9 +330,9 @@ struct program
 
         count = b.read_cast<aem::uint32>();
         phases.resize(count);
-        std::for_each(phases.begin(), phases.end(), [&b](op_type &sp) 
+        std::for_each(phases.begin(), phases.end(), [&b](op_type &sp)
         { 
-            sp = static_cast<op_type>(b.read_cast<aem::uint8>()); 
+            sp = static_cast<op_type>(b.read_cast<aem::uint8>());
         });
 
         return true;

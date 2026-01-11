@@ -74,3 +74,7 @@ void program_widget::make_scroll(int shift)
     bar->setSliderPosition(pos + shift);
 }
 
+void program_widget::load(QString const &name)
+{
+    model_.load_from_local_file(name);
+}

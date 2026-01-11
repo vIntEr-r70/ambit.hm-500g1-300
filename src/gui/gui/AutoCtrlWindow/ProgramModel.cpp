@@ -559,3 +559,4 @@ bool ProgramModel::load_from_local_file(QString name) noexcept
 
     return true;
 }
+

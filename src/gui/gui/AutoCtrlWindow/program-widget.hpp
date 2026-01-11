@@ -25,6 +25,8 @@ public:
 
     QTableView* tbody() { return tbody_; }
 
+    void load(QString const &);
+
 private:
 
     void resizeEvent(QResizeEvent *) override final;

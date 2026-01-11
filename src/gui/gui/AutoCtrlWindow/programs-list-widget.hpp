@@ -19,6 +19,10 @@ public:
 
     programs_list_widget(QWidget *);
 
+public:
+
+    QString current() const;
+
 private:
 
     void showEvent(QShowEvent *) override final;

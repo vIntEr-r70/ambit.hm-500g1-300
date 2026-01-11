@@ -2,19 +2,28 @@
 
 #include <QWidget>
 
+#include <eng/sibus/node.hpp>
+
 // class RoundButton;
 // class IconButton;
 // class ProgramListDlg;
 class ProgramModel;
-class QTableView;
-class QTableWidget;
+class program_widget;
+// class QTableView;
+// class QTableWidget;
 // class ValueViewString;
 // class ValueViewTime;
 
 class auto_ctl_page final
     : public QWidget
+    , public eng::sibus::node
 {
-    Q_OBJECT
+    // Q_OBJECT
+
+    ProgramModel &model_;
+    program_widget *program_widget_;
+
+    eng::sibus::output_wire_id_t ctl_;
 
 public:
 
@@ -22,8 +31,14 @@ public:
 
 public:
 
-    // void init();
-    //
+    void init(QString const &);
+
+private:
+
+    void make_start();
+
+    void make_stop();
+
     // void set_current_phase(std::size_t) noexcept;
     //
     // void set_time_front(std::size_t) noexcept;
@@ -58,7 +73,7 @@ public:
 //
 //     void on_load_local_program(QString);
 
-private:
+// private:
 
     // ValueViewString *name_;
     // ValueViewString *comments_;

@@ -15,7 +15,6 @@
 
 common_page_header_widget::common_page_header_widget(QWidget *parent) noexcept
     : QWidget(parent)
-    // , model_(model)
 {
     setObjectName("common_page_header_widget");
     setAttribute(Qt::WA_StyledBackground, true);

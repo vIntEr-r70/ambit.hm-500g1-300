@@ -26,7 +26,8 @@ common_page::common_page(QWidget *parent)
         {
             QWidget *w = nullptr;
 
-            tabs_->addTab(new programs_list_widget(this), "Список программ");
+            programs_list_widget_ = new programs_list_widget(this);
+            tabs_->addTab(programs_list_widget_, "Список программ");
 
             w = new QWidget(this);
             tabs_->addTab(w, "Список архивов");
@@ -37,7 +38,10 @@ common_page::common_page(QWidget *parent)
 
 void common_page::load_selected_item()
 {
-    emit goto_ctl_page();
+    // Берем текущую выбранную в списке программу
+    QString name = programs_list_widget_->current();
+    if (!name.isEmpty())
+        emit goto_ctl_page(name);
 }
 
 void common_page::open_selected_item()

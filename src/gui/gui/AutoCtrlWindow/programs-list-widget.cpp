@@ -21,9 +21,6 @@ programs_list_widget::programs_list_widget(QWidget* parent)
     if (!std::filesystem::exists(path_))
         std::filesystem::create_directories(path_);
 
-    // setAttribute(Qt::WA_StyledBackground, true);
-    // setStyleSheet("border-radius: 20px; background-color: #ffffff");
-    //
     QFont f(QWidget::font());
     f.setPointSize(16);
 
@@ -98,6 +95,15 @@ programs_list_widget::programs_list_widget(QWidget* parent)
 // {
 //     btn_remove_->setVisible(guid != auth_user);
 // }
+
+QString programs_list_widget::current() const
+{
+    int row = local_list_->currentRow();
+    if (row < 0) return "";
+
+    QTableWidgetItem* item = local_list_->item(row, 0);
+    return item->text();
+}
 
 void programs_list_widget::make_scroll(int shift)
 {

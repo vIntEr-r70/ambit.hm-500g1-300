@@ -15,13 +15,16 @@
 #include <QGraphicsDropShadowEffect>
 #include <QTableWidget>
 
+#include <eng/log.hpp>
+
 auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
     : QWidget(parent)
+    , eng::sibus::node("auto-gui-ctl")
+    , model_(model)
 {
     QVBoxLayout *vL = new QVBoxLayout(this);
     {
         QWidget *w = new QWidget(this);
-        w->hide();
         {
             w->setObjectName("auto_ctl_header");
             w->setAttribute(Qt::WA_StyledBackground, true);
@@ -36,7 +39,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
             QHBoxLayout *hL = new QHBoxLayout(w);
             {
                 RoundButton *btn = new RoundButton(w);
-                // connect(btn, &RoundButton::clicked, [this] { emit make_start(); });
+                connect(btn, &RoundButton::clicked, [this] { make_start(); });
                 btn->setText("СТАРТ/ДАЛЕЕ");
                 btn->setBgColor("#29AC39");
                 btn->setMinimumWidth(150);
@@ -44,7 +47,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
                 hL->addWidget(btn);
 
                 btn = new RoundButton(w);
-                // connect(btn, &RoundButton::clicked, [this] { emit make_stop(); });
+                connect(btn, &RoundButton::clicked, [this] { make_stop(); });
                 btn->setText("СТОП");
                 btn->setBgColor("#E55056");
                 btn->setMinimumWidth(100);
@@ -54,9 +57,18 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
         }
         vL->addWidget(w);
 
-        vL->addWidget(new program_widget(this, model));
+        program_widget_ = new program_widget(this, model);
+        vL->addWidget(program_widget_);
     }
 
+    ctl_ = node::add_output_wire();
+    node::set_wire_response_handler(ctl_, [this](bool success, eng::abc::pack args)
+    {
+        if (success)
+            eng::log::info("CMD DONE SUCCESS");
+        else
+            eng::log::error("CMD DONE FAILED: {}", eng::abc::get_sv(args));
+    });
 
 
     // QHBoxLayout *hL = new QHBoxLayout(this);
@@ -149,27 +161,51 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
     // connect(list_dlg_, SIGNAL(makeLoadFromLocalFile(QString)), this, SLOT(on_load_local_program(QString)));
 }
 
+void auto_ctl_page::init(QString const &name)
+{
+    // program_widget_->load(name);
 
-// void AutoCtrlWidget::init()
-// {
-//     name_->set_value("");
-//     comments_->set_value("");
-//
-//     btn_edit_->setVisible(false);
-//
-//     if (model_.name().isEmpty())
-//         return;
-//
-//     if (!model_.load_from_local_file(model_.name()))
-//         return;
-//
-//     btn_edit_->setVisible(true);
-//
-//     name_->set_value(model_.name());
-//     comments_->set_value(model_.comments());
-//
-//     emit load_program();
-// }
+    model_.load_from_local_file(name);
+
+    // Передаем программу в узел автоматического режима
+    std::string base64 = model_.get_base64_program();
+    node::send_wire_signal(ctl_, { "upload-program", base64 });
+
+    // Ждем пока произойдет прием и проверка программы на корректность
+    // после чего загружаем ее себе и позволяем пользователю запустить
+    // режим на выполнение
+
+
+
+
+    // name_->set_value("");
+    // comments_->set_value("");
+
+    // btn_edit_->setVisible(false);
+
+    // if (model_.name().isEmpty())
+    //     return;
+
+    // if (!model_.load_from_local_file(model_.name()))
+    //     return;
+    //
+    // btn_edit_->setVisible(true);
+    //
+    // name_->set_value(model_.name());
+    // comments_->set_value(model_.comments());
+    //
+    // emit load_program();
+}
+
+void auto_ctl_page::make_start()
+{
+    node::send_wire_signal(ctl_, { "execute" });
+}
+
+void auto_ctl_page::make_stop()
+{
+    node::send_wire_signal(ctl_, { "stop" });
+}
 
 // void AutoCtrlWidget::set_guid(int guid)
 // {

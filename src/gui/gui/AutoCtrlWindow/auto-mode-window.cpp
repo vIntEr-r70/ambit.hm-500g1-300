@@ -27,7 +27,9 @@ auto_mode_window::auto_mode_window(QWidget *parent) noexcept
     model_ = new ProgramModel();
 
     auto w = new common_page(this);
-    connect(w, &common_page::goto_ctl_page, [this] {
+    connect(w, &common_page::goto_ctl_page, [this](QString name)
+    {
+        auto_ctl_page_->init(name);
         QStackedWidget::setCurrentWidget(auto_ctl_page_);
     });
     connect(w, &common_page::goto_editor_page, [this] {

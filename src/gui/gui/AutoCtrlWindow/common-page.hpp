@@ -2,10 +2,14 @@
 
 #include <QWidget>
 
+class programs_list_widget;
+
 class common_page final
     : public QWidget
 {
     Q_OBJECT
+
+    programs_list_widget *programs_list_widget_;
 
 public:
 
@@ -13,7 +17,7 @@ public:
 
 signals:
 
-    void goto_ctl_page();
+    void goto_ctl_page(QString);
 
     void goto_editor_page();
 

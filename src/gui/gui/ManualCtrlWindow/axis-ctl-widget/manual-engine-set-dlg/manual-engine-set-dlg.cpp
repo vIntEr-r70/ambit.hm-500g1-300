@@ -56,13 +56,13 @@ manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     owire_ = node::add_output_wire();
 
     // Успешный ответ на вызов с аргументами
-    node::set_wire_signal_done_handler(owire_, [](eng::abc::pack) {
+    node::set_wire_response_handler(owire_, [](bool success, eng::abc::pack args)
+    {
+        if (success)
+            return;
+        // Системная ошибка на вызов
+        eng::log::error("manual_engine_set_dlg: {}", eng::abc::get_sv(args));
     });
-    // Системная ошибка на вызов
-    node::set_wire_signal_failed_handler(owire_, [](std::string_view emsg) {
-        eng::log::error("manual_engine_set_dlg: {}", emsg);
-    });
-
     // Обработчик состояния связи с требуемой осью
     node::set_wire_online_handler(owire_, [this] {
         emit axis_ctl_access(true);
