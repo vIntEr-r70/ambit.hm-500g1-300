@@ -5,9 +5,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-#include "common/program.h"
-
-#include <aem/types.h>
+#include "ambit/common/program.hpp"
 
 class ProgramModel
     : public QAbstractTableModel
@@ -36,7 +34,7 @@ public:
 
     void change_main(std::size_t, std::size_t, std::size_t, float) noexcept;
 
-    void change_pause(std::size_t, aem::uint64) noexcept;
+    void change_pause(std::size_t, std::uint64_t) noexcept;
 
     void change_loop(std::size_t, std::size_t, std::size_t) noexcept;
 
@@ -50,7 +48,7 @@ public:
 
     void remove_op() noexcept;
 
-    std::size_t row() const noexcept { return current_row_; }
+    std::size_t row() const noexcept { return *current_row_; }
 
     std::string get_base64_program() const noexcept;
 
@@ -89,7 +87,7 @@ private:
     QString name_;
     QString comments_;
 
-    std::size_t current_row_{ aem::MaxSizeT };
+    std::optional<std::size_t> current_row_;
 
     std::filesystem::path path_;
 };

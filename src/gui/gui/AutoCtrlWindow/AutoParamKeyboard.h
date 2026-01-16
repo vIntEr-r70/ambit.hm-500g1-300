@@ -1,9 +1,9 @@
 #pragma once
 
 #include <InteractWidgets/InteractWidget.h>
-#include <aem/types.h>
 
-#include "common/Defs.h"
+#include <ambit/common/program.hpp>
+
 
 class QLabel;
 class QLineEdit;
@@ -18,7 +18,7 @@ class AutoParamKeyboard
     Q_OBJECT
 
     typedef std::function<void(float)> main_accept_cb_t;
-    typedef std::function<void(aem::uint64)> pause_accept_cb_t;
+    typedef std::function<void(std::uint64_t)> pause_accept_cb_t;
     typedef std::function<void(std::size_t, std::size_t)> loop_accept_cb_t;
     typedef std::function<void(float, float, float)> fc_accept_cb_t;
     typedef std::function<void(centering_type, float)> center_accept_cb_t;
@@ -33,7 +33,7 @@ public:
 
     void show_main(QString const&, QString const&, float, float, float, main_accept_cb_t &&);
 
-    void show_pause(aem::uint64, pause_accept_cb_t &&);
+    void show_pause(std::uint64_t, pause_accept_cb_t &&);
 
     void show_loop(std::size_t, std::size_t, loop_accept_cb_t &&);
 

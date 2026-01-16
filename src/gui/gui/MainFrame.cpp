@@ -64,7 +64,7 @@ MainFrame::MainFrame()
 
 // #ifndef BUILDROOT
     on_connected();
-    NavigationPanel_->switch_to("auto");
+    NavigationPanel_->switch_to("manual");
 // #endif
 
     global::subscribe("sys.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)

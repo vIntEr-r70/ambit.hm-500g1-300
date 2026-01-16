@@ -143,7 +143,7 @@ void AutoParamKeyboard::show_main(QString const& title, QString const& v, float 
     // main_page_->update_pos_value(pos);
 }
 
-void AutoParamKeyboard::show_pause(aem::uint64 msec, pause_accept_cb_t &&cb)
+void AutoParamKeyboard::show_pause(std::uint64_t msec, pause_accept_cb_t &&cb)
 {
     title_->setText("Пауза");
 
@@ -160,13 +160,13 @@ void AutoParamKeyboard::show_pause(aem::uint64 msec, pause_accept_cb_t &&cb)
     auto sec = msec / 1000;
     char buf[64];
 
-    std::snprintf(buf, sizeof(buf), "%02llu", sec / 3600);
+    std::snprintf(buf, sizeof(buf), "%02zu", sec / 3600);
     pause_page_.le[0]->setText(buf);
 
-    std::snprintf(buf, sizeof(buf), "%02llu", (sec % 3600) / 60);
+    std::snprintf(buf, sizeof(buf), "%02zu", (sec % 3600) / 60);
     pause_page_.le[1]->setText(buf);
 
-    std::snprintf(buf, sizeof(buf), "%02llu.%01llu", sec % 60, (msec % 1000) / 100);
+    std::snprintf(buf, sizeof(buf), "%02zu.%01zu", sec % 60, (msec % 1000) / 100);
     pause_page_.le[2]->setText(buf);
 
     InteractWidget::show();
@@ -513,7 +513,7 @@ void AutoParamKeyboard::main_acc_handler()
 
 void AutoParamKeyboard::pause_accept_handler()
 {
-    aem::uint64 msec = pause_page_.le[0]->text().toUInt() * 3600000;
+    std::uint64_t msec = pause_page_.le[0]->text().toUInt() * 3600000;
     msec += pause_page_.le[1]->text().toUInt() * 60000;
     msec += pause_page_.le[2]->text().toFloat() * 1000;
 

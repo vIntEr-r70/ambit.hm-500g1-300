@@ -8,6 +8,7 @@ class ModbusUnitCtrlWidget;
 class SysSetsWidget;
 class HardwareSetsWidget;
 class LimitsWidget;
+class LockCtrlWindow;
 class BkiCfgWidget;
 
 class SysCfgWindow
@@ -33,5 +34,6 @@ private:
     HardwareSetsWidget* hwSetsW_;
     LimitsWidget *fcLimitsW_;
     BkiCfgWidget *bkiCfgW_;
+    LockCtrlWindow *lock_ctl_;
 };
 

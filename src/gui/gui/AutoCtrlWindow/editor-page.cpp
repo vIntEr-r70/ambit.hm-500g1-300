@@ -93,7 +93,7 @@ void editor_page::table_cell_select(QModelIndex index)
         {
         case program::op_type::pause: {
             auto &op = model_.prog().pause_ops[rid];
-            kb_->show_pause(op.msec, [this, rid] (aem::uint64 v)
+            kb_->show_pause(op.msec, [this, rid] (std::uint64_t v)
             {
                 model_.change_pause(rid, v);
                 header_->need_save(true);

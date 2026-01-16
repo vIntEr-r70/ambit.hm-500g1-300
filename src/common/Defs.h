@@ -18,14 +18,6 @@ enum class cnc_status : std::size_t
     queue
 };
 
-enum class centering_type : aem::uint8
-{
-    not_active,
-    tooth_in,
-    tooth_out,
-    shaft
-};
-
 namespace on_off_unit
 {
     enum : std::size_t 

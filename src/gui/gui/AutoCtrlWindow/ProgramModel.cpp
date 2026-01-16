@@ -5,16 +5,19 @@
 #include <QColor>
 #include <QFile>
 
-#include <aem/utils/crc.h>
-#include <aem/utils/base64.h>
-#include <aem/log.h>
-#include <aem/environment.h>
+#include <eng/buffer.hpp>
+#include <eng/base64.hpp>
+#include <eng/log.hpp>
+#include <eng/crc.hpp>
 
 ProgramModel::ProgramModel()
     : QAbstractTableModel()
-    , path_(aem::getenv("LIAEM_RW_PATH", "./home-root"))
 {
+    char const *LIAEM_RW_PATH = std::getenv("LIAEM_RW_PATH");
+
+    path_ = LIAEM_RW_PATH ? LIAEM_RW_PATH : "./home-root";
     path_ /= "programs";
+
     reset();
 }
 
@@ -22,7 +25,7 @@ void ProgramModel::change_sprayer(std::size_t rid, std::size_t id) noexcept
 {
     auto &sprayer = program_.main_ops[rid].sprayer;
     sprayer[id] = !sprayer[id];
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_main(std::size_t ctype, std::size_t rid, std::size_t id, float value) noexcept
@@ -61,14 +64,14 @@ void ProgramModel::change_main(std::size_t ctype, std::size_t rid, std::size_t i
         return;
     }
 
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
-void ProgramModel::change_pause(std::size_t rid, aem::uint64 v) noexcept
+void ProgramModel::change_pause(std::size_t rid, std::uint64_t v) noexcept
 {
     auto &op = program_.pause_ops[rid];
     op.msec = v;
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_loop(std::size_t rid, std::size_t opid, std::size_t N) noexcept
@@ -76,7 +79,7 @@ void ProgramModel::change_loop(std::size_t rid, std::size_t opid, std::size_t N)
     auto &op = program_.loop_ops[rid];
     op.opid = opid;
     op.N = N;
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_fc(std::size_t rid, float p, float i, float sec) noexcept
@@ -85,7 +88,7 @@ void ProgramModel::change_fc(std::size_t rid, float p, float i, float sec) noexc
     op.p = p * 1000;
     op.i = i;
     op.tv = sec;
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_center(std::size_t rid, centering_type type, float shift) noexcept
@@ -93,44 +96,46 @@ void ProgramModel::change_center(std::size_t rid, centering_type type, float shi
     auto &op = program_.center_ops[rid];
     op.type = type;
     op.shift = UnitsCalc::fromPos(false, shift);
-    dataChanged(createIndex(current_row_, 0), createIndex(current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::set_current_row(std::size_t row) noexcept
 {
-    if (row == current_row_)
-    {
-        if (row == aem::MaxSizeT)
-            return;
-        row = aem::MaxSizeT;
-    }
-
-    std::size_t cc = ProgramModelHeader::column_count(program_);
-
-    if (current_row_ != aem::MaxSizeT)
-    {
-        current_row_ = aem::MaxSizeT;
-        dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
-    }
-
-    current_row_ = row;
-
-    if (current_row_ != aem::MaxSizeT)
-        dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
+    // TODO: 
+    // if (row == current_row_)
+    // {
+    //     if (row == aem::MaxSizeT)
+    //         return;
+    //     row = aem::MaxSizeT;
+    // }
+    //
+    // std::size_t cc = ProgramModelHeader::column_count(program_);
+    //
+    // if (current_row_ != aem::MaxSizeT)
+    // {
+    //     current_row_ = aem::MaxSizeT;
+    //     dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
+    // }
+    //
+    // current_row_ = row;
+    //
+    // if (current_row_ != aem::MaxSizeT)
+    //     dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
 }
 
 void ProgramModel::set_current_phase(std::size_t id) noexcept
 {
-    if (current_row_ == id)
-        current_row_ = aem::MaxSizeT;
-    set_current_row(id);
+    // TODO: 
+    // if (current_row_ == id)
+    //     current_row_ = aem::MaxSizeT;
+    // set_current_row(id);
 }
 
 // Добавляем новую операцию, если это перавая то все по дефолту, 
 // если уже есть операции то копия последней
 void ProgramModel::add_op(program::op_type type) noexcept
 {
-    std::size_t irow = (current_row_ == aem::MaxSizeT) ? program_.phases.size() : current_row_;
+    std::size_t irow = !current_row_.has_value() ? program_.phases.size() : *current_row_;
     auto rid = program_.get_rid(type, irow);
 
     if (type == program::op_type::pause)
@@ -179,7 +184,7 @@ void ProgramModel::add_op(program::op_type type) noexcept
 
 void ProgramModel::add_main_op(bool absolute) noexcept
 {
-    std::size_t irow = (current_row_ == aem::MaxSizeT) ? program_.phases.size() : current_row_;
+    std::size_t irow = !current_row_.has_value() ? program_.phases.size() : *current_row_;
     auto rid = program_.get_rid(program::op_type::main, irow);
     auto &oplist = program_.main_ops;
 
@@ -197,10 +202,10 @@ void ProgramModel::add_main_op(bool absolute) noexcept
 
 void ProgramModel::remove_op() noexcept
 {
-    if (current_row_ == aem::MaxSizeT || current_row_ >= program_.rows())
+    if (!current_row_.has_value() || *current_row_ >= program_.rows())
         return;
 
-    auto [type, rid] = program_.op_info(current_row_);
+    auto [type, rid] = program_.op_info(*current_row_);
 
     if (type == program::op_type::main)
     {
@@ -233,20 +238,20 @@ void ProgramModel::remove_op() noexcept
     }
 
     auto &plist = program_.phases;
-    plist.erase(plist.begin() + current_row_);
+    plist.erase(plist.begin() + *current_row_);
 
-    beginRemoveRows(QModelIndex(), current_row_, current_row_);
+    beginRemoveRows(QModelIndex(), *current_row_, *current_row_);
     endRemoveRows();
 
-    if (current_row_ >= program_.rows())
+    if (*current_row_ >= program_.rows())
     {
-        if (current_row_ == 0)
-            current_row_ = aem::MaxSizeT;
+        if (*current_row_ == 0)
+            current_row_.reset();
         else
-            current_row_ -= 1;
+            *current_row_ -= 1;
 
         std::size_t cc = ProgramModelHeader::column_count(program_);
-        dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
+        dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, cc - 1));
     }
 }
 
@@ -328,7 +333,7 @@ QVariant ProgramModel::data(QModelIndex const& index, int role) const
                 auto msec = program_.pause_ops.at(rid).msec;
                 auto s = msec / 1000;
                 char buf[64];
-                std::snprintf(buf, sizeof(buf), "Пауза [ %02u:%02u:%02u.%01u ]",
+                std::snprintf(buf, sizeof(buf), "Пауза [ %02zu:%02zu:%02zu.%01zu ]",
                         s / 3600, (s % 3600) / 60, s % 60, (msec % 1000) / 100);
                 return QString(buf); }
 
@@ -437,16 +442,18 @@ QString ProgramModel::data_main_op_text(std::size_t rid, std::size_t col) const
 
 std::string ProgramModel::get_base64_program() const noexcept
 {
-    aem::buffer buf;
+    eng::buffer::id_t buf = eng::buffer::create();
     program_.save(buf);
-    return aem::utils::base64::encode(buf.cbegin(), buf.size());
+    std::string result{ eng::base64::encode(eng::buffer::get_content_region(buf)) };
+    eng::buffer::destroy(buf);
+    return result;
 }
 
 void ProgramModel::reset() noexcept
 {
     name_ = "";
     comments_ = "";
-    current_row_ = aem::MaxSizeT;
+    current_row_.reset();
 
     if (program_.rows())
     {
@@ -472,11 +479,11 @@ bool ProgramModel::save_to_file() const noexcept
 
     QString fname((path_ / name_.toUtf8().constData()).c_str());
 
-    aem::buffer buf;
+    eng::buffer::id_t buf;
 
     std::string comm(comments_.toUtf8().constData());
-    buf.append<aem::uint32>(comm.length());
-    buf.append(comm);
+    eng::buffer::append<std::uint32_t>(buf, comm.length());
+    eng::buffer::append(buf, comm);
 
     program_.save(buf);
 
@@ -484,13 +491,15 @@ bool ProgramModel::save_to_file() const noexcept
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
 
-    aem::uint32 crc = aem::utils::crc::crc32(buf.begin(), buf.end());
+    auto span = eng::buffer::get_content_region(buf);
+    std::uint32_t crc = eng::crc::crc32(span.begin(), span.end());
     int ret = file.write(reinterpret_cast<char const*>(&crc), sizeof(crc));
     if (ret != sizeof(crc))
         return false;
 
-    ret = file.write(buf.c_str(), buf.size());
-    if (ret != buf.size())
+    auto content_size = eng::buffer::content_size(buf);
+    ret = file.write(eng::buffer::content_c_str(buf), content_size);
+    if (ret != content_size)
         return false;
 
     return true;
@@ -503,26 +512,30 @@ bool ProgramModel::load_from_file(QString const& fname) noexcept
         return false;
 
     QByteArray data(file.readAll());
-    if (data.size() < sizeof(aem::uint32))
+    if (data.size() < sizeof(std::uint32_t))
         return false;
 
-    aem::buffer buf;
-    buf.append(data.data(), data.size());
+    eng::buffer::id_t buf = eng::buffer::create();
+    eng::buffer::append(buf, data.data(), data.size());
 
-    aem::uint32 crc = buf.read_cast<aem::uint32>();
-    aem::uint32 fcrc = aem::utils::crc::crc32(buf.begin(), buf.end());
+    auto span = eng::buffer::get_content_region(buf);
+    std::uint32_t crc = eng::read_cast<std::uint32_t>(span);
+    std::uint32_t fcrc = eng::crc::crc32(span.begin(), span.end());
 
     if (crc != fcrc)
+    {
+        eng::buffer::destroy(buf);
         return false;
+    }
 
     reset();
 
-    aem::uint32 slen = buf.read_cast<aem::uint32>();
-    comments_ = QString(QByteArray(buf.c_str(), slen));
-    buf.drain(slen);
+    std::uint32_t slen = eng::read_cast<std::uint32_t>(span);
+    comments_ = QString(QByteArray(reinterpret_cast<char const *>(span.data()), slen));
+    span = span.subspan(slen);
 
     program tp;
-    tp.load(buf);
+    tp.load(span);
 
     if (tp.rows())
     {
@@ -539,6 +552,8 @@ bool ProgramModel::load_from_file(QString const& fname) noexcept
     //     i += 1;
     // }
 
+    eng::buffer::destroy(buf);
+
     return true;
 }
 
@@ -551,7 +566,7 @@ bool ProgramModel::load_from_local_file(QString name) noexcept
 {
     if (!load_from_file((path_ / name.toUtf8().constData()).c_str()))
     {
-        aem::log::error("ProgramModel::load_from_local_file: {}", name.toUtf8().constData());
+        eng::log::error("ProgramModel::load_from_local_file: {}", name.toUtf8().constData());
         return false;
     }
 

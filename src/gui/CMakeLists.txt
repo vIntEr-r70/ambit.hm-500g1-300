@@ -66,6 +66,7 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${Qt5Widgets_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
+    /home/alex/projects
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

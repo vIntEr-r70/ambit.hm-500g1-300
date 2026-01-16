@@ -64,11 +64,8 @@ manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
         eng::log::error("manual_engine_set_dlg: {}", eng::abc::get_sv(args));
     });
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_online_handler(owire_, [this] {
-        emit axis_ctl_access(true);
-    });
-    node::set_wire_offline_handler(owire_, [this] {
-        emit axis_ctl_access(false);
+    node::set_wire_link_handler(owire_, [this](bool linked) {
+        emit axis_ctl_access(linked);
     });
 }
 

@@ -48,7 +48,7 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
         hL = new QHBoxLayout();
         hL->setSpacing(15);
         {
-            fcCtrlW_ = new FcCtrlWidget(this, "fc", global::rpc(), global::signer());
+            fcCtrlW_ = new FcCtrlWidget(this, "fc");
             hL->addWidget(fcCtrlW_);
 
             cCfgW_ = new CenteringCfgWidget(this);
