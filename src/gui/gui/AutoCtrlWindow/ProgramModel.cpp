@@ -1,13 +1,11 @@
 #include "ProgramModel.h"
 #include "ProgramModelHeader.h"
-#include "UnitsCalc.h"
 
 #include <QColor>
 #include <QFile>
 
 #include <eng/buffer.hpp>
 #include <eng/base64.hpp>
-#include <eng/log.hpp>
 #include <eng/crc.hpp>
 
 ProgramModel::ProgramModel()
@@ -25,10 +23,10 @@ void ProgramModel::change_sprayer(std::size_t rid, std::size_t id) noexcept
 {
     auto &sprayer = program_.main_ops[rid].sprayer;
     sprayer[id] = !sprayer[id];
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
-void ProgramModel::change_main(std::size_t ctype, std::size_t rid, std::size_t id, float value) noexcept
+void ProgramModel::change_main(std::size_t ctype, std::size_t rid, std::size_t id, double value) noexcept
 {
     auto &op = program_.main_ops[rid];
 
@@ -43,35 +41,33 @@ void ProgramModel::change_main(std::size_t ctype, std::size_t rid, std::size_t i
         op.fc[id].I = value;
         break;
 
-    // Приходят в об/мин, программа хранит в рад/мин
+    // Приходят в об/мин, программа хранит в град/сек
     case ProgramModelHeader::Spin:
-        op.spin[id] = UnitsCalc::fromSpeed(true, value);
+        op.spin[id] = value * 6;
         break;
 
-    // Приходят в мм или град, программа хранит в мм или рад
+    // Приходят в мм или градусах, программа хранит в мм или градусах
     case ProgramModelHeader::TargetPos:
-        op.target.pos[id] = UnitsCalc::fromPos(program_.is_target_spin_axis(id), value);
+        op.target.pos[id] = value;
         break;
 
-    // Приходят в мм/с или об/мин, программа хранит в мм/мин или рад/мин
-    case ProgramModelHeader::TargetSpeed: {
-        op.target.set_in = static_cast<program::tspeed_t>(id);
-        bool spin = op.target.set_in == program::tspeed_t::rev_min;
-        op.target.speed = UnitsCalc::fromSpeed(spin, value);
-        break; }
+    // Приходят в мм/сек или об/мин, программа хранит в мм/cек или град/сек
+    case ProgramModelHeader::TargetSpeed:
+        op.target.speed = (id == 0) ? value : value * 6;
+        break;
 
     default:
         return;
     }
 
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_pause(std::size_t rid, std::uint64_t v) noexcept
 {
     auto &op = program_.pause_ops[rid];
     op.msec = v;
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_loop(std::size_t rid, std::size_t opid, std::size_t N) noexcept
@@ -79,7 +75,7 @@ void ProgramModel::change_loop(std::size_t rid, std::size_t opid, std::size_t N)
     auto &op = program_.loop_ops[rid];
     op.opid = opid;
     op.N = N;
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_fc(std::size_t rid, float p, float i, float sec) noexcept
@@ -88,47 +84,30 @@ void ProgramModel::change_fc(std::size_t rid, float p, float i, float sec) noexc
     op.p = p * 1000;
     op.i = i;
     op.tv = sec;
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::change_center(std::size_t rid, centering_type type, float shift) noexcept
 {
     auto &op = program_.center_ops[rid];
     op.type = type;
-    op.shift = UnitsCalc::fromPos(false, shift);
-    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, ProgramModelHeader::column_count(program_) - 1));
+    op.shift = shift;
+    dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
 void ProgramModel::set_current_row(std::size_t row) noexcept
 {
-    // TODO: 
-    // if (row == current_row_)
-    // {
-    //     if (row == aem::MaxSizeT)
-    //         return;
-    //     row = aem::MaxSizeT;
-    // }
-    //
-    // std::size_t cc = ProgramModelHeader::column_count(program_);
-    //
-    // if (current_row_ != aem::MaxSizeT)
-    // {
-    //     current_row_ = aem::MaxSizeT;
-    //     dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
-    // }
-    //
-    // current_row_ = row;
-    //
-    // if (current_row_ != aem::MaxSizeT)
-    //     dataChanged(createIndex(current_row_, 0), createIndex(current_row_, cc - 1));
-}
+    std::size_t cc = ProgramModelHeader::column_count(program_);
 
-void ProgramModel::set_current_phase(std::size_t id) noexcept
-{
-    // TODO: 
-    // if (current_row_ == id)
-    //     current_row_ = aem::MaxSizeT;
-    // set_current_row(id);
+    if (current_row_ && *current_row_ == row)
+    {
+        dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, cc - 1));
+        current_row_.reset();
+        return;
+    }
+
+    dataChanged(createIndex(row, 0), createIndex(row, cc - 1));
+    current_row_ = row;
 }
 
 // Добавляем новую операцию, если это перавая то все по дефолту, 
@@ -293,7 +272,7 @@ QVariant ProgramModel::data(QModelIndex const& index, int role) const
 
     case Qt::BackgroundRole:
         if (col == 0)
-            return (row == current_row_) ? QColor("#ffb800") : QVariant();
+            return (current_row_ && (row == *current_row_)) ? QColor("#ffb800") : QVariant();
         break;
 
     default:
@@ -306,7 +285,7 @@ QVariant ProgramModel::data(QModelIndex const& index, int role) const
         {
             switch(type)
             {
-            case program::op_type::pause: 
+            case program::op_type::pause:
                 return program_.pause_ops.at(rid).msec ? QColor("#98FB98") : QColor("#FA8072");
             case program::op_type::loop:
                 return QColor("#87CEEB");
@@ -355,7 +334,7 @@ QVariant ProgramModel::data(QModelIndex const& index, int role) const
                 if (op.type != centering_type::shaft)
                 {
                     char const* type = (op.type == centering_type::tooth_in) ? "внутреннего" : "внешнего";
-                    std::snprintf(buf, sizeof(buf), "Поиск центра %s зуба, h = %.1f", type, UnitsCalc::toPos(false, op.shift));
+                    std::snprintf(buf, sizeof(buf), "Поиск центра %s зуба, h = %.1f", type, op.shift);
                 }
                 else
                 {
@@ -405,8 +384,7 @@ bool ProgramModel::data_main_op_equal(std::size_t rid, std::size_t col) const
     case ProgramModelHeader::TargetPos:
         return (op.target.pos[id] == prev.target.pos[id]);
     case ProgramModelHeader::TargetSpeed: 
-        return (op.target.speed == prev.target.speed && 
-                op.target.set_in == prev.target.set_in); 
+        return (op.target.speed == prev.target.speed);
     }
 
     return false;
@@ -427,14 +405,13 @@ QString ProgramModel::data_main_op_text(std::size_t rid, std::size_t col) const
     case ProgramModelHeader::Sprayer:
         return QString(op.sprayer[id] ? "ВКЛ" : "ВЫКЛ");
     case ProgramModelHeader::Spin:
-        return QString::number(UnitsCalc::toSpeed(true, op.spin[id]), 'f', 2);
+        return QString::number(op.spin[id] / 6, 'f', 2);
     case ProgramModelHeader::TargetPos:
-        return QString::number(UnitsCalc::toPos(program_.is_target_spin_axis(id), op.target.pos[id]), 'f', 2);
-    case ProgramModelHeader::TargetSpeed: {
-        bool spin = op.target.set_in == program::tspeed_t::rev_min;
-        if (static_cast<program::tspeed_t>(id) == op.target.set_in)
-            return QString::number(UnitsCalc::toSpeed(spin, op.target.speed), 'f', 2);
-        return QString::number(UnitsCalc::toSpeed(!spin, op.target.speed), 'f', 2); }
+        // return QString(op.absolute ? "" : "Δ ") + QString::number(op.target.pos[id], 'f', 2);
+        return QString::number(op.target.pos[id], 'f', 2);
+    case ProgramModelHeader::TargetSpeed:
+        if (id == 0) return QString::number(op.target.speed, 'f', 2);
+        return QString::number(op.target.speed / 6, 'f', 2);
     }
 
     return "";
@@ -465,8 +442,8 @@ void ProgramModel::reset() noexcept
 
     program_.fc_count = 1;
     program_.sprayer_count = 3;
-    program_.s_axis = { 'U', 'V' };
-    program_.t_axis = { 'X', 'Y', 'Z', 'U', 'V' };
+    program_.s_axis = { 'V' };
+    program_.t_axis = { 'X', 'Y', 'Z', 'V' };
 }
 
 bool ProgramModel::save_to_file() const noexcept
@@ -479,34 +456,50 @@ bool ProgramModel::save_to_file() const noexcept
 
     QString fname((path_ / name_.toUtf8().constData()).c_str());
 
-    eng::buffer::id_t buf;
+    eng::buffer::id_t buf = eng::buffer::create();
 
     std::string comm(comments_.toUtf8().constData());
     eng::buffer::append<std::uint32_t>(buf, comm.length());
     eng::buffer::append(buf, comm);
 
+    auto span = eng::buffer::get_content_region(buf);
+
     program_.save(buf);
+
+    span = eng::buffer::get_content_region(buf);
 
     QFile file(fname);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        eng::buffer::destroy(buf);
         return false;
+    }
 
-    auto span = eng::buffer::get_content_region(buf);
+    span = eng::buffer::get_content_region(buf);
     std::uint32_t crc = eng::crc::crc32(span.begin(), span.end());
     int ret = file.write(reinterpret_cast<char const*>(&crc), sizeof(crc));
     if (ret != sizeof(crc))
+    {
+        eng::buffer::destroy(buf);
         return false;
+    }
 
     auto content_size = eng::buffer::content_size(buf);
     ret = file.write(eng::buffer::content_c_str(buf), content_size);
     if (ret != content_size)
+    {
+        eng::buffer::destroy(buf);
         return false;
+    }
 
+    eng::buffer::destroy(buf);
     return true;
 }
 
 bool ProgramModel::load_from_file(QString const& fname) noexcept
 {
+    // eng::log::info("ProgramModel::load_from_file: {}", fname.toUtf8().constData());
+
     QFile file(fname);
     if (!file.open(QIODevice::ReadOnly))
         return false;
@@ -565,10 +558,7 @@ bool ProgramModel::load_from_usb_file(QString const& fname) noexcept
 bool ProgramModel::load_from_local_file(QString name) noexcept
 {
     if (!load_from_file((path_ / name.toUtf8().constData()).c_str()))
-    {
-        eng::log::error("ProgramModel::load_from_local_file: {}", name.toUtf8().constData());
         return false;
-    }
 
     name_ = name;
 

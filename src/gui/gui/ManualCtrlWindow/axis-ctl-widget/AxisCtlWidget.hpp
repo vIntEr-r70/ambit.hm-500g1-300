@@ -11,9 +11,8 @@ class AxisCtlWidget
     : public QWidget 
 {
     QVBoxLayout* vL_;
-    std::vector<QHBoxLayout*> hL_;
 
-    std::map<char, AxisCtlItemWidget*> axis_;
+    std::unordered_map<char, AxisCtlItemWidget*> axis_;
 
     manual_engine_set_dlg *manual_engine_set_dlg_;
 
@@ -22,8 +21,6 @@ public:
     AxisCtlWidget(QWidget*) noexcept;
 
 private:
-
-    void update_axis_view(char, std::string_view);
 
     void update_axis_ctl_access(bool);
 

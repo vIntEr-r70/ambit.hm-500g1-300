@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QFontDatabase>
 #include <QScreen>
+#include <QStyleFactory>
 
 #include "gui/MainFrame.h"
 
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
     global::create();
 
     QApplication a(argc, argv);
-    a.setStyle("plastique");
+    // a.setStyle("plastique");
     a.setDoubleClickInterval(500);
 
     QCoreApplication::setOrganizationName("ambit");
@@ -27,13 +28,15 @@ int main(int argc, char *argv[])
 
     QLocale::setDefault(QLocale::C);
 
-    QFile qss("StyleSheet.qss");
-    if (qss.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QByteArray block = qss.readAll();
-        block.append('\0');
-        a.setStyleSheet(block.constData());
-    }
+    // QFile qss("StyleSheet.qss");
+    // if (qss.open(QIODevice::ReadOnly | QIODevice::Text))
+    // {
+    //     QByteArray block = qss.readAll();
+    //     block.append('\0');
+    //     a.setStyleSheet(block.constData());
+    // }
+
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     int id = QFontDatabase::addApplicationFont("Roboto-Regular.ttf");
     if (id < 0)

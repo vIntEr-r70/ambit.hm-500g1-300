@@ -40,15 +40,15 @@ common_page_header_widget::common_page_header_widget(QWidget *parent) noexcept
             hL->addStretch();
 
             RoundButton *btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { emit make_open(); });
+            connect(btn, &RoundButton::clicked, [this] { emit make_create_program(); });
             btn->setText("Создать");
             btn->setBgColor("#29AC39");
-            // btn->setMinimumWidth(150);
+            btn->setMinimumWidth(150);
             // btn_start_ = btn;
             hL->addWidget(btn);
 
             btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { emit make_open(); });
+            connect(btn, &RoundButton::clicked, [this] { emit make_edit_program(); });
             btn->setText("Изменить");
             btn->setBgColor("#29AC39");
             // btn->setMinimumWidth(150);
@@ -56,7 +56,7 @@ common_page_header_widget::common_page_header_widget(QWidget *parent) noexcept
             hL->addWidget(btn);
 
             btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { emit make_load(); });
+            connect(btn, &RoundButton::clicked, [this] { emit make_init_program(); });
             btn->setText("Загрузить");
             btn->setBgColor("#29AC39");
             // btn->setMinimumWidth(150);

@@ -32,10 +32,10 @@ editor_page_header_widget::editor_page_header_widget(QWidget *parent, ProgramMod
 
             hL->addSpacing(50);
 
-            IconButton *btn_exit_ = new IconButton(this, ":/check-mark");
-            connect(btn_exit_, &IconButton::clicked, [this] { do_exit(); });
-            btn_exit_->setBgColor("#8a8a8a");
-            hL->addWidget(btn_exit_);
+            IconButton *btn_exit = new IconButton(this, ":/check-mark");
+            connect(btn_exit, &IconButton::clicked, [this] { emit make_done();/*do_exit();*/ });
+            btn_exit->setBgColor("#8a8a8a");
+            hL->addWidget(btn_exit);
 
             btn_save_ = new IconButton(this, ":/SaveFile");
             connect(btn_save_, &IconButton::clicked, [this] { do_save();});
@@ -93,13 +93,13 @@ void editor_page_header_widget::make_table_op(TableAc ac) noexcept
     {
     case AddMainOp:
         model_.add_main_op(true);
-        return;
+        break;
     case AddRelMainOp:
         model_.add_main_op(false);
-        return;
+        break;
     case DeleteOp:
         model_.remove_op();
-        return;
+        break;
     case AddPauseOp:
         model_.add_op(program::op_type::pause);
         break;
@@ -113,35 +113,8 @@ void editor_page_header_widget::make_table_op(TableAc ac) noexcept
         model_.add_op(program::op_type::center);
         break;
     }
-}
 
-void editor_page_header_widget::edit_main_op(std::size_t id, std::size_t column)
-{
-    // model_.edit_main_op(id, column, [this](auto ptype, auto pid, nlohmann::json const&)
-    // {
-    //     
-    //
-    // });
-
-    // auto [ptype, pid] = model_.get_op_info(column);
-    // switch(ptype)
-    // {
-    // case ProgramModel::param_type_t::as_float:
-    //     break;
-    // case ProgramModel::param_type_t::as_bool:
-    //
-    //     break;
-    // }
-}
-
-void editor_page_header_widget::edit_pause_op(std::size_t)
-{
-}
-void editor_page_header_widget::edit_fc_op(std::size_t)
-{
-}
-void editor_page_header_widget::edit_loop_op(std::size_t)
-{
+    emit rows_count_changed();
 }
 
 void editor_page_header_widget::need_save(bool dirty) noexcept

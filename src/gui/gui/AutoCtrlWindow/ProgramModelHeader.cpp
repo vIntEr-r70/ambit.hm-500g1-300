@@ -107,15 +107,17 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header, i
     // Теперь вращение
     if (!p.s_axis.empty())
     {
-        header.setSpan(0, idx, 1, p.s_axis.size());
+        if (p.s_axis.size() > 1)
+            header.setSpan(0, idx, 1, p.s_axis.size());
         header.setItem(0, idx, new_item("Вращение"));
-        header.setSpan(1, idx, 1, p.s_axis.size());
+        if (p.s_axis.size() > 1)
+            header.setSpan(1, idx, 1, p.s_axis.size());
         header.setItem(1, idx, new_item("Скорость, об/мин"));
         for (std::size_t i = 0; i < p.s_axis.size(); ++i)
         {
             header.setItem(2, idx + i, new_item(QString("%1").arg(p.s_axis[i])));
-            header.setColumnWidth(idx + i, 70);
-            width -= 70;
+            header.setColumnWidth(idx + i, 140);
+            width -= 140;
         }
         idx += p.s_axis.size();
     }
@@ -132,18 +134,18 @@ void ProgramModelHeader::create_header(program const& p, QTableWidget& header, i
             bool spin = std::find(p.s_axis.begin(), p.s_axis.end(), axis) != p.s_axis.end();
             header.setSpan(1, idx + i, 2, 1);
             header.setItem(1, idx + i, new_item(QString("%1\n%2").arg(axis).arg(spin ? "град" : "мм")));
-            header.setColumnWidth(idx + i, 68);
-            width -= 68;
+            header.setColumnWidth(idx + i, 85);
+            width -= 85;
         }
         idx += p.t_axis.size();
 
         header.setSpan(1, idx, 1, 2);
         header.setItem(1, idx, new_item("Скорость"));
 
-        header.setItem(2, idx + 0, new_item("Значение"));
-        header.setColumnWidth(idx + 0, 65);
-        width -= 65;
-        header.setItem(2, idx + 1, new_item("Единицы"));
+        header.setItem(2, idx + 0, new_item("мм/сек"));
+        header.setColumnWidth(idx + 0, width / 2);
+        width -= width / 2;
+        header.setItem(2, idx + 1, new_item("об/мин"));
         header.setColumnWidth(idx + 1, width);
     }
 

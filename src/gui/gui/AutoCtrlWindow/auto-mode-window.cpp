@@ -26,21 +26,28 @@ auto_mode_window::auto_mode_window(QWidget *parent) noexcept
 {
     model_ = new ProgramModel();
 
-    auto w = new common_page(this);
-    connect(w, &common_page::goto_ctl_page, [this](QString name)
+    common_page_ = new common_page(this);
+    connect(common_page_, &common_page::goto_ctl_page, [this](QString const &name)
     {
         auto_ctl_page_->init(name);
         QStackedWidget::setCurrentWidget(auto_ctl_page_);
     });
-    connect(w, &common_page::goto_editor_page, [this] {
+    connect(common_page_, &common_page::goto_editor_page, [this](QString const &name) {
+        editor_page_->init(name);
         QStackedWidget::setCurrentWidget(editor_page_);
     });
-    QStackedWidget::addWidget(w);
+    QStackedWidget::addWidget(common_page_);
 
     auto_ctl_page_ = new auto_ctl_page(this, *model_);
+    connect(auto_ctl_page_, &auto_ctl_page::make_done, [this] {
+        QStackedWidget::setCurrentWidget(common_page_);
+    });
     QStackedWidget::addWidget(auto_ctl_page_);
 
     editor_page_ = new editor_page(this, *model_);
+    connect(editor_page_, &editor_page::make_done, [this] {
+        QStackedWidget::setCurrentWidget(common_page_);
+    });
     QStackedWidget::addWidget(editor_page_);
 
     // pTblW_ = new QTableView(this);

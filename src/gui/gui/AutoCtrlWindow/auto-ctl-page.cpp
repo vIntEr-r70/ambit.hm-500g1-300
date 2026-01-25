@@ -38,12 +38,25 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 
             QHBoxLayout *hL = new QHBoxLayout(w);
             {
+                IconButton *btn_exit = new IconButton(this, ":/check-mark");
+                connect(btn_exit, &IconButton::clicked, [this] { emit make_done(); });
+                btn_exit->setBgColor("#8a8a8a");
+                hL->addWidget(btn_exit);
+
                 RoundButton *btn = new RoundButton(w);
                 connect(btn, &RoundButton::clicked, [this] { make_start(); });
-                btn->setText("СТАРТ/ДАЛЕЕ");
+                btn->setText("СТАРТ");
                 btn->setBgColor("#29AC39");
                 btn->setMinimumWidth(150);
-                // btn_start_ = btn;
+                btn_start_ = btn;
+                hL->addWidget(btn);
+
+                btn = new RoundButton(w);
+                connect(btn, &RoundButton::clicked, [this] { make_start(); });
+                btn->setText("ДАЛЕЕ");
+                btn->setBgColor("#29AC39");
+                btn->setMinimumWidth(150);
+                btn_continue_ = btn;
                 hL->addWidget(btn);
 
                 btn = new RoundButton(w);
@@ -51,7 +64,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
                 btn->setText("СТОП");
                 btn->setBgColor("#E55056");
                 btn->setMinimumWidth(100);
-                // btn_stop_ = btn;
+                btn_stop_ = btn;
                 hL->addWidget(btn);
             }
         }
@@ -61,6 +74,10 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
         vL->addWidget(program_widget_);
     }
 
+    node::add_input_port("state", [this](eng::abc::pack args) {
+        update_ctl_state(std::move(args));
+    });
+
     ctl_ = node::add_output_wire();
     node::set_wire_response_handler(ctl_, [this](bool success, eng::abc::pack args)
     {
@@ -69,6 +86,13 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
         else
             eng::log::error("CMD DONE FAILED: {}", eng::abc::get_sv(args));
     });
+
+    node::set_wire_online_handler(ctl_, [this](bool) {
+        update_widget_view();
+    });
+
+    update_widget_view();
+
 
 
     // QHBoxLayout *hL = new QHBoxLayout(this);
@@ -163,12 +187,13 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 
 void auto_ctl_page::init(QString const &name)
 {
-    // program_widget_->load(name);
-
     model_.load_from_local_file(name);
+    program_widget_->rows_count_changed();
+
 
     // Передаем программу в узел автоматического режима
     std::string base64 = model_.get_base64_program();
+    eng::log::info("{}", base64);
     node::send_wire_signal(ctl_, { "upload-program", base64 });
 
     // Ждем пока произойдет прием и проверка программы на корректность
@@ -199,12 +224,63 @@ void auto_ctl_page::init(QString const &name)
 
 void auto_ctl_page::make_start()
 {
+    btn_start_->setEnabled(false);
     node::send_wire_signal(ctl_, { "execute" });
 }
 
 void auto_ctl_page::make_stop()
 {
     node::send_wire_signal(ctl_, { "stop" });
+}
+
+void auto_ctl_page::update_widget_view()
+{
+    if (node::is_wire_online(ctl_) && phase_id_)
+    {
+        switch(ctl_mode_)
+        {
+        case 0: // idle
+            btn_start_->show();
+            btn_stop_->hide();
+            btn_continue_->hide();
+            btn_start_->setEnabled(true);
+            break;
+        case 1: // run
+            btn_stop_->show();
+            btn_start_->hide();
+            btn_continue_->hide();
+            break;
+        case 2: // pause
+            btn_stop_->hide();
+            btn_start_->hide();
+            btn_continue_->show();
+            break;
+        }
+    }
+    else
+    {
+        btn_start_->show();
+        btn_start_->setEnabled(false);
+
+        btn_stop_->hide();
+        btn_continue_->hide();
+    }
+}
+
+void auto_ctl_page::update_ctl_state(eng::abc::pack args)
+{
+    if (!args)
+    {
+        phase_id_.reset();
+    }
+    else
+    {
+        phase_id_ = eng::abc::get<std::uint32_t>(args, 0);
+        ctl_mode_ = eng::abc::get<std::uint32_t>(args, 1);
+        model_.set_current_row(*phase_id_);
+    }
+
+    update_widget_view();
 }
 
 // void AutoCtrlWidget::set_guid(int guid)

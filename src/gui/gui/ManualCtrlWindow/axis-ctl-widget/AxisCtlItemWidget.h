@@ -4,8 +4,6 @@
 
 #include <eng/sibus/node.hpp>
 
-// #include <aem/types.h>
-
 class QLabel;
 class ValueViewReal;
 class QFrame;
@@ -18,31 +16,30 @@ class AxisCtlItemWidget
 
 public:
 
-    AxisCtlItemWidget(QWidget*, char);
+    AxisCtlItemWidget(QWidget*, char, std::string_view, bool);
 
 signals:
 
     void on_move_to_click();
 
-    void axis_view(std::string_view);
-
     void axis_speed(double);
+
+    void axis_state(double, double);
 
 public:
 
+    void execute(eng::abc::pack);
+
+public:
+
+
     QString const &name() const noexcept { return name_; }
 
-    void set_active(bool);
-
 private:
-
-    void update_name(std::string_view);
 
     void update_gui();
 
 public:
-
-    void apply_self_axis() noexcept;
 
     void nf_speed(float) noexcept;
 
@@ -74,6 +71,9 @@ private:
 
 private:
 
+    eng::sibus::output_wire_id_t octl_;
+
+    char axis_;
     QString name_;
 
     QLabel* lblHeader_;
@@ -86,6 +86,8 @@ private:
 
     float pos_{0.0f};
     float speed_{0.0f};
+
+    bool rotation_;
 
     // aem::uint8 sysMode_;
     // aem::uint8 ctlMode_;

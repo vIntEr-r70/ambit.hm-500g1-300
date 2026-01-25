@@ -45,9 +45,11 @@ private:
 
 signals:
 
-    void make_load();
+    void make_create_program();
 
-    void make_open();
+    void make_edit_program();
+
+    void make_init_program();
 
     // void make_start();
     //

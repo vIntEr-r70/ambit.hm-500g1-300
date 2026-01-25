@@ -17,13 +17,15 @@ public:
 
 signals:
 
-    void goto_ctl_page(QString);
+    void goto_ctl_page(QString const &);
 
-    void goto_editor_page();
+    void goto_editor_page(QString const &);
 
 private:
 
-    void load_selected_item();
+    void make_create_program();
 
-    void open_selected_item();
+    void make_edit_program();
+
+    void make_init_program();
 };

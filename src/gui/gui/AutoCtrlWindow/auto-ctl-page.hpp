@@ -4,7 +4,7 @@
 
 #include <eng/sibus/node.hpp>
 
-// class RoundButton;
+class RoundButton;
 // class IconButton;
 // class ProgramListDlg;
 class ProgramModel;
@@ -18,12 +18,19 @@ class auto_ctl_page final
     : public QWidget
     , public eng::sibus::node
 {
-    // Q_OBJECT
+    Q_OBJECT
 
     ProgramModel &model_;
     program_widget *program_widget_;
 
     eng::sibus::output_wire_id_t ctl_;
+
+    RoundButton *btn_start_;
+    RoundButton *btn_stop_;
+    RoundButton *btn_continue_;
+
+    std::optional<std::size_t> phase_id_;
+    std::size_t ctl_mode_{ 0 };
 
 public:
 
@@ -38,6 +45,12 @@ private:
     void make_start();
 
     void make_stop();
+
+private:
+
+    void update_widget_view();
+
+    void update_ctl_state(eng::abc::pack);
 
     // void set_current_phase(std::size_t) noexcept;
     //
@@ -59,9 +72,9 @@ private:
 //
 //     void update_ctl_buttons();
 //
-// signals:
-//
-//     void make_edit();
+signals:
+
+    void make_done();
 //
 //     void make_start();
 //
@@ -81,9 +94,6 @@ private:
     // IconButton *btn_load_;
     // IconButton *btn_edit_;
     // IconButton *btn_new_;
-    //
-    // RoundButton *btn_start_;
-    // RoundButton *btn_stop_;
     //
     // // ProgramListDlg *list_dlg_;
     //

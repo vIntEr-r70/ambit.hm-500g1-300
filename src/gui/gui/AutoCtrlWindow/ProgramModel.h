@@ -26,13 +26,15 @@ public:
 
     program const& prog() const noexcept { return program_; }
 
-    void set_current_row(std::size_t) noexcept;
+    void set_edited_row(std::size_t row) noexcept {
+        edited_row_ = row;
+    }
 
-    void set_current_phase(std::size_t) noexcept;
+    void set_current_row(std::size_t) noexcept;
 
     void change_sprayer(std::size_t, std::size_t) noexcept;
 
-    void change_main(std::size_t, std::size_t, std::size_t, float) noexcept;
+    void change_main(std::size_t, std::size_t, std::size_t, double) noexcept;
 
     void change_pause(std::size_t, std::uint64_t) noexcept;
 
@@ -87,6 +89,7 @@ private:
     QString name_;
     QString comments_;
 
+    std::size_t edited_row_{ 0 };
     std::optional<std::size_t> current_row_;
 
     std::filesystem::path path_;

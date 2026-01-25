@@ -62,10 +62,13 @@ MainFrame::MainFrame()
         on_connected();
     };
 
-// #ifndef BUILDROOT
     on_connected();
+
+#ifdef BUILDROOT
     NavigationPanel_->switch_to("manual");
-// #endif
+#else
+    NavigationPanel_->switch_to("auto");
+#endif
 
     global::subscribe("sys.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
     {

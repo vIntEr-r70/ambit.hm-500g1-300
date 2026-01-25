@@ -57,6 +57,8 @@ programs_list_widget::programs_list_widget(QWidget* parent)
             local_list_->horizontalHeader()->setStretchLastSection(true);
             hL->addWidget(local_list_);
 
+            hL->addSpacing(5);
+
             hL->addWidget(vs);
         }
         vL->addLayout(hL);
@@ -136,7 +138,8 @@ void programs_list_widget::showEvent(QShowEvent *)
     local_list_->setRowCount(files.size());
     for (std::size_t i = 0; i < files.size(); ++i)
     {
-        local_list_->setItem(i, 0, new QTableWidgetItem(files[i].first.c_str()));
+        QString fname(QString::fromLocal8Bit(files[i].first.c_str()));
+        local_list_->setItem(i, 0, new QTableWidgetItem(fname));
         local_list_->setItem(i, 1, new QTableWidgetItem(files[i].second.c_str()));
     }
 }

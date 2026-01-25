@@ -9,6 +9,8 @@
 #include <QHeaderView>
 #include <QScrollBar>
 
+#include <eng/log.hpp>
+
 program_widget::program_widget(QWidget *parent, ProgramModel &model)
     : QWidget(parent)
     , model_(model)
@@ -27,6 +29,7 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
             thead_->setSelectionMode(QAbstractItemView::NoSelection);
             thead_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
             thead_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            thead_->setFixedHeight(75 + 7);
             vL->addWidget(thead_);
 
             tbody_ = new QTableView(this);
@@ -48,23 +51,37 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
         }
         hL->addLayout(vL);
 
+        hL->addSpacing(5);
+
         vscroll_ = new VerticalScroll(this);
         connect(vscroll_, &VerticalScroll::move, [this](int shift) { make_scroll(shift); });
         hL->addWidget(vscroll_);
     }
 }
 
-void program_widget::resizeEvent(QResizeEvent *)
+void program_widget::rows_count_changed()
 {
+    // Это заставляем таблицу пересчитать размер полосы прокрутки
+    tbody_->setVerticalScrollMode(QAbstractItemView::ScrollPerItem);
+    tbody_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
     vscroll_->setVisible(tbody_->verticalScrollBar()->maximum() > 0);
 
     int ww = width() - (vscroll_->isVisible() ? vscroll_->width() : 0);
-    thead_->setFixedSize(QSize(ww, 75 + 7));
 
     ProgramModelHeader::create_header(model_.prog(), *thead_, ww);
     for (std::size_t i = 0; i < thead_->columnCount(); ++i)
         tbody_->setColumnWidth(i, thead_->columnWidth(i));
+}
 
+void program_widget::resizeEvent(QResizeEvent *)
+{
+    rows_count_changed();
+}
+
+void program_widget::showEvent(QShowEvent *)
+{
+    rows_count_changed();
 }
 
 void program_widget::make_scroll(int shift)
@@ -74,7 +91,3 @@ void program_widget::make_scroll(int shift)
     bar->setSliderPosition(pos + shift);
 }
 
-void program_widget::load(QString const &name)
-{
-    model_.load_from_local_file(name);
-}

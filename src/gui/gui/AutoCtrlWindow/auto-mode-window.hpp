@@ -13,12 +13,14 @@ class ProgramModel;
 
 class auto_ctl_page;
 class editor_page;
+class common_page;
 
 class auto_mode_window final
     : public QStackedWidget
 {
     ProgramModel *model_;
 
+    common_page *common_page_;
     auto_ctl_page *auto_ctl_page_;
     editor_page *editor_page_;
 

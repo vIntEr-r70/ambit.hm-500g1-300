@@ -10,6 +10,7 @@ class InteractWidget;
 class ValueSetReal;
 class RoundButton;
 class QTabWidget;
+class QLabel;
 
 class axis_ctl_widget final
     : public QWidget
@@ -26,9 +27,15 @@ class axis_ctl_widget final
     struct axis_t
     {
         int irow{ -1 };
+        double max_speed{ 0.0 };
         double speed{ 0.0 };
+        double position{ 0.0 };
     };
     std::unordered_map<char, axis_t> axis_;
+
+    QLabel *lbl_axis_position_;
+    QLabel *lbl_axis_speed_;
+    QLabel *lbl_axis_max_speed_;
 
 public:
 
@@ -38,13 +45,17 @@ public:
 
     void set_axis(char, std::string_view);
 
-    void set_axis_speed(char, double);
+    void set_axis_max_speed(char, double);
 
     void select_axis(char);
+
+    void set_axis_state(char, double, double);
 
 private:
 
     char get_selected_axis() const;
+
+    void update_axis_info(char);
 
 private slots:
 
@@ -52,5 +63,5 @@ private slots:
 
 signals:
 
-    void axis_command(eng::abc::pack);
+    void axis_command(char, eng::abc::pack);
 };

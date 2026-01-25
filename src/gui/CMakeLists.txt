@@ -85,5 +85,6 @@ target_compile_features(${PROJECT_NAME} PRIVATE
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-deprecated-declarations
+    -Wno-template-id-cdtor
 )
 

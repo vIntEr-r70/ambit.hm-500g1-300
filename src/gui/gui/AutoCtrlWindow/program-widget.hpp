@@ -25,11 +25,13 @@ public:
 
     QTableView* tbody() { return tbody_; }
 
-    void load(QString const &);
+    void rows_count_changed();
 
 private:
 
     void resizeEvent(QResizeEvent *) override final;
+
+    void showEvent(QShowEvent *) override final;
 
 private:
 

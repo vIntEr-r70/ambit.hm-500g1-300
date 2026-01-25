@@ -53,16 +53,22 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
         QVBoxLayout *vL = new QVBoxLayout();
         {
             QGridLayout *gL = new QGridLayout();
+            gL->setVerticalSpacing(5);
             {
                 gL->addWidget(new QLabel("Текущая позиция:", this), 0, 0);
                 gL->addWidget(new QLabel("Текущая скорость:", this), 1, 0);
                 gL->addWidget(new QLabel("Максимальная cкорость:", this), 2, 0);
 
-                gL->addWidget(new QLabel("100", this), 0, 1);
-                gL->addWidget(new QLabel("200", this), 1, 1);
-                gL->addWidget(new QLabel("300", this), 2, 1);
+                lbl_axis_position_ = new QLabel("- - -", this);
+                gL->addWidget(lbl_axis_position_, 0, 1);
+                lbl_axis_speed_ = new QLabel("- - -", this);
+                gL->addWidget(lbl_axis_speed_, 1, 1);
+                lbl_axis_max_speed_ = new QLabel("- - -", this);
+                gL->addWidget(lbl_axis_max_speed_, 2, 1);
             }
             vL->addLayout(gL);
+
+            vL->addStretch();
 
             tab_ = new QTabWidget(this);
             QFont f(font());
@@ -91,7 +97,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             {
                                 auto axis = get_selected_axis();
                                 auto pos = vsr_abs_value_->value();
-                                emit axis_command({ axis, "move-to", pos, axis_[axis].speed });
+                                emit axis_command(axis, { "move-to", pos, axis_[axis].max_speed });
                             });
                             btn->setText("▶");
                             btn->setBgColor(QColor("#29AC39"));
@@ -103,7 +109,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             connect(btn, &RoundButton::clicked, [this]
                             {
                                 auto axis = get_selected_axis();
-                                emit axis_command({ axis, "stop" });
+                                emit axis_command(axis, { "stop" });
                             });
                             btn->setText("⏹");
                             btn->setBgColor(QColor("#29AC39"));
@@ -137,7 +143,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             {
                                 auto axis = get_selected_axis();
                                 auto pos = vsr_dx_value_->value();
-                                emit axis_command({ axis, "shift", pos, axis_[axis].speed });
+                                emit axis_command(axis, { "shift", pos, axis_[axis].max_speed });
                             });
                             btn->setText("▶");
                             btn->setBgColor(QColor("#29AC39"));
@@ -149,7 +155,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             connect(btn, &RoundButton::clicked, [this]
                             {
                                 auto axis = get_selected_axis();
-                                emit axis_command({ axis, "stop" });
+                                emit axis_command(axis, { "stop" });
                             });
                             btn->setText("⏹");
                             btn->setBgColor(QColor("#29AC39"));
@@ -170,7 +176,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         connect(btn, &RoundButton::clicked, [this]
                         {
                             auto axis = get_selected_axis();
-                            emit axis_command({ axis, "spin", -axis_[axis].speed });
+                            emit axis_command(axis, { "spin", -axis_[axis].max_speed });
                         });
                         btn->setText("↩");
                         btn->setBgColor(QColor("#29AC39"));
@@ -182,7 +188,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         connect(btn, &RoundButton::clicked, [this]
                         {
                             auto axis = get_selected_axis();
-                            emit axis_command({ axis, "stop" });
+                            emit axis_command(axis, { "stop" });
                         });
                         btn->setText("⏹");
                         btn->setBgColor(QColor("#29AC39"));
@@ -194,7 +200,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                         connect(btn, &RoundButton::clicked, [this]
                         {
                             auto axis = get_selected_axis();
-                            emit axis_command({ axis, "spin", axis_[axis].speed });
+                            emit axis_command(axis, { "spin", axis_[axis].max_speed });
                         });
                         btn->setText("↪");
                         btn->setBgColor(QColor("#29AC39"));
@@ -236,9 +242,17 @@ void axis_ctl_widget::select_axis(char axis)
     axis_table_->selectRow(axis_[axis].irow);
 }
 
-void axis_ctl_widget::set_axis_speed(char axis, double value)
+void axis_ctl_widget::set_axis_max_speed(char axis, double value)
 {
-    axis_[axis].speed = value;
+    axis_[axis].max_speed = value;
+    update_axis_info(axis);
+}
+
+void axis_ctl_widget::set_axis_state(char axis, double position, double speed)
+{
+    axis_[axis].speed = speed;
+    axis_[axis].position = position;
+    update_axis_info(axis);
 }
 
 char axis_ctl_widget::get_selected_axis() const
@@ -259,6 +273,8 @@ void axis_ctl_widget::on_axis_selected(QTableWidgetItem *current, QTableWidgetIt
         tab_->setTabVisible(0, true);
         tab_->setTabVisible(1, true);
         tab_->setTabVisible(2, true);
+
+        update_axis_info(axis);
     }
     else
     {
@@ -266,5 +282,16 @@ void axis_ctl_widget::on_axis_selected(QTableWidgetItem *current, QTableWidgetIt
         tab_->setTabVisible(1, false);
         tab_->setTabVisible(2, false);
     }
+}
+
+void axis_ctl_widget::update_axis_info(char axis)
+{
+    if (axis != get_selected_axis())
+        return;
+    auto const &info = axis_[axis];
+    lbl_axis_position_->setText(QString::number(info.position, 'f', 2));
+    lbl_axis_speed_->setText(QString::number(info.speed, 'f', 2));
+    lbl_axis_max_speed_->setText(QString::number(info.max_speed, 'f', 2));
+
 }
 

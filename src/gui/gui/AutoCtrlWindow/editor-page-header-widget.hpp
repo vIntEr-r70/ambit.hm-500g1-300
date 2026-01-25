@@ -39,15 +39,7 @@ signals:
 
     void make_done();
 
-private:
-
-    void edit_main_op(std::size_t, std::size_t);
-
-    void edit_pause_op(std::size_t);
-
-    void edit_fc_op(std::size_t);
-
-    void edit_loop_op(std::size_t);
+    void rows_count_changed();
 
 private:
 

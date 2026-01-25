@@ -17,7 +17,7 @@
 
 manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     : InteractWidget(parent)
-    , eng::sibus::node("axis-gui-ctl")
+    // , eng::sibus::node("axis-gui-ctl")
 {
     setObjectName("manual_engine_set_dlg");
     setAttribute(Qt::WA_StyledBackground, true);
@@ -30,12 +30,13 @@ manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     {
         axis_ctl_ = new axis_ctl_widget(this);
         connect(axis_ctl_, &axis_ctl_widget::axis_command,
-            [this](eng::abc::pack args) {
-                node::send_wire_signal(owire_, std::move(args));
+            [this](char axis, eng::abc::pack args) {
+                emit axis_command(axis, std::move(args));
             });
         vL->addWidget(axis_ctl_);
 
         QHBoxLayout *hL = new QHBoxLayout();
+        vL->setContentsMargins(10, 10, 10, 10);
         {
             RoundButton *btn = new RoundButton(this);
             connect(btn, &RoundButton::clicked, [this]
@@ -53,28 +54,28 @@ manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     }
 
     // Канал для управления драйверами
-    owire_ = node::add_output_wire();
+    // owire_ = node::add_output_wire();
 
     // Успешный ответ на вызов с аргументами
-    node::set_wire_response_handler(owire_, [](bool success, eng::abc::pack args)
-    {
-        if (success)
-            return;
-        // Системная ошибка на вызов
-        eng::log::error("manual_engine_set_dlg: {}", eng::abc::get_sv(args));
-    });
-    // Обработчик состояния связи с требуемой осью
-    node::set_wire_link_handler(owire_, [this](bool linked) {
-        emit axis_ctl_access(linked);
-    });
+    // node::set_wire_response_handler(owire_, [](bool success, eng::abc::pack args)
+    // {
+    //     if (success)
+    //         return;
+    //     // Системная ошибка на вызов
+    //     eng::log::error("manual_engine_set_dlg: {}", eng::abc::get_sv(args));
+    // });
+    // // Обработчик состояния связи с требуемой осью
+    // node::set_wire_link_handler(owire_, [this](bool linked) {
+    //     emit axis_ctl_access(linked);
+    // });
 }
 
-void manual_engine_set_dlg::register_on_bus_done()
-{
-    node::wire_activate(owire_);
-}
+// void manual_engine_set_dlg::register_on_bus_done()
+// {
+//     node::wire_activate(owire_);
+// }
 
-void manual_engine_set_dlg::set_axis(char axis, std::string_view name)
+void manual_engine_set_dlg::add_axis(char axis, std::string_view name, bool rotation)
 {
     axis_ctl_->set_axis(axis, name);
 }
@@ -85,8 +86,12 @@ void manual_engine_set_dlg::select_axis(char axis)
     Interact::dialog(this);
 }
 
-void manual_engine_set_dlg::set_axis_speed(char axis, double value)
+void manual_engine_set_dlg::set_axis_max_speed(char axis, double value)
 {
-    axis_ctl_->set_axis_speed(axis, value);
+    axis_ctl_->set_axis_max_speed(axis, value);
 }
 
+void manual_engine_set_dlg::set_axis_state(char axis, double position, double speed)
+{
+    axis_ctl_->set_axis_state(axis, position, speed);
+}

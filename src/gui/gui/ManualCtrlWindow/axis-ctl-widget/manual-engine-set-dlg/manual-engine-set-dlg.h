@@ -2,7 +2,7 @@
 
 #include <InteractWidgets/InteractWidget.h>
 
-#include <eng/sibus/node.hpp>
+#include <eng/abc/pack.hpp>
 
 class QLabel;
 class QLineEdit;
@@ -13,13 +13,10 @@ class axis_ctl_widget;
 
 class manual_engine_set_dlg
     : public InteractWidget 
-    , public eng::sibus::node
 {
     Q_OBJECT
 
     axis_ctl_widget *axis_ctl_;
-
-    eng::sibus::output_wire_id_t owire_;
 
 public:
 
@@ -27,19 +24,21 @@ public:
 
 public:
 
-    void set_axis(char, std::string_view);
+    void add_axis(char, std::string_view, bool);
 
-    void set_axis_speed(char, double);
+    void set_axis_max_speed(char, double);
+
+    void set_axis_state(char, double, double);
 
     void select_axis(char);
 
 signals:
 
-    void axis_ctl_access(bool);
+    void axis_command(char, eng::abc::pack);
 
-private:
-
-    void register_on_bus_done() override final;
+// private:
+//
+//     void register_on_bus_done() override final;
 };
 
 

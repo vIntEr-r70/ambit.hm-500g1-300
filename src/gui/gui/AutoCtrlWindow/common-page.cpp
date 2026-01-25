@@ -11,12 +11,14 @@ common_page::common_page(QWidget *parent)
     QVBoxLayout *vL = new QVBoxLayout(this);
     {
         auto w = new common_page_header_widget(this);
-        connect(w, &common_page_header_widget::make_load, [this] {
-            load_selected_item();
-        });
-        connect(w, &common_page_header_widget::make_open, [this] {
-            open_selected_item();
-        });
+
+        connect(w, &common_page_header_widget::make_create_program,
+                [this] { make_create_program(); });
+        connect(w, &common_page_header_widget::make_edit_program,
+                [this] { make_edit_program(); });
+        connect(w, &common_page_header_widget::make_init_program,
+                [this] { make_init_program(); });
+
         w->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         vL->addWidget(w);
 
@@ -36,16 +38,23 @@ common_page::common_page(QWidget *parent)
     }
 }
 
-void common_page::load_selected_item()
+void common_page::make_create_program()
 {
-    // Берем текущую выбранную в списке программу
+    emit goto_editor_page("");
+}
+
+void common_page::make_edit_program()
+{
+    QString name = programs_list_widget_->current();
+    if (!name.isEmpty())
+        emit goto_editor_page(name);
+}
+
+// Открываем программу для исполнения
+void common_page::make_init_program()
+{
     QString name = programs_list_widget_->current();
     if (!name.isEmpty())
         emit goto_ctl_page(name);
-}
-
-void common_page::open_selected_item()
-{
-    emit goto_editor_page();
 }
 
