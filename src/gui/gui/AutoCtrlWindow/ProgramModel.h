@@ -50,7 +50,7 @@ public:
 
     void remove_op() noexcept;
 
-    std::size_t row() const noexcept { return *current_row_; }
+    std::size_t last_insert_row() const noexcept;
 
     std::string get_base64_program() const noexcept;
 

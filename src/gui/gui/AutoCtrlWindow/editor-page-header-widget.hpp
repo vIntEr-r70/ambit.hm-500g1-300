@@ -39,7 +39,7 @@ signals:
 
     void make_done();
 
-    void rows_count_changed();
+    void rows_count_changed(bool);
 
 private:
 

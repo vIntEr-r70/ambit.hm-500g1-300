@@ -1,4 +1,5 @@
 #include "AxisCtlItemWidget.h"
+#include "eng/sibus/sibus.hpp"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -93,27 +94,33 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     });
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_online_handler(octl_, [this](bool online)
+    node::set_wire_status_handler(octl_, [this](eng::sibus::wire_status)
     {
-        active_ = online;
+        active_ = node::is_wire_usable(octl_);
         update_gui();
     });
 
-    node::add_input_port("axis",
+    node::add_input_port("position",
         [this](eng::abc::pack const &args)
         {
-            double position = eng::abc::get<double>(args, 0);
-            double speed = eng::abc::get<double>(args, 1);
+            double position = eng::abc::get<double>(args);
             vvr_pos_->set_value(position);
-            emit axis_state(position, speed);
+            emit axis_position(position);
         });
 
-    node::add_input_port("speed",
+    node::add_input_port("real-speed",
+        [this](eng::abc::pack const &args)
+        {
+            double speed = eng::abc::get<double>(args);
+            emit axis_real_speed(speed);
+        });
+
+    node::add_input_port("set-speed",
         [this](eng::abc::pack const &args)
         {
             double speed = eng::abc::get<double>(args, 0);
             vvr_speed_->set_value(speed);
-            emit axis_speed(speed);
+            emit axis_set_speed(speed);
         });
 
     update_gui();

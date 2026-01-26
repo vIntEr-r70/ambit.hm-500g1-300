@@ -59,7 +59,29 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
     }
 }
 
-void program_widget::rows_count_changed()
+void program_widget::rows_count_changed(bool all)
+{
+    if (all)
+    {
+        std::size_t i = 0;
+        for (auto const& type : model_.prog().phases)
+        {
+            if (type != program::op_type::main)
+                tbody_->setSpan(i, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
+            i += 1;
+        }
+    }
+    else
+    {
+        std::size_t irow = model_.last_insert_row(); 
+        if (model_.prog().phases[irow] != program::op_type::main)
+            tbody_->setSpan(irow, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
+    }
+
+    update_view();
+}
+
+void program_widget::update_view()
 {
     // Это заставляем таблицу пересчитать размер полосы прокрутки
     tbody_->setVerticalScrollMode(QAbstractItemView::ScrollPerItem);
@@ -69,19 +91,19 @@ void program_widget::rows_count_changed()
 
     int ww = width() - (vscroll_->isVisible() ? vscroll_->width() : 0);
 
-    ProgramModelHeader::create_header(model_.prog(), *thead_, ww);
+    ProgramModelHeader::create_header(model_.prog(), *thead_, ww - 7);
     for (std::size_t i = 0; i < thead_->columnCount(); ++i)
         tbody_->setColumnWidth(i, thead_->columnWidth(i));
 }
 
 void program_widget::resizeEvent(QResizeEvent *)
 {
-    rows_count_changed();
+    update_view();
 }
 
 void program_widget::showEvent(QShowEvent *)
 {
-    rows_count_changed();
+    update_view();
 }
 
 void program_widget::make_scroll(int shift)

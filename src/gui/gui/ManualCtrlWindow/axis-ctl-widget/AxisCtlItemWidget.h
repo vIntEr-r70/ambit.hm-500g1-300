@@ -22,9 +22,11 @@ signals:
 
     void on_move_to_click();
 
-    void axis_speed(double);
+    void axis_set_speed(double);
 
-    void axis_state(double, double);
+    void axis_real_speed(double);
+
+    void axis_position(double);
 
 public:
 

@@ -64,12 +64,17 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
             connect(w, &AxisCtlItemWidget::on_move_to_click,
                     [this, axis] { show_axis_move_dlg(axis); });
 
-            connect(w, &AxisCtlItemWidget::axis_state,
-                    [this, axis](double position, double speed) {
-                        manual_engine_set_dlg_->set_axis_state(axis, position, speed);
+            connect(w, &AxisCtlItemWidget::axis_real_speed,
+                    [this, axis](double speed) {
+                        manual_engine_set_dlg_->set_axis_real_speed(axis, speed);
                     });
 
-            connect(w, &AxisCtlItemWidget::axis_speed,
+            connect(w, &AxisCtlItemWidget::axis_position,
+                    [this, axis](double position) {
+                        manual_engine_set_dlg_->set_axis_position(axis, position);
+                    });
+
+            connect(w, &AxisCtlItemWidget::axis_set_speed,
                     [this, axis](double value) {
                         manual_engine_set_dlg_->set_axis_max_speed(axis, value);
                     });

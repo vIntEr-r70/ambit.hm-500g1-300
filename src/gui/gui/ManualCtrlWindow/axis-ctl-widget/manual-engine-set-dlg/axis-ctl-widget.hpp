@@ -49,7 +49,9 @@ public:
 
     void select_axis(char);
 
-    void set_axis_state(char, double, double);
+    void set_axis_real_speed(char, double);
+
+    void set_axis_position(char, double);
 
 private:
 

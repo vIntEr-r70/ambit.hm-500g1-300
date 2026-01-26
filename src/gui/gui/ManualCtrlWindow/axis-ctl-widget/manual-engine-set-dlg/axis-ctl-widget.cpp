@@ -248,10 +248,15 @@ void axis_ctl_widget::set_axis_max_speed(char axis, double value)
     update_axis_info(axis);
 }
 
-void axis_ctl_widget::set_axis_state(char axis, double position, double speed)
+void axis_ctl_widget::set_axis_position(char axis, double position)
+{
+    axis_[axis].position = position;
+    update_axis_info(axis);
+}
+
+void axis_ctl_widget::set_axis_real_speed(char axis, double speed)
 {
     axis_[axis].speed = speed;
-    axis_[axis].position = position;
     update_axis_info(axis);
 }
 

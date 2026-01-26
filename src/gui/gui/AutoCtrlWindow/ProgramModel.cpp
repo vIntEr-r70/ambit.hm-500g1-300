@@ -110,7 +110,15 @@ void ProgramModel::set_current_row(std::size_t row) noexcept
     current_row_ = row;
 }
 
-// Добавляем новую операцию, если это перавая то все по дефолту, 
+std::size_t ProgramModel::last_insert_row() const noexcept
+{
+    if (current_row_.has_value())
+        return *current_row_;
+    else
+        return program_.phases.size() - 1;
+}
+
+// Добавляем новую операцию, если это перавая то все по дефолту,
 // если уже есть операции то копия последней
 void ProgramModel::add_op(program::op_type type) noexcept
 {
@@ -157,8 +165,6 @@ void ProgramModel::add_op(program::op_type type) noexcept
     beginInsertRows(QModelIndex(), irow, irow);
     program_.phases.insert(program_.phases.begin() + irow, type);
     endInsertRows();
-
-    // table_.setSpan(irow, 1, 1, ProgramModelHeader::column_count(program_) - 1);
 }
 
 void ProgramModel::add_main_op(bool absolute) noexcept
@@ -498,8 +504,6 @@ bool ProgramModel::save_to_file() const noexcept
 
 bool ProgramModel::load_from_file(QString const& fname) noexcept
 {
-    // eng::log::info("ProgramModel::load_from_file: {}", fname.toUtf8().constData());
-
     QFile file(fname);
     if (!file.open(QIODevice::ReadOnly))
         return false;
@@ -536,14 +540,6 @@ bool ProgramModel::load_from_file(QString const& fname) noexcept
         program_ = std::move(tp);
         endInsertRows();
     }
-
-    // std::size_t i = 0;
-    // for (auto const& type : program_.phases)
-    // {
-    //     if (type != program::op_type::main)
-    //         table_.setSpan(i, 1, 1, ProgramModelHeader::column_count(program_) - 1);
-    //     i += 1;
-    // }
 
     eng::buffer::destroy(buf);
 

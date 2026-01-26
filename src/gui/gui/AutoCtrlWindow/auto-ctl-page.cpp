@@ -7,6 +7,7 @@
 #include <Widgets/VerticalScroll.h>
 
 #include "ProgramModel.h"
+#include "eng/sibus/sibus.hpp"
 #include "program-widget.hpp"
 
 #include <QVBoxLayout>
@@ -74,8 +75,9 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
         vL->addWidget(program_widget_);
     }
 
-    node::add_input_port("state", [this](eng::abc::pack args) {
-        update_ctl_state(std::move(args));
+    node::add_input_port_v2("phase-id", [this](eng::abc::pack args)
+    {
+        update_phase_id(std::move(args));
     });
 
     ctl_ = node::add_output_wire();
@@ -87,7 +89,8 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
             eng::log::error("CMD DONE FAILED: {}", eng::abc::get_sv(args));
     });
 
-    node::set_wire_online_handler(ctl_, [this](bool) {
+    node::set_wire_status_handler(ctl_, [this](eng::sibus::wire_status)
+    {
         update_widget_view();
     });
 
@@ -188,13 +191,15 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 void auto_ctl_page::init(QString const &name)
 {
     model_.load_from_local_file(name);
-    program_widget_->rows_count_changed();
-
+    program_widget_->rows_count_changed(true);
 
     // Передаем программу в узел автоматического режима
     std::string base64 = model_.get_base64_program();
     eng::log::info("{}", base64);
     node::send_wire_signal(ctl_, { "upload-program", base64 });
+
+    if (phase_id_.has_value())
+        model_.set_current_row(*phase_id_);
 
     // Ждем пока произойдет прием и проверка программы на корректность
     // после чего загружаем ее себе и позволяем пользователю запустить
@@ -225,49 +230,63 @@ void auto_ctl_page::init(QString const &name)
 void auto_ctl_page::make_start()
 {
     btn_start_->setEnabled(false);
-    node::send_wire_signal(ctl_, { "execute" });
+    node::activate(ctl_, { });
 }
 
 void auto_ctl_page::make_stop()
 {
-    node::send_wire_signal(ctl_, { "stop" });
+    node::deactivate(ctl_);
 }
 
 void auto_ctl_page::update_widget_view()
 {
-    if (node::is_wire_online(ctl_) && phase_id_)
+    eng::log::info("auto_ctl_page::update_widget_view: ws = {}",
+            static_cast<std::uint8_t>(node::wire(ctl_)));
+
+    btn_stop_->hide();
+    btn_start_->hide();
+    btn_continue_->hide();
+
+    if (node::is_wire_usable(ctl_))
     {
-        switch(ctl_mode_)
-        {
-        case 0: // idle
-            btn_start_->show();
-            btn_stop_->hide();
-            btn_continue_->hide();
-            btn_start_->setEnabled(true);
-            break;
-        case 1: // run
-            btn_stop_->show();
-            btn_start_->hide();
-            btn_continue_->hide();
-            break;
-        case 2: // pause
-            btn_stop_->hide();
-            btn_start_->hide();
-            btn_continue_->show();
-            break;
-        }
+        btn_start_->show();
+        btn_start_->setEnabled(phase_id_.has_value());
+    }
+    else if (node::wire(ctl_) == eng::sibus::wire_status::active)
+    {
+        btn_stop_->show();
     }
     else
     {
         btn_start_->show();
         btn_start_->setEnabled(false);
-
-        btn_stop_->hide();
-        btn_continue_->hide();
     }
+
+    //
+    // if ( && )
+    // {
+    //     switch(ctl_mode_)
+    //     {
+    //     case 0: // idle
+    //         break;
+    //     case 1: // run
+    //         break;
+    //     case 2: // pause
+    //         btn_stop_->hide();
+    //         btn_start_->hide();
+    //         btn_continue_->show();
+    //         break;
+    //     }
+    // }
+    // else
+    // {
+    //
+    //     btn_stop_->hide();
+    //     btn_continue_->hide();
+    // }
 }
 
-void auto_ctl_page::update_ctl_state(eng::abc::pack args)
+void auto_ctl_page::update_phase_id(eng::abc::pack args)
 {
     if (!args)
     {
@@ -276,7 +295,8 @@ void auto_ctl_page::update_ctl_state(eng::abc::pack args)
     else
     {
         phase_id_ = eng::abc::get<std::uint32_t>(args, 0);
-        ctl_mode_ = eng::abc::get<std::uint32_t>(args, 1);
+        execution_error_ = eng::abc::get<bool>(args, 1);
+        // ctl_mode_ = eng::abc::get<std::uint32_t>(args, 1);
         model_.set_current_row(*phase_id_);
     }
 

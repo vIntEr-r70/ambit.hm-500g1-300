@@ -114,7 +114,7 @@ void editor_page_header_widget::make_table_op(TableAc ac) noexcept
         break;
     }
 
-    emit rows_count_changed();
+    emit rows_count_changed(false);
 }
 
 void editor_page_header_widget::need_save(bool dirty) noexcept

@@ -30,6 +30,8 @@ class auto_ctl_page final
     RoundButton *btn_continue_;
 
     std::optional<std::size_t> phase_id_;
+    bool execution_error_;
+
     std::size_t ctl_mode_{ 0 };
 
 public:
@@ -50,7 +52,7 @@ private:
 
     void update_widget_view();
 
-    void update_ctl_state(eng::abc::pack);
+    void update_phase_id(eng::abc::pack);
 
     // void set_current_phase(std::size_t) noexcept;
     //

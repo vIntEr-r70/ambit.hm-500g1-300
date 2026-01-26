@@ -25,7 +25,7 @@ public:
 
     QTableView* tbody() { return tbody_; }
 
-    void rows_count_changed();
+    void rows_count_changed(bool);
 
 private:
 
@@ -34,6 +34,8 @@ private:
     void showEvent(QShowEvent *) override final;
 
 private:
+
+    void update_view();
 
     void make_scroll(int);
 };

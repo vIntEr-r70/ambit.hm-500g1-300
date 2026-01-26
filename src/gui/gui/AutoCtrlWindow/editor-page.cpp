@@ -20,8 +20,8 @@ editor_page::editor_page(QWidget *parent, ProgramModel &model)
         connect(header_, &editor_page_header_widget::make_done, [this] {
             emit make_done();
         });
-        connect(header_, &editor_page_header_widget::rows_count_changed, [this] {
-            program_widget_->rows_count_changed();
+        connect(header_, &editor_page_header_widget::rows_count_changed, [this](bool all) {
+            program_widget_->rows_count_changed(all);
         });
         vL->addWidget(header_);
 
@@ -41,6 +41,8 @@ void editor_page::init(QString const &name)
         model_.reset();
     else
         model_.load_from_local_file(name);
+
+    program_widget_->rows_count_changed(true);
 }
 
 void editor_page::table_cell_select(QModelIndex index)
