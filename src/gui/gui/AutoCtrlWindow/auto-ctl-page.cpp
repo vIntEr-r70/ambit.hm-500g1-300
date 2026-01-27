@@ -250,7 +250,7 @@ void auto_ctl_page::update_widget_view()
     if (node::is_wire_usable(ctl_))
     {
         btn_start_->show();
-        btn_start_->setEnabled(phase_id_.has_value());
+        btn_start_->setEnabled(true);
     }
     else if (node::wire(ctl_) == eng::sibus::wire_status::active)
     {
