@@ -7,40 +7,27 @@
 
 #include "gui/MainFrame.h"
 
-#include <global.h>
-
-#include <aem/log.h>
-
 #include <eng/eng.hpp>
 #include <eng/timer.hpp>
 #include <eng/sibus/client.hpp>
+#include <eng/log.hpp>
 
 int main(int argc, char *argv[])
 {
-    global::create();
-
     QApplication a(argc, argv);
-    // a.setStyle("plastique");
+    a.setStyle("plastique");
     a.setDoubleClickInterval(500);
-
-    QCoreApplication::setOrganizationName("ambit");
-    QCoreApplication::setApplicationName("cnc-ctrl");
 
     QLocale::setDefault(QLocale::C);
 
-    // QFile qss("StyleSheet.qss");
-    // if (qss.open(QIODevice::ReadOnly | QIODevice::Text))
-    // {
-    //     QByteArray block = qss.readAll();
-    //     block.append('\0');
-    //     a.setStyleSheet(block.constData());
-    // }
+    QCoreApplication::setOrganizationName("ambit");
+    QCoreApplication::setApplicationName("cnc-ctrl");
 
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     int id = QFontDatabase::addApplicationFont("Roboto-Regular.ttf");
     if (id < 0)
-        aem::log::error("Не удалось загрузить шрифт....");
+        eng::log::error("Не удалось загрузить шрифт....");
     else
         QApplication::setFont(QFontDatabase::applicationFontFamilies(id).at(0));
 
@@ -64,10 +51,6 @@ int main(int argc, char *argv[])
         if (!w->isHidden())
             return;
 
-        // Закрываем соединение с агентом
-        global::rpc().close();
-        global::nf().close();
-
         eng::timer::kill_timer(timer_id);
 
         eng::sibus::client::destroy();
@@ -77,7 +60,6 @@ int main(int argc, char *argv[])
 
     // Вызываем деструкторы окон
     delete w;
-    global::destroy();
 
     return result;
 }

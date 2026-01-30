@@ -1,4 +1,9 @@
 #include "ManualCtrlWindow.h"
+#include "axis-ctl-widget/AxisCtlWidget.hpp"
+#include "SprayerCtrlWidget.h"
+#include "CenteringCfgWidget.h"
+
+#include <FcCtrlWidget/FcCtrlWidget.h>
 
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -6,22 +11,8 @@
 #include <QLabel>
 #include <QPixmapCache>
 
-#include "axis-ctl-widget/AxisCtlWidget.hpp"
-
-#include "SprayerCtrlWidget.h"
-#include "CenteringCfgWidget.h"
-
-#include <FcCtrlWidget/FcCtrlWidget.h>
-
-#include <axis-cfg.h>
-#include <global.h>
-
-#include <aem/log.h>
-
-ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg) noexcept
+ManualCtrlWindow::ManualCtrlWindow(QWidget *parent) noexcept
     : QWidget(parent) 
-    , rpc_(global::rpc())
-    , axis_cfg_(axis_cfg)
 {
     QVBoxLayout* vL = new QVBoxLayout(this);
     vL->setContentsMargins(10, 10, 10, 10);
@@ -81,11 +72,11 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent, we::axis_cfg const &axis_cfg
     //     }
     // });
 
-    global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
-    {
-        bool bki_allow = value.get<bool>();
-        cCfgW_->setEnabled(bki_allow);
-    });
+    // global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
+    // {
+    //     bool bki_allow = value.get<bool>();
+    //     cCfgW_->setEnabled(bki_allow);
+    // });
 }
 
 void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
@@ -114,24 +105,24 @@ void ManualCtrlWindow::nf_sys_centering_step(int v) noexcept
 
 void ManualCtrlWindow::onDoCalibrate(char axisId) noexcept
 {
-    rpc_.call("set", { "cnc", "axis-calibrate", { axisId } })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("ManualCtrlWindow::onDoCalibrate: {}", emsg);
-        });
+    // rpc_.call("set", { "cnc", "axis-calibrate", { axisId } })
+    //     .error([this](std::string_view emsg)
+    //     {
+    //         aem::log::error("ManualCtrlWindow::onDoCalibrate: {}", emsg);
+    //     });
 }
 
 void ManualCtrlWindow::engineMakeAsZero(char axisId)
 {
-    rpc_.call("set", { "cnc", "axis-init-zero", { axisId } })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("ManualCtrlWindow::onMakeZero: {}", emsg);
-        });
+    // rpc_.call("set", { "cnc", "axis-init-zero", { axisId } })
+    //     .error([this](std::string_view emsg)
+    //     {
+    //         aem::log::error("ManualCtrlWindow::onMakeZero: {}", emsg);
+    //     });
 }
 
 void ManualCtrlWindow::engineApplyNewPos(char axisId, float pos)
 {
-    rpc_.call("set", { "cnc", "axis-move-to", { axisId, pos } });
+    // rpc_.call("set", { "cnc", "axis-move-to", { axisId, pos } });
 }
 

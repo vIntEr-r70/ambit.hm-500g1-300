@@ -12,7 +12,7 @@ class LockCtrlWindow;
 class BkiCfgWidget;
 
 class SysCfgWindow
-    : public QWidget 
+    : public QWidget
 {
 public:
 

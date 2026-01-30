@@ -5,7 +5,7 @@
 #include <filesystem>
 
 class QTableWidget;
-// class RoundButton;
+class MessageBox;
 
 class programs_list_widget final
     : public QWidget
@@ -15,6 +15,8 @@ class programs_list_widget final
     QTableWidget *local_list_;
     std::filesystem::path path_;
 
+    MessageBox *question_msg_box_;
+
 public:
 
     programs_list_widget(QWidget *);
@@ -23,35 +25,22 @@ public:
 
     QString current() const;
 
+    void remove_selected();
+
+signals:
+
+    void row_changed();
+
 private:
 
     void showEvent(QShowEvent *) override final;
 
-// public:
-//
-//     void show();
-//
-//     void set_guid(int);
-
-// signals:
-//
-//     void makeLoadFromLocalFile(QString);
-
-private slots:
-
-    void onSelectInLocal(QModelIndex);
+    void on_row_changed(int);
 
 private:
 
     void make_scroll(int);
 
     void make_load_file();
-
-//     void make_delete_file();
-
-// private:
-
-//
-//     RoundButton *btn_remove_;
 };
 

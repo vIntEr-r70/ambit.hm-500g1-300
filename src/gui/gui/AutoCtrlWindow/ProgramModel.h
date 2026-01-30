@@ -16,6 +16,10 @@ public:
 
 public:
 
+    static bool load_program_comments(QString, QString &) noexcept;
+
+public:
+
     bool save_to_file() const noexcept;
 
     bool load_from_local_file(QString) noexcept;
@@ -30,7 +34,11 @@ public:
         edited_row_ = row;
     }
 
+    void clear_current_row();
+
     void set_current_row(std::size_t) noexcept;
+
+    void set_current_phase(std::size_t) noexcept;
 
     void change_sprayer(std::size_t, std::size_t) noexcept;
 

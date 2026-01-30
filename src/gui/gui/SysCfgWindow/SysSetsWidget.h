@@ -2,8 +2,6 @@
 
 #include <QWidget>
 
-#include "func-map.h"
-
 class QLabel;
 class ValueSetString;
 class ValueSetInt;
@@ -56,8 +54,6 @@ private:
     void makeApplyUnitId();
 
 private:
-
-    func_multi_map sys_key_map_;
 
     QLabel *cn_optime_;
     QLabel *fc_optime_;

@@ -71,9 +71,9 @@ void program_widget::rows_count_changed(bool all)
             i += 1;
         }
     }
-    else
+    else if (!model_.prog().phases.empty())
     {
-        std::size_t irow = model_.last_insert_row(); 
+        std::size_t irow = model_.last_insert_row();
         if (model_.prog().phases[irow] != program::op_type::main)
             tbody_->setSpan(irow, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
     }
@@ -103,6 +103,14 @@ void program_widget::resizeEvent(QResizeEvent *)
 
 void program_widget::showEvent(QShowEvent *)
 {
+    std::size_t i = 0;
+    for (auto const& type : model_.prog().phases)
+    {
+        if (type != program::op_type::main)
+            tbody_->setSpan(i, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
+        i += 1;
+    }
+
     update_view();
 }
 

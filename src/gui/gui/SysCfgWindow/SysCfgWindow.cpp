@@ -14,10 +14,6 @@
 #include "SysSetsWidget.h"
 #include "BkiCfgWidget.h"
 
-#include <defs.h>
-
-#include <global.h>
-
 SysCfgWindow::SysCfgWindow(QWidget *parent)
     : QWidget(parent)
 {
@@ -32,7 +28,7 @@ SysCfgWindow::SysCfgWindow(QWidget *parent)
     layout->addWidget(tab_);
 
     axisSettingsW_ = new AxisSettingsWidget(this);
-    modbusCtrlW_ = new ModbusUnitCtrlWidget(this, global::rpc(), global::signer());
+    // modbusCtrlW_ = new ModbusUnitCtrlWidget(this, global::rpc(), global::signer());
     sysSetsW_ = new SysSetsWidget(this);
     hwSetsW_ = new HardwareSetsWidget(this);
     fcLimitsW_ = new LimitsWidget(this, "fc");
@@ -42,7 +38,7 @@ SysCfgWindow::SysCfgWindow(QWidget *parent)
     tab_->addTab(sysSetsW_, "Система");
     tab_->addTab(axisSettingsW_, "Настройки ШД");
     tab_->addTab(hwSetsW_, "Hardware");
-    tab_->addTab(modbusCtrlW_, "Регистры");
+    // tab_->addTab(modbusCtrlW_, "Регистры");
     tab_->addTab(fcLimitsW_, "Тоководы");
     tab_->addTab(lock_ctl_, "Блокировки");
     tab_->addTab(bkiCfgW_, "БКИ");
@@ -58,22 +54,22 @@ void SysCfgWindow::set_guid(int guid)
     tab_->setTabVisible(tab_->indexOf(sysSetsW_), false);
     tab_->setTabVisible(tab_->indexOf(fcLimitsW_), false);
     tab_->setTabVisible(tab_->indexOf(hwSetsW_), false);
-    tab_->setTabVisible(tab_->indexOf(modbusCtrlW_), false);
+    // tab_->setTabVisible(tab_->indexOf(modbusCtrlW_), false);
     tab_->setTabVisible(tab_->indexOf(bkiCfgW_), false);
 
-    switch(guid)
-    {
-    case auth_manufacturer:
-        tab_->setTabVisible(tab_->indexOf(hwSetsW_), true);
-        tab_->setTabVisible(tab_->indexOf(modbusCtrlW_), true);
-        tab_->setTabVisible(tab_->indexOf(bkiCfgW_), true);
-    case auth_engineer:
-        tab_->setTabVisible(tab_->indexOf(axisSettingsW_), true);
-        tab_->setTabVisible(tab_->indexOf(sysSetsW_), true);
-        tab_->setTabVisible(tab_->indexOf(fcLimitsW_), true);
-    case auth_user:
-        break;
-    }
+    // switch(guid)
+    // {
+    // case auth_manufacturer:
+    //     tab_->setTabVisible(tab_->indexOf(hwSetsW_), true);
+    //     tab_->setTabVisible(tab_->indexOf(modbusCtrlW_), true);
+    //     tab_->setTabVisible(tab_->indexOf(bkiCfgW_), true);
+    // case auth_engineer:
+    //     tab_->setTabVisible(tab_->indexOf(axisSettingsW_), true);
+    //     tab_->setTabVisible(tab_->indexOf(sysSetsW_), true);
+    //     tab_->setTabVisible(tab_->indexOf(fcLimitsW_), true);
+    // case auth_user:
+    //     break;
+    // }
 }
 
 bool SysCfgWindow::have_tabs() const

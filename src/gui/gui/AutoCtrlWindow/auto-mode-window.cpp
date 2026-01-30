@@ -36,11 +36,18 @@ auto_mode_window::auto_mode_window(QWidget *parent) noexcept
         editor_page_->init(name);
         QStackedWidget::setCurrentWidget(editor_page_);
     });
+    // connect(common_page_, &common_page::program_changed, [this](QString const &name) {
+    //     editor_page_->init(name);
+    //     QStackedWidget::setCurrentWidget(editor_page_);
+    // });
     QStackedWidget::addWidget(common_page_);
 
     auto_ctl_page_ = new auto_ctl_page(this, *model_);
     connect(auto_ctl_page_, &auto_ctl_page::make_done, [this] {
         QStackedWidget::setCurrentWidget(common_page_);
+    });
+    connect(auto_ctl_page_, &auto_ctl_page::make_edit, [this] {
+        QStackedWidget::setCurrentWidget(editor_page_);
     });
     QStackedWidget::addWidget(auto_ctl_page_);
 

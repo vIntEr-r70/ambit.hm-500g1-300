@@ -320,16 +320,6 @@ QWidget* AutoParamKeyboard::create_main_page()
     {
         QVBoxLayout *vL = new QVBoxLayout(w);
         {
-            QHBoxLayout *hL = new QHBoxLayout();
-            {
-                hL->addStretch();
-
-                auto vsb = new ValueSetBool(w);
-                vsb->setValueView("Относительно", "Абсолютно");
-                hL->addWidget(vsb);
-            }
-            vL->addLayout(hL);
-
             main_page_.le = create_line_edit(w);
             main_page_.le->setValidator(main_page_.validator);
             vL->addWidget(main_page_.le);

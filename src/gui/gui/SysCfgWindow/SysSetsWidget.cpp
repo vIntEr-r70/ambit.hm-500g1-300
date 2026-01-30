@@ -9,10 +9,7 @@
 #include <Widgets/ValueSetString.h>
 #include <Widgets/ValueSetInt.h>
 
-#include <aem/log.h>
-
-#include <defs.h>
-#include <global.h>
+#include <eng/log.hpp>
 
 SysSetsWidget::SysSetsWidget(QWidget* parent) noexcept
     : QWidget(parent)
@@ -125,14 +122,14 @@ SysSetsWidget::SysSetsWidget(QWidget* parent) noexcept
         vL->addLayout(hL);
     }
 
-    sys_key_map_.add("cn", this, &SysSetsWidget::nf_sys_optime_cn);
-    sys_key_map_.add("fc", this, &SysSetsWidget::nf_sys_optime_fc);
-
-    global::subscribe("sys.optime.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
-    {
-        std::string_view kparam = keys[0].get<std::string_view>();
-        sys_key_map_.apply(kparam, value);
-    });
+    // sys_key_map_.add("cn", this, &SysSetsWidget::nf_sys_optime_cn);
+    // sys_key_map_.add("fc", this, &SysSetsWidget::nf_sys_optime_fc);
+    //
+    // global::subscribe("sys.optime.{}", [this](nlohmann::json::array_t const& keys, nlohmann::json const& value)
+    // {
+    //     std::string_view kparam = keys[0].get<std::string_view>();
+    //     sys_key_map_.apply(kparam, value);
+    // });
 }
 
 void SysSetsWidget::nf_sys_optime_fc(std::size_t sec) {
@@ -145,8 +142,8 @@ void SysSetsWidget::nf_sys_optime_cn(std::size_t sec) {
 
 void SysSetsWidget::set_guid(int guid)
 {
-    vss_unit_name_->setReadOnly(guid != auth_manufacturer);
-    vss_unit_sid_->setReadOnly(guid != auth_manufacturer);
+    // vss_unit_name_->setReadOnly(guid != auth_manufacturer);
+    // vss_unit_sid_->setReadOnly(guid != auth_manufacturer);
 }
 
 void SysSetsWidget::initNotify()
@@ -187,7 +184,7 @@ void SysSetsWidget::on_value_changed()
             vsi_year_->value(), vsi_month_->value(), vsi_day_->value(), 
             vsi_hour_->value(), vsi_mins_->value());
 
-    aem::log::warn("Системное время: {}", buf);
+    eng::log::warn("Системное время: {}", buf);
 
 #ifdef BULDROOT
     std::system(buf);

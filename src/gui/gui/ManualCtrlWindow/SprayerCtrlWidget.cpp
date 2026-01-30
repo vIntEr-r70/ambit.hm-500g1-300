@@ -4,12 +4,8 @@
 #include <QGraphicsDropShadowEffect>
 #include <QVBoxLayout>
 
-#include <global.h>
-
 #include <Widgets/ValueViewReal.h>
 #include <Widgets/ValueSetBool.h>
-
-#include <aem/log.h>
 
 SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QString const& title, bool fc, bool dp)
     : QWidget(parent)
@@ -73,23 +69,23 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QS
         vL->addLayout(hL);
     }
 
-    if (dp) 
-    {
-        global::subscribe(fmt::format("{}.DP", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-            if (vvr_dp_) vvr_dp_->setJsonValue(value);
-        });
-    }
-
-    if (fc) 
-    {
-        global::subscribe(fmt::format("{}.FC", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-            if (vvr_fc_) vvr_fc_->setJsonValue(value);
-        });
-    }
-
-    global::subscribe(fmt::format("{}.V", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-        vsb_->setJsonValue(value);
-    });
+    // if (dp) 
+    // {
+    //     global::subscribe(fmt::format("{}.DP", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
+    //         if (vvr_dp_) vvr_dp_->setJsonValue(value);
+    //     });
+    // }
+    //
+    // if (fc) 
+    // {
+    //     global::subscribe(fmt::format("{}.FC", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
+    //         if (vvr_fc_) vvr_fc_->setJsonValue(value);
+    //     });
+    // }
+    //
+    // global::subscribe(fmt::format("{}.V", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
+    //     vsb_->setJsonValue(value);
+    // });
 }
 
 void SprayerCtrlWidget::nf_sys_mode(unsigned char v) noexcept
@@ -102,10 +98,10 @@ void SprayerCtrlWidget::nf_sys_mode(unsigned char v) noexcept
 
 void SprayerCtrlWidget::change_state() noexcept
 {
-    if (vsb_->value())
-        global::rpc().call("start", { sid_ });
-    else
-        global::rpc().call("stop", { sid_ });
+    // if (vsb_->value())
+    //     global::rpc().call("start", { sid_ });
+    // else
+    //     global::rpc().call("stop", { sid_ });
 }
 
 void SprayerCtrlWidget::updateGui()
@@ -113,3 +109,4 @@ void SprayerCtrlWidget::updateGui()
     bool allow = (mode_ == Core::SysMode::Manual);
     vsb_->setEnabled(allow);
 }
+

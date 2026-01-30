@@ -2,11 +2,6 @@
 
 #include <QWidget>
 
-#include "func-map.h"
-#include <axis-cfg.h>
-
-#include <aem/types.h>
-
 class BkiLockMessage;
 class EmgStopMessage;
 class NavigationPanel;
@@ -26,15 +21,15 @@ public:
 
 public:
 
-    void nf_sys_mode(aem::uint8) noexcept;
+    void nf_sys_mode(std::uint8_t) noexcept;
 
-    void nf_sys_ctrl(aem::uint8) noexcept;
+    void nf_sys_ctrl(std::uint8_t) noexcept;
 
     void nf_sys_bki_lock(bool) noexcept;
 
     void nf_sys_emg_stop(bool) noexcept;
 
-    void nf_sys_locker(aem::uint8) noexcept;
+    void nf_sys_locker(std::uint8_t) noexcept;
 
 private slots:
 
@@ -48,16 +43,11 @@ private:
 
     void keyPressEvent(QKeyEvent*) noexcept override final;
 
-    void mousePressEvent(QMouseEvent*) override final;
-
 private:
 
     NavigationPanel *NavigationPanel_;
     SysCfgWindow *sys_cfg_window_;
     auto_mode_window *auto_mode_window_;
-
-    func_multi_map sys_key_map_;
-    we::axis_cfg axis_cfg_;
 
     BkiLockMessage *bki_lock_msg_;
     bool bki_lock_flag_{ false };

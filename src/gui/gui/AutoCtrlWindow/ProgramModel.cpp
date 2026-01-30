@@ -95,6 +95,17 @@ void ProgramModel::change_center(std::size_t rid, centering_type type, float shi
     dataChanged(createIndex(edited_row_, 0), createIndex(edited_row_, ProgramModelHeader::column_count(program_) - 1));
 }
 
+void ProgramModel::clear_current_row()
+{
+    if (!current_row_.has_value())
+        return;
+
+    std::size_t cc = ProgramModelHeader::column_count(program_);
+
+    dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, cc - 1));
+    current_row_.reset();
+}
+
 void ProgramModel::set_current_row(std::size_t row) noexcept
 {
     std::size_t cc = ProgramModelHeader::column_count(program_);
@@ -106,6 +117,13 @@ void ProgramModel::set_current_row(std::size_t row) noexcept
         return;
     }
 
+    dataChanged(createIndex(row, 0), createIndex(row, cc - 1));
+    current_row_ = row;
+}
+
+void ProgramModel::set_current_phase(std::size_t row) noexcept
+{
+    std::size_t cc = ProgramModelHeader::column_count(program_);
     dataChanged(createIndex(row, 0), createIndex(row, cc - 1));
     current_row_ = row;
 }
@@ -231,9 +249,14 @@ void ProgramModel::remove_op() noexcept
     if (*current_row_ >= program_.rows())
     {
         if (*current_row_ == 0)
+        {
             current_row_.reset();
+            return;
+        }
         else
+        {
             *current_row_ -= 1;
+        }
 
         std::size_t cc = ProgramModelHeader::column_count(program_);
         dataChanged(createIndex(*current_row_, 0), createIndex(*current_row_, cc - 1));
@@ -267,13 +290,11 @@ QVariant ProgramModel::data(QModelIndex const& index, int role) const
 
     case Qt::DisplayRole:
         if (col == 0)
-        {
-            QString result = QString::number(row + 1);
-            if (program_.phases[row] == program::op_type::main)
-                if (!program_.main_ops.at(rid).absolute)
-                    result = "Δ" + result;
-            return result;
-        }
+#ifdef BUILDROOT
+            return QString::number(row + 1);
+#else
+            return QString::number(row);
+#endif
         break;
 
     case Qt::BackgroundRole:
@@ -413,8 +434,7 @@ QString ProgramModel::data_main_op_text(std::size_t rid, std::size_t col) const
     case ProgramModelHeader::Spin:
         return QString::number(op.spin[id] / 6, 'f', 2);
     case ProgramModelHeader::TargetPos:
-        // return QString(op.absolute ? "" : "Δ ") + QString::number(op.target.pos[id], 'f', 2);
-        return QString::number(op.target.pos[id], 'f', 2);
+        return QString(op.absolute ? "" : "Δ ") + QString::number(op.target.pos[id], 'f', 2);
     case ProgramModelHeader::TargetSpeed:
         if (id == 0) return QString::number(op.target.speed, 'f', 2);
         return QString::number(op.target.speed / 6, 'f', 2);
@@ -499,6 +519,37 @@ bool ProgramModel::save_to_file() const noexcept
     }
 
     eng::buffer::destroy(buf);
+    return true;
+}
+
+bool ProgramModel::load_program_comments(QString fname, QString &comments) noexcept
+{
+    QFile file(fname);
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray data(file.readAll());
+    if (data.size() < sizeof(std::uint32_t))
+        return false;
+
+    eng::buffer::id_t buf = eng::buffer::create();
+    eng::buffer::append(buf, data.data(), data.size());
+
+    auto span = eng::buffer::get_content_region(buf);
+    std::uint32_t crc = eng::read_cast<std::uint32_t>(span);
+    std::uint32_t fcrc = eng::crc::crc32(span.begin(), span.end());
+
+    if (crc != fcrc)
+    {
+        eng::buffer::destroy(buf);
+        return false;
+    }
+
+    std::uint32_t slen = eng::read_cast<std::uint32_t>(span);
+    comments = QString(QByteArray(reinterpret_cast<char const *>(span.data()), slen));
+
+    eng::buffer::destroy(buf);
+
     return true;
 }
 

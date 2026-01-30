@@ -31,8 +31,6 @@ public:
 
 public:
 
-    void init();
-
     void need_save(bool) noexcept;
 
 signals:
@@ -48,6 +46,10 @@ private:
     void do_exit() noexcept;
 
     void do_save() noexcept;
+
+private:
+
+    void showEvent(QShowEvent *) override final;
 
 private:
 

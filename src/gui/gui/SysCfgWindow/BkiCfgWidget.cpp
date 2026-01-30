@@ -5,13 +5,8 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
-#include <defs.h>
-
-#include "global.h"
-
 BkiCfgWidget::BkiCfgWidget(QWidget *parent)
     : QWidget(parent)
-    , rpc_(global::rpc())
 {
     QHBoxLayout* hL = new QHBoxLayout(this);
     hL->setContentsMargins(20, 20, 20, 20);
@@ -57,13 +52,13 @@ BkiCfgWidget::BkiCfgWidget(QWidget *parent)
         hL->addStretch();
     }
 
-    global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
-    {
-        vsb_->setJsonValue(value);
-    });
+    // global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
+    // {
+    //     vsb_->setJsonValue(value);
+    // });
 }
 
 void BkiCfgWidget::on_bki_status()
 {
-    rpc_.call("set", { "bki", "allow", vsb_->value() });
+    // rpc_.call("set", { "bki", "allow", vsb_->value() });
 }

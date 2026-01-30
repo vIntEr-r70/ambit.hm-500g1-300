@@ -24,6 +24,10 @@ public:
 
     editor_page(QWidget *, ProgramModel &);
 
+signals:
+
+    void make_done();
+
 public:
 
     void init(QString const &);
@@ -31,8 +35,4 @@ public:
 private:
 
     void table_cell_select(QModelIndex);
-
-signals:
-
-    void make_done();
 };

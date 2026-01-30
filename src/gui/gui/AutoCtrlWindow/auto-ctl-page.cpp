@@ -27,9 +27,9 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
     {
         QWidget *w = new QWidget(this);
         {
-            w->setObjectName("auto_ctl_header");
+            w->setObjectName("auto_ctl_page");
             w->setAttribute(Qt::WA_StyledBackground, true);
-            w->setStyleSheet("QWidget#auto_ctl_header { border-radius: 20px; background-color: white; }");
+            w->setStyleSheet("QWidget#auto_ctl_page { border-radius: 20px; background-color: white; }");
 
             QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(w);
             effect->setOffset(0, 0);
@@ -43,6 +43,11 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
                 connect(btn_exit, &IconButton::clicked, [this] { emit make_done(); });
                 btn_exit->setBgColor("#8a8a8a");
                 hL->addWidget(btn_exit);
+
+                IconButton *btn_edit = new IconButton(this, ":/EditFile");
+                connect(btn_edit, &IconButton::clicked, [this] { go_to_editor(); });
+                btn_edit->setBgColor("#8a8a8a");
+                hL->addWidget(btn_edit);
 
                 RoundButton *btn = new RoundButton(w);
                 connect(btn, &RoundButton::clicked, [this] { make_start(); });
@@ -188,6 +193,12 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
     // connect(list_dlg_, SIGNAL(makeLoadFromLocalFile(QString)), this, SLOT(on_load_local_program(QString)));
 }
 
+void auto_ctl_page::go_to_editor()
+{
+    model_.clear_current_row();
+    emit make_edit();
+}
+
 void auto_ctl_page::init(QString const &name)
 {
     model_.load_from_local_file(name);
@@ -290,14 +301,17 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
 {
     if (!args)
     {
+        eng::log::info("{}: phase-id = {}", name(), "NULL");
         phase_id_.reset();
     }
     else
     {
         phase_id_ = eng::abc::get<std::uint32_t>(args, 0);
+        eng::log::info("{}: phase-id = {}", name(), phase_id_.value());
+
         execution_error_ = eng::abc::get<bool>(args, 1);
         // ctl_mode_ = eng::abc::get<std::uint32_t>(args, 1);
-        model_.set_current_row(*phase_id_);
+        model_.set_current_phase(*phase_id_);
     }
 
     update_widget_view();

@@ -2,18 +2,9 @@
 
 #include <QWidget>
 
-#include <aem/net/rpc_tcp_client.h>
-
-class QVBoxLayout;
-class QHBoxLayout;
-
 class FcCtrlWidget;
 class CenteringCfgWidget;
 class SprayerCtrlWidget;
-
-namespace we {
-    class axis_cfg;
-}
 
 class ManualCtrlWindow
     : public QWidget 
@@ -22,19 +13,11 @@ class ManualCtrlWindow
 
 public:
 
-    ManualCtrlWindow(QWidget*, we::axis_cfg const &) noexcept;
+    ManualCtrlWindow(QWidget*) noexcept;
 
 public:
 
-    // void apply_axis_cfg() noexcept;
-
-    // void nf_sys_error(unsigned int) noexcept;
-
     void nf_sys_mode(unsigned char) noexcept;
-
-    // void nf_sys_ctrl(unsigned char) noexcept;
-
-    // void nf_sys_ctrl_mode_axis(char) noexcept;
 
     void nf_sys_calibrate(char) noexcept;
 
@@ -55,10 +38,6 @@ private slots:
     void onDoCalibrate(char) noexcept;
 
 private:
-
-    aem::net::rpc_tcp_client &rpc_;
-
-    we::axis_cfg const &axis_cfg_;
 
     FcCtrlWidget* fcCtrlW_;
     CenteringCfgWidget *cCfgW_;

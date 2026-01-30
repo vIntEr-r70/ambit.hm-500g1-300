@@ -25,6 +25,8 @@ editor_page::editor_page(QWidget *parent, ProgramModel &model)
         });
         vL->addWidget(header_);
 
+        vL->addSpacing(20);
+
         program_widget_ = new program_widget(this, model);
         connect(program_widget_->tbody(), &QTableView::pressed, [this](QModelIndex index) {
             table_cell_select(index);
@@ -74,6 +76,12 @@ void editor_page::table_cell_select(QModelIndex index)
         double max = 0;
 
         QString v = index.data().toString();
+        if (ctype == ProgramModelHeader::TargetPos)
+        {
+            auto vl = v.split(' ');
+            if (!vl.empty()) v = vl.back();
+        }
+
         QString title = ProgramModelHeader::title(model_.prog(), ctype, id);
 
         // Если это позиционная координата

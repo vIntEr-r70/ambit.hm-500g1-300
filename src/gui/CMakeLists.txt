@@ -45,7 +45,6 @@ add_executable(${PROJECT_NAME}
 
     gui/SysCfgWindow/SysCfgWindow.cpp
     gui/SysCfgWindow/SysSetsWidget.cpp
-    gui/SysCfgWindow/EngineSignalsWidget.cpp
     gui/SysCfgWindow/BkiCfgWidget.cpp
 
     gui/ArcsWindow/BaseArcsLoader.cpp
