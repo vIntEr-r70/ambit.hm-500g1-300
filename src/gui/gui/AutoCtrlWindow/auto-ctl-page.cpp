@@ -94,8 +94,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
             eng::log::error("CMD DONE FAILED: {}", eng::abc::get_sv(args));
     });
 
-    node::set_wire_status_handler(ctl_, [this](eng::sibus::wire_status)
-    {
+    node::set_wire_status_handler(ctl_, [this] {
         update_widget_view();
     });
 
@@ -251,19 +250,16 @@ void auto_ctl_page::make_stop()
 
 void auto_ctl_page::update_widget_view()
 {
-    eng::log::info("auto_ctl_page::update_widget_view: ws = {}",
-            static_cast<std::uint8_t>(node::wire(ctl_)));
-
     btn_stop_->hide();
     btn_start_->hide();
     btn_continue_->hide();
 
-    if (node::is_wire_usable(ctl_))
+    if (node::is_ready(ctl_) && !node::is_transiting(ctl_))
     {
         btn_start_->show();
         btn_start_->setEnabled(true);
     }
-    else if (node::wire(ctl_) == eng::sibus::wire_status::active)
+    else if (node::is_active(ctl_))
     {
         btn_stop_->show();
     }

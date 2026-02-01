@@ -94,9 +94,9 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     });
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_status_handler(octl_, [this](eng::sibus::wire_status)
+    node::set_wire_status_handler(octl_, [this]
     {
-        active_ = node::is_wire_usable(octl_);
+        active_ = node::is_ready(octl_);
         update_gui();
     });
 
