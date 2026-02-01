@@ -4,7 +4,6 @@ progs/
 src_/
 cfg/
 src/Lib/
-src/core/
 /interface
 /home-root
 /build*

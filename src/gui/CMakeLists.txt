@@ -58,8 +58,6 @@ add_executable(${PROJECT_NAME}
     gui/ArcsWindow/DiagramView.cpp
 
     gui/LiquidSystem/LiquidSystemWindow.cpp
-
-    ../common/Program.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

@@ -90,10 +90,10 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QS
 
 void SprayerCtrlWidget::nf_sys_mode(unsigned char v) noexcept
 {
-    if (mode_ == v)
-        return;
-    mode_ = v;
-    updateGui();
+    // if (mode_ == v)
+    //     return;
+    // mode_ = v;
+    // updateGui();
 }
 
 void SprayerCtrlWidget::change_state() noexcept
@@ -106,7 +106,7 @@ void SprayerCtrlWidget::change_state() noexcept
 
 void SprayerCtrlWidget::updateGui()
 {
-    bool allow = (mode_ == Core::SysMode::Manual);
-    vsb_->setEnabled(allow);
+    // bool allow = (mode_ == Core::SysMode::Manual);
+    // vsb_->setEnabled(allow);
 }
 

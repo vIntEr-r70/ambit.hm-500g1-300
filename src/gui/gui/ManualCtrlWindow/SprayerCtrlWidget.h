@@ -2,8 +2,8 @@
 
 #include <QWidget>
 
-#include "common/Defs.h"
-#include <aem/json.hpp>
+// #include "common/Defs.h"
+// #include <aem/json.hpp>
 
 class ValueViewReal;
 class ValueSetBool;
@@ -35,6 +35,6 @@ private:
     ValueViewReal *vvr_fc_{ nullptr };
     ValueViewReal *vvr_dp_{ nullptr };
 
-    unsigned char mode_ = Core::SysMode::No;
+    // unsigned char mode_ = Core::SysMode::No;
 };
 

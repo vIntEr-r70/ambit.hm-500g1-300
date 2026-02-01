@@ -1,17 +1,14 @@
 #include "CenteringCfgWidget.h"
+#include "CenteringCtrlDlg.h"
 
 #include <Widgets/ValueSetBool.h>
 #include <Widgets/ValueSetReal.h>
 #include <Widgets/RoundButton.h>
 
-#include "CenteringCtrlDlg.h"
-
 #include <QGraphicsDropShadowEffect>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QStackedWidget>
-
-#include <aem/log.h>
 
 CenteringCfgWidget::CenteringCfgWidget(QWidget* parent) noexcept
     : QWidget(parent)
@@ -122,10 +119,10 @@ CenteringCfgWidget::CenteringCfgWidget(QWidget* parent) noexcept
 
 void CenteringCfgWidget::nf_sys_mode(unsigned char v) noexcept
 {
-    if (mode_ == v)
-        return;
-    mode_ = v;
-    updateGui();
+    // if (mode_ == v)
+    //     return;
+    // mode_ = v;
+    // updateGui();
 }
 
 void CenteringCfgWidget::set_centering_step(int v) noexcept
@@ -154,6 +151,6 @@ void CenteringCfgWidget::show_dialog() noexcept
 
 void CenteringCfgWidget::updateGui()
 {
-    bool allow = (mode_ == Core::SysMode::Manual);
-    btn_init_->setEnabled(allow);
+    // bool allow = (mode_ == Core::SysMode::Manual);
+    // btn_init_->setEnabled(allow);
 }

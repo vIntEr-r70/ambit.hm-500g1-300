@@ -2,8 +2,6 @@
 
 #include <QWidget>
 
-#include "common/Defs.h"
-
 class ValueSetBool;
 class ValueSetReal;
 class RoundButton;
@@ -43,5 +41,5 @@ private:
 
     QStackedWidget *stack_;
 
-    unsigned char mode_ = Core::SysMode::No;
+    // unsigned char mode_ = Core::SysMode::No;
 };
