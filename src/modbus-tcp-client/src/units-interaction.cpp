@@ -5,6 +5,7 @@
 
 #include <eng/modbus/operation/read_holding_registers.hpp>
 #include <eng/modbus/operation/write_single_register.hpp>
+#include <eng/modbus/operation/write_multiple_registers.hpp>
 #include <eng/modbus/tcp/frame.hpp>
 #include <eng/modbus/pdu.hpp>
 #include <eng/modbus/tcp/receiver.hpp>
@@ -245,6 +246,14 @@ namespace global
         client->unit->write_done();
     }
 
+    static void write_multiple_response(client_t *client)
+    {
+        modbus::tcp::frame &frame = client->receiver.frame();
+        modbus::response::write_multiple_registers<modbus::tcp::frame>
+            response{ modbus::pdu<modbus::tcp::frame>(frame) };
+        client->unit->write_done();
+    }
+
 }
 
 namespace units_interaction
@@ -282,8 +291,32 @@ namespace units_interaction
         op.frame.set_unit_id(client->unit->id());
 
         // Формируем запрос
-        modbus::response::write_single_register
+        modbus::request::write_single_register
             <modbus::tcp::frame>{ op.frame, address, value };
+    }
+
+    void write_multiple(std::size_t idx, std::uint16_t address, std::span<std::uint16_t const> values)
+    {
+        // Получаем интересующее нас устройство
+        auto client = global::clients[idx];
+
+        if (!client->stream)
+        {
+            eng::log::info("[{}]: Отсутствует подключение к устройству", idx);
+            return;
+        }
+
+        // Встраиваем в конец приоритетной очереди команду на запись
+        auto &op = global::prepare_operation(client, &global::write_multiple_response, true);
+        op.frame.set_unit_id(client->unit->id());
+
+        // Формируем запрос
+        modbus::request::write_multiple_registers
+            <modbus::tcp::frame> request{ op.frame, address };
+
+        std::ranges::for_each(values, [&request](std::uint16_t value) {
+            request.push(value);
+        });
     }
 
 }

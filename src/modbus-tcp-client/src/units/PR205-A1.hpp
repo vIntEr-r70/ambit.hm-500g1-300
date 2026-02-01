@@ -38,6 +38,7 @@ class PR205_A1 final
     {
         void(PR205_A1::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
+        eng::sibus::output_port_id_t port_out;
     };
     std::array<valve_t, 3> valves_;
 

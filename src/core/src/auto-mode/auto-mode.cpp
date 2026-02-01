@@ -1,20 +1,13 @@
 #include "auto-mode.hpp"
-#include "ambit/common/program-phases.hpp"
-#include "eng/abc/pack.hpp"
+#include "common/program.hpp"
 
-// #include "eng/sibus/sibus.hpp"
-// #include "eng/buffer.hpp"
-// #include "eng/sibus/sibus.hpp"
-
-#include <algorithm>
-#include <ambit/common/program.hpp>
-
-#include <chrono>
 #include <eng/log.hpp>
 #include <eng/base64.hpp>
 #include <eng/timer.hpp>
 #include <eng/json.hpp>
 
+#include <algorithm>
+#include <chrono>
 #include <filesystem>
 
 template <typename T>
@@ -187,7 +180,7 @@ void auto_mode::s_deinitialize()
         return;
 
     node::deactivated(ictl_);
-    main_state_ = nullptr;
+    switch_to_state(nullptr);
 
     eng::log::info("{}: DEACTIVATED", name());
 }
@@ -525,7 +518,7 @@ void auto_mode::handle_request(eng::abc::pack args)
 
 void auto_mode::cmd_upload_program(eng::abc::pack args)
 {
-    if (main_state_ != nullptr)
+    if (is_in_state())
     {
         node::wire_response(ictl_, false, { "Программа выполняется" });
         return;
@@ -591,8 +584,7 @@ void auto_mode::load_axis_list()
 
                 axis_program_pos_[axis] = position - axis_initial_pos_[axis];
 
-                if (main_state_ != nullptr)
-                    touch_current_state();
+                touch_current_state();
             });
         });
     }
@@ -601,41 +593,6 @@ void auto_mode::load_axis_list()
         eng::log::error("{}: {}", name(), e.what());
         return;
     }
-}
-
-void auto_mode::switch_to_state(void(auto_mode::*new_state)())
-{
-    main_state_ = new_state;
-
-    if (state_call_timer_)
-        eng::timer::kill_timer(state_call_timer_);
-
-    state_call_timer_ = eng::timer::once([this]
-    {
-        state_call_timer_.reset();
-        touch_current_state();
-    });
-}
-
-void auto_mode::touch_current_state()
-{
-    if (main_state_ == nullptr)
-    {
-        // throw std::runtime_error(std::format("{}: touch_current_state: Система не готова", name()));
-        eng::log::error("{}: touch_current_state: Система не готова", name());
-        return;
-    }
-
-    // Если вызов произошел раньше чем это сделал таймер
-    if (state_call_timer_)
-    {
-        // Отменяем таймер
-        eng::timer::kill_timer(state_call_timer_);
-        state_call_timer_.reset();
-    }
-
-    // Производим вызов
-    (this->*main_state_)();
 }
 
 

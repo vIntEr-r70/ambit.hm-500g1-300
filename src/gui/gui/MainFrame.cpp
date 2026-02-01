@@ -1,7 +1,7 @@
 #include "MainFrame.h"
 #include "ManualCtrlWindow/ManualCtrlWindow.h"
 #include "LiquidSystem/LiquidSystemWindow.h"
-#include "AutoCtrlWindow/auto-mode-window.hpp"
+#include "auto-ctl-window/auto-ctl-window.hpp"
 #include "SysCfgWindow/SysCfgWindow.h"
 #include "ArcsWindow/ArcsWindow.h"
 
@@ -70,8 +70,8 @@ void MainFrame::on_connected() noexcept
     LiquidSystemWindow* lsw = new LiquidSystemWindow(this);
     NavigationPanel_->add(lsw, "lsw",   true);
 
-    auto_mode_window_ = new auto_mode_window(this/*, axis_cfg_*/);
-    NavigationPanel_->add(auto_mode_window_, "auto", true);
+    auto_ctl_window_ = new auto_ctl_window(this);
+    NavigationPanel_->add(auto_ctl_window_, "auto", true);
 
     // NavigationPanel_->add(new ArcsWindow(this), "arcs", true);
 

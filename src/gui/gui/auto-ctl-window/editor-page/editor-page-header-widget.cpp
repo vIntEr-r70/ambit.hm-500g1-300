@@ -1,7 +1,7 @@
 #include "editor-page-header-widget.hpp"
-#include "ProgramModel.h"
+#include "../common/ProgramModel.h"
+#include "../common/ProgramModelHeader.h"
 #include "EditorMessageBox.h"
-#include "ProgramModelHeader.h"
 
 #include <Widgets/ValueSetString.h>
 #include <Widgets/IconButton.h>

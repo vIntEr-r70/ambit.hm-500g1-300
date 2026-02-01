@@ -31,6 +31,7 @@ class PR205_BN final
     {
         void(PR205_BN::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
+        eng::sibus::output_port_id_t port_out;
     };
     std::array<pump_t, 2> pumps_;
 

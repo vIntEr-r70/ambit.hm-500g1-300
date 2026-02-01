@@ -1,8 +1,8 @@
 #include "editor-page.hpp"
 #include "editor-page-header-widget.hpp"
-#include "program-widget.hpp"
-#include "ProgramModel.h"
-#include "ProgramModelHeader.h"
+#include "../common/program-widget.hpp"
+#include "../common/ProgramModel.h"
+#include "../common/ProgramModelHeader.h"
 #include "AutoParamKeyboard.h"
 
 #include <QVBoxLayout>

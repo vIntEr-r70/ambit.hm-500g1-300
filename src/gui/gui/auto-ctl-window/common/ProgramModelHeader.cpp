@@ -1,5 +1,5 @@
 #include "ProgramModelHeader.h"
-#include "ambit/common/program.hpp"
+#include "common/program.hpp"
 
 #include <QTableWidget>
 

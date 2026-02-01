@@ -1,7 +1,7 @@
 #include "axis-motion-node.hpp"
 #include "slaves/servo-motor.hpp"
 
-#include <ambit/common/axis-config.hpp>
+#include "common/axis-config.hpp"
 
 #include <eng/timer.hpp>
 #include <eng/log.hpp>

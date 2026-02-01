@@ -11,6 +11,8 @@ namespace units_interaction
 
     void write_single(std::size_t, std::uint16_t, std::uint16_t);
 
+    void write_multiple(std::size_t, std::uint16_t, std::span<std::uint16_t const>);
+
     void add_last_unit_record(std::size_t, std::size_t, unit_conf_loader::record_t const &);
 
     void start();

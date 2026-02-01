@@ -16,10 +16,6 @@ add_executable(${PROJECT_NAME}
     src/panel-switch-2-ctl.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    /home/alex/projects
-)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
     eng::eng
     stdc++exp

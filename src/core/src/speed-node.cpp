@@ -1,8 +1,8 @@
 #include "speed-node.hpp"
+#include "common/axis-config.hpp"
 
 #include <eng/log.hpp>
 #include <eng/sibus/client.hpp>
-#include <ambit/common/axis-config.hpp>
 
 speed_node::speed_node(char axis)
     : eng::sibus::node(std::format("SPEED-{}", axis))

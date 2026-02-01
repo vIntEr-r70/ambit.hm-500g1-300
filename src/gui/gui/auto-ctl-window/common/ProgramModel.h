@@ -1,11 +1,11 @@
 #pragma once
 
-#include <filesystem>
-
 #include <QAbstractTableModel>
 #include <QStringList>
 
-#include "ambit/common/program.hpp"
+#include "common/program.hpp"
+
+#include <filesystem>
 
 class ProgramModel
     : public QAbstractTableModel
@@ -66,7 +66,7 @@ public:
 
     QString const& comments() const noexcept { return comments_; }
 
-    void set_name(QString const& name) noexcept { name_ = name; } 
+    void set_name(QString const& name) noexcept { name_ = name; }
 
     void set_comments(QString const& comments) noexcept { comments_ = comments; }
 

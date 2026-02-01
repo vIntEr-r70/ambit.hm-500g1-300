@@ -34,6 +34,9 @@ class PLC110 final
 
     std::array<bits_value_t<8>, 2> mk_bits_;
 
+    std::bitset<20> outputs_;
+    std::array<std::bitset<8>, 2> mk_outputs_;
+
 public:
 
     PLC110(std::string_view, std::uint16_t);
@@ -55,4 +58,10 @@ private:
     void read_mk_2_done(readed_regs_t);
 
     void read_mk_done(std::size_t, readed_regs_t);
+
+private:
+
+    void write_outputs();
+
+    void write_mk_outputs(std::size_t);
 };

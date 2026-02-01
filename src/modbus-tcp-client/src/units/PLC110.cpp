@@ -26,6 +26,32 @@ PLC110::PLC110(std::string_view host, std::uint16_t port)
     read_task_handlers_[idx] = &PLC110::read_bits_done;
     for (std::size_t i = 0; i < bits_.bitset.size(); ++i)
         bits_.ports_id[i] = node::add_output_port(std::format("b{}", i + 5));
+
+    for (std::size_t i = 0; i < outputs_.size(); ++i)
+    {
+        node::add_input_port(std::format("b{}", i + 5), [this, i](eng::abc::pack args)
+        {
+            bool state = eng::abc::get<bool>(args);
+            if (state == outputs_.test(i)) return;
+            outputs_.set(i, state);
+            write_outputs();
+        });
+    }
+
+    for (std::size_t imk = 0; imk < mk_outputs_.size(); ++imk)
+    {
+        auto &outputs = mk_outputs_[imk];
+        for (std::size_t i = 0; i < outputs.size(); ++i)
+        {
+            node::add_input_port(std::format("m{}b{}", imk + 1, i + 1), [this, imk, i](eng::abc::pack args)
+            {
+                bool state = eng::abc::get<bool>(args);
+                if (state == mk_outputs_[imk].test(i)) return;
+                mk_outputs_[imk].set(i, state);
+                write_mk_outputs(imk);
+            });
+        }
+    }
 }
 
 void PLC110::read_task_done(std::size_t idx, readed_regs_t regs)
@@ -109,3 +135,31 @@ void PLC110::read_mk_done(std::size_t idx, readed_regs_t regs)
 
     bits.initialized = true;
 }
+
+void PLC110::write_outputs()
+{
+    if (!modbus_unit::is_online())
+        return;
+
+    std::uint16_t values[2];
+    values[0] = outputs_.to_ulong() & 0xFFFF;
+    values[1] = (outputs_.to_ulong() >> 16) & 0x000F;
+
+    modbus_unit::write_multiple(0x0006, std::span{ values });
+
+    eng::log::info("PLC110::OUTPUTS: {}", outputs_.to_string());
+}
+
+void PLC110::write_mk_outputs(std::size_t imk)
+{
+    if (!modbus_unit::is_online())
+        return;
+
+    static std::uint16_t address[] { 0x0015, 0x0018 };
+
+    std::uint16_t value = mk_outputs_[imk].to_ulong() & 0x00FF;
+    modbus_unit::write_single(address[imk], value);
+
+    eng::log::info("PLC110::MK[{}]::OUTPUTS: {}", imk, mk_outputs_[imk].to_string());
+}
+

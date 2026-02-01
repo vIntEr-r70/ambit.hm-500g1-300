@@ -1,11 +1,10 @@
 #include "multi-axis-ctl.hpp"
-#include "eng/sibus/sibus.hpp"
+#include "common/axis-config.hpp"
 
 #include <eng/json.hpp>
 #include <eng/sibus/client.hpp>
 #include <eng/timer.hpp>
 #include <eng/log.hpp>
-#include <ambit/common/axis-config.hpp>
 
 #include <algorithm>
 #include <optional>

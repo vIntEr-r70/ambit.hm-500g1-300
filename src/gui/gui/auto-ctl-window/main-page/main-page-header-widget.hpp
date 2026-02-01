@@ -6,7 +6,7 @@
 
 class ValueViewString;
 
-class common_page_header_widget final
+class main_page_header_widget final
     : public QWidget
 {
     Q_OBJECT
@@ -18,7 +18,7 @@ class common_page_header_widget final
 
 public:
 
-    common_page_header_widget(QWidget*) noexcept;
+    main_page_header_widget(QWidget*) noexcept;
 
 public:
 

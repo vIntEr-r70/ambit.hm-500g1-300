@@ -73,6 +73,8 @@ protected:
 
     void write_single(std::uint16_t, std::uint16_t);
 
+    void write_multiple(std::uint16_t, std::span<std::uint16_t const>);
+
 private:
 
     virtual void read_task_done(std::size_t, readed_regs_t) { }

@@ -33,6 +33,8 @@ PR205_BN::PR205_BN(std::size_t id, std::string_view host, std::uint16_t port)
         node::set_deactivate_handler(pumps_[i].ictl, [this, i] {
             (this->*pumps_[i].state)(i);
         });
+
+        pumps_[i].port_out = node::add_output_port(std::format("H{}", i + 1));
     }
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
@@ -128,6 +130,8 @@ void PR205_BN::read_state_done(readed_regs_t regs)
     {
         auto &pump = pumps_[i];
         (this->*pump.state)(i);
+
+        node::set_port_value(pump.port_out, { bs_0х4001_.test(i) });
     };
 }
 

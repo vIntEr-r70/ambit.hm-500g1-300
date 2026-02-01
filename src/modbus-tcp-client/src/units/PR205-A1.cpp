@@ -43,6 +43,8 @@ PR205_A1::PR205_A1(std::string_view host, std::uint16_t port)
         node::set_deactivate_handler(valves_[i].ictl, [this, i] {
             (this->*valves_[i].state)(i);
         });
+
+        valves_[i].port_out = node::add_output_port(std::format("A{}", i + 1));
     }
 }
 
@@ -140,6 +142,7 @@ void PR205_A1::read_state_done(readed_regs_t regs)
     {
         auto &valve = valves_[i];
         (this->*valve.state)(i);
+        node::set_port_value(valve.port_out, { bs_0х4005_.test(i) });
     };
 }
 

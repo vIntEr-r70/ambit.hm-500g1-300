@@ -30,18 +30,19 @@ add_executable(${PROJECT_NAME}
     gui/ManualCtrlWindow/CenteringCfgWidget.cpp
     gui/ManualCtrlWindow/CenteringCtrlDlg.cpp
 
-    gui/AutoCtrlWindow/auto-mode-window.cpp
-    gui/AutoCtrlWindow/common-page.cpp
-    gui/AutoCtrlWindow/common-page-header-widget.cpp
-    gui/AutoCtrlWindow/auto-ctl-page.cpp
-    gui/AutoCtrlWindow/editor-page.cpp
-    gui/AutoCtrlWindow/editor-page-header-widget.cpp
-    gui/AutoCtrlWindow/ProgramModel.cpp
-    gui/AutoCtrlWindow/program-widget.cpp
-    gui/AutoCtrlWindow/ProgramModelHeader.cpp
-    gui/AutoCtrlWindow/programs-list-widget.cpp
-    gui/AutoCtrlWindow/AutoParamKeyboard.cpp
-    gui/AutoCtrlWindow/EditorMessageBox.cpp
+    gui/auto-ctl-window/auto-ctl-window.cpp
+    gui/auto-ctl-window/main-page/main-page.cpp
+    gui/auto-ctl-window/main-page/main-page-header-widget.cpp
+    gui/auto-ctl-window/main-page/programs-list-widget.cpp
+    gui/auto-ctl-window/auto-ctl-page/auto-ctl-page.cpp
+    gui/auto-ctl-window/auto-ctl-page/problem-list-widget.cpp
+    gui/auto-ctl-window/editor-page/editor-page.cpp
+    gui/auto-ctl-window/editor-page/editor-page-header-widget.cpp
+    gui/auto-ctl-window/editor-page/AutoParamKeyboard.cpp
+    gui/auto-ctl-window/editor-page/EditorMessageBox.cpp
+    gui/auto-ctl-window/common/ProgramModel.cpp
+    gui/auto-ctl-window/common/program-widget.cpp
+    gui/auto-ctl-window/common/ProgramModelHeader.cpp
 
     gui/SysCfgWindow/SysCfgWindow.cpp
     gui/SysCfgWindow/SysSetsWidget.cpp
@@ -63,7 +64,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${Qt5Widgets_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
-    /home/alex/projects
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

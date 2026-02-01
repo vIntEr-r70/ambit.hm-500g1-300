@@ -1,24 +1,24 @@
-#include "common-page.hpp"
-#include "common-page-header-widget.hpp"
+#include "main-page.hpp"
+#include "main-page-header-widget.hpp"
 #include "programs-list-widget.hpp"
 
 #include <QVBoxLayout>
 #include <QTabWidget>
 
-common_page::common_page(QWidget *parent)
+main_page::main_page(QWidget *parent)
     : QWidget(parent)
 {
     QVBoxLayout *vL = new QVBoxLayout(this);
     {
-        header_ = new common_page_header_widget(this);
+        header_ = new main_page_header_widget(this);
 
-        connect(header_, &common_page_header_widget::make_create_program,
+        connect(header_, &main_page_header_widget::make_create_program,
                 [this] { make_create_program(); });
-        connect(header_, &common_page_header_widget::make_edit_program,
+        connect(header_, &main_page_header_widget::make_edit_program,
                 [this] { make_edit_program(); });
-        connect(header_, &common_page_header_widget::make_init_program,
+        connect(header_, &main_page_header_widget::make_init_program,
                 [this] { make_init_program(); });
-        connect(header_, &common_page_header_widget::make_remove_program,
+        connect(header_, &main_page_header_widget::make_remove_program,
                 [this] { make_remove_program(); });
 
         header_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -42,12 +42,12 @@ common_page::common_page(QWidget *parent)
     }
 }
 
-void common_page::make_create_program()
+void main_page::make_create_program()
 {
     emit goto_editor_page("");
 }
 
-void common_page::make_edit_program()
+void main_page::make_edit_program()
 {
     QString name = programs_list_widget_->current();
     if (!name.isEmpty())
@@ -55,22 +55,21 @@ void common_page::make_edit_program()
 }
 
 // Открываем программу для исполнения
-void common_page::make_init_program()
+void main_page::make_init_program()
 {
     QString name = programs_list_widget_->current();
     if (!name.isEmpty())
         emit goto_ctl_page(name);
 }
 
-void common_page::make_remove_program()
+void main_page::make_remove_program()
 {
     programs_list_widget_->remove_selected();
 }
 
-void common_page::selected_program_changed()
+void main_page::selected_program_changed()
 {
     QString name = programs_list_widget_->current();
     header_->set_program_name(name);
-    // emit program_changed(name);
 }
 

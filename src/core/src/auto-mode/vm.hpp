@@ -6,7 +6,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ambit/common/program-phases.hpp"
+#include "common/program-phases.hpp"
 
 class vm
 {

@@ -6,7 +6,7 @@ class BkiLockMessage;
 class EmgStopMessage;
 class NavigationPanel;
 class SysCfgWindow;
-class auto_mode_window;
+class auto_ctl_window;
 
 class MainFrame
     : public QWidget
@@ -47,7 +47,7 @@ private:
 
     NavigationPanel *NavigationPanel_;
     SysCfgWindow *sys_cfg_window_;
-    auto_mode_window *auto_mode_window_;
+    auto_ctl_window *auto_ctl_window_;
 
     BkiLockMessage *bki_lock_msg_;
     bool bki_lock_flag_{ false };

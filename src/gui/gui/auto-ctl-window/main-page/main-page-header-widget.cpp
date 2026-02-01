@@ -1,6 +1,6 @@
-#include "common-page-header-widget.hpp"
+#include "main-page-header-widget.hpp"
 
-#include "ProgramModel.h"
+#include "../common/ProgramModel.h"
 
 #include <Widgets/ValueViewString.h>
 #include <Widgets/RoundButton.h>
@@ -10,7 +10,7 @@
 #include <QHeaderView>
 #include <QGraphicsDropShadowEffect>
 
-common_page_header_widget::common_page_header_widget(QWidget *parent) noexcept
+main_page_header_widget::main_page_header_widget(QWidget *parent) noexcept
     : QWidget(parent)
 {
     auto LIAEM_RW_PATH = std::getenv("LIAEM_RW_PATH");
@@ -81,7 +81,7 @@ common_page_header_widget::common_page_header_widget(QWidget *parent) noexcept
     }
 }
 
-void common_page_header_widget::set_program_name(QString name)
+void main_page_header_widget::set_program_name(QString name)
 {
     name_->set_value(name);
 

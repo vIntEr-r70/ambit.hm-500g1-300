@@ -2,7 +2,7 @@
 
 #include <InteractWidgets/InteractWidget.h>
 
-#include <ambit/common/program.hpp>
+#include "common/program.hpp"
 
 
 class QLabel;

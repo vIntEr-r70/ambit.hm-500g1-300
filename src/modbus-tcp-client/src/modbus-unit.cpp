@@ -51,6 +51,11 @@ void modbus_unit::write_single(std::uint16_t address, std::uint16_t value)
     units_interaction::write_single(idx_, address, value);
 }
 
+void modbus_unit::write_multiple(std::uint16_t address, std::span<std::uint16_t const> values)
+{
+    units_interaction::write_multiple(idx_, address, values);
+}
+
 void modbus_unit::connected()
 {
     if (online_ && *online_)

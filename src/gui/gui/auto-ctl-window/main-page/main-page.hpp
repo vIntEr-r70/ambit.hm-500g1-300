@@ -3,27 +3,25 @@
 #include <QWidget>
 
 class programs_list_widget;
-class common_page_header_widget;
+class main_page_header_widget;
 
-class common_page final
+class main_page final
     : public QWidget
 {
     Q_OBJECT
 
-    common_page_header_widget *header_;
+    main_page_header_widget *header_;
     programs_list_widget *programs_list_widget_;
 
 public:
 
-    common_page(QWidget *);
+    main_page(QWidget *);
 
 signals:
 
     void goto_ctl_page(QString const &);
 
     void goto_editor_page(QString const &);
-
-    // void program_changed(QString const &);
 
 private:
 

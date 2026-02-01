@@ -1,12 +1,14 @@
 #pragma once
 
 #include "vm.hpp"
+#include "common/internal-state-ctl.hpp"
 
 #include <eng/sibus/node.hpp>
 #include <eng/timer.hpp>
 
 class auto_mode final
     : public eng::sibus::node
+    , public internal_state_ctl<auto_mode>
 {
     typedef void (auto_mode::*command_handler)(eng::abc::pack);
 
@@ -35,9 +37,6 @@ class auto_mode final
     std::unordered_map<char, double> axis_program_pos_;
 
     eng::timer::id_t pause_timer_;
-
-    void(auto_mode::*main_state_)() { nullptr };
-    eng::timer::id_t state_call_timer_;
 
 public:
 
@@ -96,12 +95,6 @@ private:
     void handle_request(eng::abc::pack);
 
     void cmd_upload_program(eng::abc::pack);
-
-private:
-
-    void switch_to_state(void(auto_mode::*)());
-
-    void touch_current_state();
 
 private:
 
