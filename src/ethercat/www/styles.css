@@ -1,0 +1,215 @@
+
+:root {
+    --bg: #0f1724;
+    --panel: #071229;
+    --accent: #22a6f3;
+    --muted: #94a3b8
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}
+
+.main {
+    display: flex;
+    height: 100vh;
+    background: #0f1724;
+}
+
+.board {
+    padding: 8px;
+    position: relative;
+    flex: 1;
+    background: transparent;
+    overflow: hidden;
+}
+
+aside.sidebar {
+    width: 280px;
+    padding: 12px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent)
+}
+
+.list {
+    margin: 20px 0;
+}
+
+.list .item {
+    padding: 12px 15px;
+    margin: 8px 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.list .item:hover {
+    border-color: #2196F3;
+    background-color: #f3f9ff;
+}
+
+.list .item.selected {
+    border-color: #2196F3;
+    background-color: #2196F3;
+    color: white;
+}
+
+.state-on {
+    background-color: #1ce83a;
+}
+
+.state-off {
+    background-color: unset;
+}
+
+table, td {
+    border-collapse: collapse;
+    border: 1px solid black;
+    text-align: center;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 5px;
+    padding: 5px;
+}
+thead {
+    font-weight: bold;
+    background-color: #00D4D4;
+    padding: 3px;
+}
+tbody {
+    font-weight: normal;
+    background-color: #96D4D4;
+}
+
+.BIT-ON {
+    min-width: 50px;
+    height: 30px;
+    content: "ВКЛ";
+    color: #0000ff;
+    cursor: pointer;
+}
+.BIT-ON:before {
+    content: "ВКЛ";
+}
+
+.BIT-OFF {
+    min-width: 50px;
+    height: 30px;
+    color: #0000ff;
+    cursor: pointer;
+    content: "ОТКЛ";
+}
+.BIT-OFF:before {
+    content: "ОТКЛ";
+}
+
+.slider-container {
+  width: 300px;
+  margin: 50px;
+  user-select: none;
+}
+
+.slider-track {
+  position: relative;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: -7px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background: #4caf50;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-value {
+  margin-top: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+@keyframes blink-animation {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Стиль фона */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+  width: 300px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.modal-header, .modal-footer {
+  padding: 15px;
+  background: #f0f0f0;
+}
+
+.modal-header {
+  font-weight: bold;
+  font-size: 18px;
+  border-bottom: 1px solid #ccc;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  text-align: right;
+  border-top: 1px solid #ccc;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  margin-left: 10px;
+}
+
+.btn {
+    background: #3098d8;
+    color: white;
+    border: none;
+    padding: 5px 20px;
+    margin: 5px 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(1.0, 1.0, 1.0, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn:hover {
+    background: #043b5d;
+}
+
+.btn:active {
+    box-shadow: 0 4px 15px rgba(1.0, 1.0, 1.0, 0.15);
+}

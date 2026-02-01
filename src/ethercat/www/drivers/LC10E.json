@@ -1,0 +1,162 @@
+{
+    "table":
+    [
+        {
+            "title": "Status Word 6041:00",
+            "value-src": "6041:00",
+            "body":
+            [
+                { "bit": 0,  "label": "ready to\nswitch on"     },
+                { "bit": 1,  "label": "switch on"               },
+                { "bit": 2,  "label": "operation\nenabled"      },
+                { "bit": 3,  "label": "fault"                   },
+                { "bit": 4,  "label": "voltage\nenabled"        },
+                { "bit": 5,  "label": "quick\nstop"             },
+                { "bit": 6,  "label": "switch on\ndisabled"     },
+                { "bit": 7,  "label": "warning"                 },
+                { "bit": 9,  "label": "remote"                  },
+                { "bit": 10, "label": "target\nreach"           },
+                { "bit": 11, "label": "internal\nlimit active"  },
+                { "bit": 12, "label": "opmode1"                 },
+                { "bit": 13, "label": "opmode2"                 },
+                { "bit": 15, "label": "Home Find"               }
+            ]
+        },
+
+        {
+            "title": "Control Model 6060:00",
+            "value-dst": "6060:00",
+            "body":
+            [
+                { "value": 0,  "label": "OFF" },
+                { "value": 1,  "label": "pp"  },
+                { "value": 3,  "label": "PV"  },
+                { "value": 4,  "label": "pt"  },
+                { "value": 6,  "label": "hm"  },
+                { "value": 8,  "label": "CSP" },
+                { "value": 9,  "label": "CSV" },
+                { "value": 10, "label": "CST" }
+            ]
+        },
+
+        {
+            "title": "Control Word 6040:00",
+            "value-dst": "6040:00",
+            "body":
+            [
+                { "bit": 0, "label": "switch on"            },
+                { "bit": 1, "label": "enable\nvoltage"      },
+                { "bit": 2, "label": "quick\nstop"          },
+                { "bit": 3, "label": "enable\noperation"    },
+                { "bit": 7, "label": "fault\nreset"         },
+                { "bit": 8, "label": "halt"                 },
+                { "bit": 9, "label": "ready"                }
+            ]
+        },
+
+        {
+            "title": "DI state 60FD:00",
+            "value-src": "60FD:00",
+            "body":
+            [
+                { "bit": 0,  "label": "Reverse\novertravel\nswitch" },
+                { "bit": 1,  "label": "Forward\novertravel\nswitch" },
+                { "bit": 2,  "label": "Original\nswitch"            },
+                { "bit": 16, "label": "ZSignal"                     },
+                { "bit": 17, "label": "probe1"                      },
+                { "bit": 18, "label": "probe2"                      },
+                { "bit": 20, "label": "DI0"                         },
+                { "bit": 21, "label": "DI1"                         },
+                { "bit": 22, "label": "DI2"                         },
+                { "bit": 23, "label": "DI3"                         },
+                { "bit": 24, "label": "DI4"                         }
+            ]
+        },
+
+        {
+            "body":
+            [
+                { "value-src": "603F:00", "title": "Error\ncode"                    },
+                { "value-src": "6061:00", "title": "Mode\ndisplay"                  },
+                { "value-src": "6062:00", "title": "Position\ncommand\ncommand"     },
+                { "value-src": "6063:00", "title": "Position\nfeedback\nencoder"    },
+                { "value-src": "6064:00", "title": "Position\nfeedback\ncommand"    },
+                { "value-src": "606C:00", "title": "Actual\nspeed"                  },
+                { "value-src": "6077:00", "title": "Actual\ntorque"                 },
+                { "value-src": "60FC:00", "title": "Position\ncommand\nencoder"     }
+            ]
+        },
+
+        {
+            "title": "Profile position mode (pp)",
+            "body":
+            [
+                { "value-dst": "607A:00", "title": "Target\nposition"           },
+                { "value-dst": "6081:00", "title": "Target\nspeed"              },
+                { "value-dst": "6083:00", "title": "Acceleration"               },
+                { "value-dst": "6084:00", "title": "Deceleration"               },
+                { "value-dst": "6072:00", "title": "Maximum\ntorque"            },
+                { "value-dst": "60E0:00", "title": "Forward\ntorque\nlimit"     },
+                { "value-dst": "60E1:00", "title": "Reverse\ntorque\nlimit"     },
+                { "value-dst": "607F:00", "title": "Maximum\nspeed\nlimit"      }
+            ]
+        },
+
+        {
+            "title": "Profile position mode (pV)",
+            "body":
+            [
+                { "value-dst": "60FF:00", "title": "Target\nspeed"              },
+                { "value-dst": "6083:00", "title": "Acceleration"               },
+                { "value-dst": "6084:00", "title": "Deceleration"               },
+                { "value-dst": "60E0:00", "title": "Forward\ntorque\nlimit"     },
+                { "value-dst": "60E1:00", "title": "Reverse\ntorque\nlimit"     },
+                { "value-dst": "607F:00", "title": "Maximum\nspeed\nlimit"      }
+            ]
+        },
+
+        {
+            "title": "Contour torque mode (PT)",
+            "body":
+            [
+                { "value-dst": "60FF:00", "title": "Target\nspeed"              },
+                { "value-dst": "6083:00", "title": "Acceleration"               },
+                { "value-dst": "6084:00", "title": "Deceleration"               },
+                { "value-dst": "60E0:00", "title": "Forward\ntorque\nlimit"     },
+                { "value-dst": "60E1:00", "title": "Reverse\ntorque\nlimit"     },
+                { "value-dst": "607F:00", "title": "Maximum\nspeed\nlimit"      }
+            ]
+        },
+
+        {
+            "body":
+            [
+                { "value-dst": "60B1:00" },
+                { "value-src": "6065:00" },
+                { "value-dst": "6091:01" },
+                { "value-dst": "6091:02" },
+                { "value-dst": "6099:01" },
+                { "value-src": "6099:02" },
+                { "value-dst": "60FF:00" }
+            ]
+        }
+    ],
+
+    "button":
+    [
+        {
+            "value": "60FF:00",
+            "on-press": 100000,
+            "on-release": 0,
+            "class": "fas fa-arrow-rotate-left"
+        },
+
+        {
+            "value": "60FF:00",
+            "on-press": -100000,
+            "on-release": 0,
+            "class": "fas fa-arrow-rotate-right"
+        }
+    ]
+}
+

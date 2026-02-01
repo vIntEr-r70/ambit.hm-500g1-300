@@ -1,0 +1,17 @@
+{
+    "VendorID":     0x00004321,
+    "ProductCode":  0x61400005,
+
+    "SDO":
+    [
+        { "type": "u8",  "index": 0xF030, "subidx": 0x00 },
+        { "type": "u32", "index": 0xF030, "subidx": 0x01 },
+        { "type": "u32", "index": 0xF030, "subidx": 0x02 },
+        { "type": "u32", "index": 0xF030, "subidx": 0x03 }
+    ],
+
+    "PDO":
+    {
+    }
+}
+

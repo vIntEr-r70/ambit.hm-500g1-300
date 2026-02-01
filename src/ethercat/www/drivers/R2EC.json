@@ -1,0 +1,14 @@
+{
+    "table":
+    [
+        {
+            "body":
+            [
+                { "value-dst": "F030:00" },
+                { "value-dst": "F030:01" },
+                { "value-dst": "F030:02" },
+                { "value-dst": "F030:03" }
+            ]
+        }
+    ]
+}

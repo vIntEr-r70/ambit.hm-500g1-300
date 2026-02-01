@@ -1,0 +1,53 @@
+{
+    "VendorID":     0x00000766,
+    "ProductCode":  0x00000402,
+
+    "SDO":
+    {
+        "ro":
+        [
+            { "type": "s8",  "index": 0x6061, "subidx": 0x00 },
+            { "type": "s32", "index": 0x6062, "subidx": 0x00 },
+            { "type": "s32", "index": 0x6063, "subidx": 0x00 },
+            { "type": "s32", "index": 0x6064, "subidx": 0x00 },
+            { "type": "s32", "index": 0x606c, "subidx": 0x00 },
+            { "type": "s16", "index": 0x6077, "subidx": 0x00 },
+            { "type": "s32", "index": 0x60fc, "subidx": 0x00 },
+            { "type": "u32", "index": 0x60fd, "subidx": 0x00 }
+        ],
+
+        "rw":
+        [
+            { "type": "u32", "index": 0x6065, "subidx": 0x00 },
+            { "type": "u32", "index": 0x6091, "subidx": 0x01 },
+            { "type": "u32", "index": 0x6091, "subidx": 0x02 },
+            { "type": "u32", "index": 0x6099, "subidx": 0x01 },
+            { "type": "u32", "index": 0x6099, "subidx": 0x02 },
+            { "type": "u16", "index": 0x6072, "subidx": 0x00 },
+            { "type": "s32", "index": 0x607a, "subidx": 0x00 },
+            { "type": "u32", "index": 0x607f, "subidx": 0x00 },
+            { "type": "u32", "index": 0x6081, "subidx": 0x00 },
+            { "type": "u32", "index": 0x6083, "subidx": 0x00 },
+            { "type": "u32", "index": 0x6084, "subidx": 0x00 },
+            { "type": "s32", "index": 0x60b1, "subidx": 0x00 },
+            { "type": "u16", "index": 0x60e0, "subidx": 0x00 },
+            { "type": "u16", "index": 0x60e1, "subidx": 0x00 },
+            { "type": "s32", "index": 0x60ff, "subidx": 0x00 }
+        ]
+    },
+
+    "PDO":
+    {
+        "receive":
+        [
+            { "type": "u16", "index": 0x603f, "subidx": 0x00 },
+            { "type": "u16", "index": 0x6041, "subidx": 0x00 }
+        ],
+
+        "transmit":
+        [
+            { "type": "u16", "index": 0x6040, "subidx": 0x00 },
+            { "type": "s8",  "index": 0x6060, "subidx": 0x00 }
+        ]
+    }
+}

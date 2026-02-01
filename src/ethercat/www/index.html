@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>МКУ</title>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <link rel="stylesheet" type="text/css" href="all.min.css">
+    </head>
+    <body>
+        <div class="main">
+            <aside class="sidebar">
+                <div class="list"></div>
+            </aside>
+            <div class="board" id="board">
+            </div>
+        </div>
+
+        <script src="dialogs.js"></script>
+        <script src="handlers.js"></script>
+        <script src="tables.js"></script>
+        <script src="main.js"></script>
+        <script>
+
+            let socket = null;
+
+            (async () =>
+            {
+                let ACTIVE = null;
+
+                function create_slave_page(board, ctls)
+                {
+                    UPDATE = new Map();
+
+                    // Удаляем текущее содержимое
+                    board.innerHTML = '';
+                    board.dataset.id = ACTIVE;
+
+                    create_gui_controls(board, ACTIVE, ctls);
+
+                    // Применяем все значения из STORAGE для данного устройства
+                    const storage = STORAGE.get(ACTIVE);
+                    if (storage !== undefined)
+                    {
+                        for (const [key, value] of storage)
+                        {
+                            const update = UPDATE.get(key);
+                            if (update !== undefined)
+                            {
+                                for (const func of update)
+                                    func(value);
+                            }
+                        }
+                    }
+                }
+
+                try
+                {
+                    let response = await fetch("/initial-page", { method: "GET" });
+                    if (!response.ok)
+                        throw new Error('Сетевая ошибка');
+                    const result = await response.json();
+
+                    console.log(result);
+
+                    const list = document.querySelector('.list');
+                    const board = document.querySelector('.board');
+                    for (const [key, value] of Object.entries(result))
+                    {
+                        // Добавляем новый slave в список
+                        const newItem = document.createElement('div');
+                        newItem.className = 'item';
+                        newItem.textContent = key;
+                        newItem.addEventListener('click', function()
+                        {
+                            if (ACTIVE === key)
+                                return;
+                            ACTIVE = key;
+
+                            list.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+                            this.classList.add('selected');
+
+                            create_slave_page(board, value);
+                        });
+                        list.appendChild(newItem);
+
+                        if (ACTIVE === null)
+                        {
+                            ACTIVE = key;
+                            create_slave_page(board, value);
+                            newItem.classList.add('selected');
+                        }
+                    }
+
+                    const host = window.location.host;
+                    const wsUrl = `ws://${host}`; // или ваш endpoint
+
+                    function connect()
+                    {
+                        socket = new WebSocket(wsUrl);
+
+                        socket.onopen = function(event) {
+                            updateStatus('Подключено', 'green');
+                            console.log('WebSocket подключен');
+                        };
+
+                        socket.onmessage = function(event)
+                        {
+                            const objs = JSON.parse(event.data);
+
+                            for (const obj of objs)
+                            {
+                                // Обновляем соответствующее значение в локальном хранилище
+                                let slave = STORAGE.get(obj[0]);
+                                if (slave === undefined)
+                                {
+                                    slave = new Map();
+                                    STORAGE.set(obj[0], slave);
+                                }
+                                slave.set(obj[1], obj[2]);
+
+                                // Обновляем данные на экране если необходимо
+                                const board = document.querySelector('.board');
+                                if (board.dataset.id !== obj[0])
+                                    return;
+
+                                const update = UPDATE.get(obj[1]);
+                                if (update !== undefined)
+                                {
+                                    for (const func of update)
+                                        func(obj[2]);
+                                }
+                            }
+                        };
+
+                        socket.onclose = function(event) {
+                            updateStatus('Отключено', 'red');
+                            console.log('WebSocket отключен');
+                            // Автопереподключение через 3 секунды
+                            //setTimeout(connect, 3000);
+                        };
+
+                        socket.onerror = function(error) {
+                            //updateStatus('Ошибка', 'red');
+                            console.error('WebSocket ошибка:', error);
+                        };
+                    }
+
+                    function sendMessage()
+                    {
+                        //const input = document.getElementById('messageInput');
+                        //const message = input.value.trim();
+                        //
+                        //if (message && socket && socket.readyState === WebSocket.OPEN) {
+                        //    socket.send(message);
+                        //    displayMessage('Вы: ' + message);
+                        //    input.value = '';
+                        //}
+                    }
+
+                    function updateStatus(status, color)
+                    {
+                        //const statusDiv = document.getElementById('status');
+                        //statusDiv.textContent = 'Статус: ' + status;
+                        //statusDiv.style.color = color;
+                    }
+
+                    // Отправка по Enter
+                    //document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                    //    if (e.key === 'Enter') {
+                    //        sendMessage();
+                    //    }
+                    //});
+
+                    // Запуск подключения при загрузке страницы
+                    connect();
+                }
+                catch(error)
+                {
+                    console.log("Не удалось получить файл конфигурации: ", error);
+                }
+            })();
+        </script>
+
+    </body>
+</html>
+
+
