@@ -16,7 +16,7 @@ auto_ctl_window::auto_ctl_window(QWidget *parent) noexcept
     connect(main_page_, &main_page::goto_ctl_page, [this](QString const &name)
     {
         if (!load_program_to_model(name)) return;
-        if (!auto_ctl_page_->init()) return;
+        auto_ctl_page_->init();
         QStackedWidget::setCurrentWidget(auto_ctl_page_);
     });
     connect(main_page_, &main_page::goto_editor_page, [this](QString const &name) {

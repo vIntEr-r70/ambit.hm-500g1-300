@@ -103,23 +103,18 @@ void frequency_converter::activate(eng::abc::pack args)
 {
     if (!is_online())
     {
-        // node::deactivated(ictl_, { "Отсутствует связь с устройством" });
-        node::deactivated(ictl_);
+        node::terminate(ictl_, "Отсутствует связь с устройством");
         return;
     }
 
     if (hw_state_ == &frequency_converter::s_damaged)
     {
-        // node::deactivated(ictl_, { "Устройство в состоянии аварии" });
-        node::deactivated(ictl_);
+        node::terminate(ictl_, "Устройство в состоянии аварии");
         return;
     }
 
     if (hw_state_ == &frequency_converter::s_powered)
-    {
-        node::activated(ictl_);
         return;
-    }
 
     // Записываем уставки
     std::array<std::uint16_t, 3> iup{
@@ -142,14 +137,13 @@ void frequency_converter::deactivate()
 {
     if (!is_online())
     {
-        // node::deactivated(ictl_, { "Отсутствует связь с устройством" });
-        node::deactivated(ictl_);
+        node::terminate(ictl_, "Отсутствует связь с устройством");
         return;
     }
 
     if (hw_state_ == &frequency_converter::s_idle)
     {
-        node::deactivated(ictl_);
+        node::set_ready(ictl_);
         return;
     }
 
@@ -191,13 +185,13 @@ void frequency_converter::s_powered(std::uint16_t status)
     case 0:
         node::set_port_value(p_out_[pout::powered], { false });
         hw_state_ = &frequency_converter::s_idle;
-        node::deactivated(ictl_);
+        node::set_ready(ictl_);
         return;
     case 1:
         return;
     }
 
-    node::deactivated(ictl_);
+    node::set_ready(ictl_);
 
     node::set_port_value(p_out_[pout::damaged],
         { true, damages_[0], damages_[1], damages_[2], damages_[3] });
@@ -240,10 +234,7 @@ void frequency_converter::now_unit_online()
 void frequency_converter::connection_was_lost()
 {
     if (hw_state_ == &frequency_converter::s_powered)
-    {
-        // node::deactivated(ictl_, { "Связь с устройством потеряна" });
-        node::deactivated(ictl_);
-    }
+        node::terminate(ictl_, "Связь с устройством потеряна");
 
     hw_state_ = nullptr;
     write_task_handler_.handler = nullptr;
@@ -276,19 +267,13 @@ void frequency_converter::write_task_done(std::size_t idx)
 
 void frequency_converter::w_start(bool success)
 {
-    if (success)
-        node::activated(ictl_);
-    else
-    {
-        // node::deactivated(ictl_, { "Не удалось включить устройство" });
-        node::deactivated(ictl_);
-    }
+    if (!success)
+        node::terminate(ictl_, "Не удалось включить устройство");
 }
 
 void frequency_converter::w_stop(bool success)
 {
-    // node::deactivated(ictl_, { "Не удалось выключить устройство" });
-    node::deactivated(ictl_);
+    node::terminate(ictl_, "Не удалось выключить устройство");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,349 +329,3 @@ void frequency_converter::read_P_done(readed_regs_t regs)
     node::set_port_value(p_out_[pout::P], { P });
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-// Не удалось выполнить команду
-// void frequency_converter::device_offline()
-// {
-//     node::wire_response(ictl_, false, { "Связь потеряна" });
-//     set_offline_state();
-//     init_next_read();
-// }
-//
-// /////////////////////////////////////////////////////////////////////////////////////////////
-//
-// // Команда на запуск [ current, power ]
-// void frequency_converter::cmd_start(eng::abc::pack args)
-// {
-//     iup_[0] = std::min(eng::abc::get<double>(args, 0), I_max_);
-//     iup_[2] = eng::abc::get<double>(args, 1);
-//     eng::log::info("frequency_converter::cmd_start: P: {}, I: {}", iup_[2], iup_[0]);
-//
-//     // Запрашиваем текущее состояние
-//     modbus_rtu_slave::read_holding(0xA411, 3,
-//         &frequency_converter::st_start_get_status, &frequency_converter::device_offline);
-// }
-//
-// // Получен статус устройства
-// void frequency_converter::st_start_get_status(std::span<std::uint16_t const> regs)
-// {
-//     // Если устройство в состоянии аварии
-//     if (regs[0] == 2)
-//     {
-//         node::wire_response(ictl_, false, { "В состоянии аварии" });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Уже запущены
-//     if (regs[1] == 1)
-//     {
-//         node::wire_response(ictl_, true, { });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Записываем уставки
-//     std::array<std::uint16_t, 3> iup{
-//         static_cast<std::uint16_t>(std::lround(iup_[0] * 10.0f)),
-//         static_cast<std::uint16_t>(std::lround(iup_[1])),
-//         static_cast<std::uint16_t>(std::lround(iup_[2] * 0.01f))
-//     };
-//     modbus_rtu_slave::write_multiple(0xA420, { iup.data(), iup.size() },
-//         &frequency_converter::st_start_update_set, &frequency_converter::device_offline);
-// }
-//
-// // Уставки записаны
-// void frequency_converter::st_start_update_set()
-// {
-//     // Передаем команду на запуск
-//     modbus_rtu_slave::write_single(0xA410, 0x0001,
-//         &frequency_converter::st_start_check, &frequency_converter::device_offline);
-// }
-//
-// // Команда на запуск передана
-// void frequency_converter::st_start_check()
-// {
-//     // Запрашиваем текущее состояние
-//     modbus_rtu_slave::read_holding(0xA411, 3,
-//         &frequency_converter::st_start_wait_done, &frequency_converter::device_offline);
-// }
-//
-// // Ждем когда устройство запустится
-// void frequency_converter::st_start_wait_done(std::span<std::uint16_t const> regs)
-// {
-//     // Если устройство в состоянии аварии
-//     if (regs[0] == 2)
-//     {
-//         node::wire_response(ictl_, false, { "Не удалось включить" });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Уже запущены
-//     if (regs[0] == 1)
-//     {
-//         node::wire_response(ictl_, true, { });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Повторяем попытку получить состояние
-//     eng::timer::once(std::chrono::milliseconds(100), [this]
-//     {
-//         st_start_check();
-//     });
-// }
-//
-// /////////////////////////////////////////////////////////////////////////////////////////////
-//
-// // Команда на прекращение работы
-// void frequency_converter::cmd_stop(eng::abc::pack)
-// {
-//     eng::log::info("frequency_converter::cmd_stop");
-//     st_stop_init();
-// }
-//
-// void frequency_converter::st_stop_init()
-// {
-//     // Запрашиваем текущее состояние
-//     modbus_rtu_slave::read_holding(0xA411, 3,
-//         &frequency_converter::st_stop_get_status, &frequency_converter::device_offline);
-// }
-//
-// // Получен статус устройства
-// void frequency_converter::st_stop_get_status(std::span<std::uint16_t const> regs)
-// {
-//     // Уже остановлено
-//     if (regs[0] == 0)
-//     {
-//         node::wire_response(ictl_, true, { });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Если в состоянии аварии
-//     if (regs[0] == 2)
-//     {
-//         // Передаем команду на сброс аварии
-//         modbus_rtu_slave::write_single(0xA410, 0x0002,
-//             &frequency_converter::st_stop_check, &frequency_converter::device_offline);
-//
-//         return;
-//     }
-//
-//     // Передаем команду на остановку
-//     modbus_rtu_slave::write_single(0xA410, 0x0000,
-//         &frequency_converter::st_stop_check, &frequency_converter::device_offline);
-// }
-//
-// // Команда на остановку / сброс аварии передана
-// void frequency_converter::st_stop_check()
-// {
-//     // Запрашиваем текущее состояние
-//     modbus_rtu_slave::read_holding(0xA411, 3,
-//         &frequency_converter::st_stop_wait_done, &frequency_converter::device_offline);
-// }
-//
-// // Ждем когда устройство остановится / сбросит аварию
-// void frequency_converter::st_stop_wait_done(std::span<std::uint16_t const> regs)
-// {
-//     // Уже остановлено
-//     if (regs[0] == 0 || regs[0] == 2)
-//     {
-//         node::wire_response(ictl_, true, { });
-//         init_next_read();
-//         return;
-//     }
-//
-//     // Повторяем попытку получить состояние
-//     eng::timer::once(std::chrono::milliseconds(100), [this]
-//     {
-//         st_stop_check();
-//     });
-// }
-//
-// /////////////////////////////////////////////////////////////////////////////////////////////
-//
-// // [ current ]
-// void frequency_converter::cmd_set_i(eng::abc::pack args)
-// {
-//     iup_[0] = std::min(eng::abc::get<double>(args), I_max_);
-//     st_update_set();
-// }
-//
-// // [ power ]
-// void frequency_converter::cmd_set_p(eng::abc::pack args)
-// {
-//     iup_[2] = eng::abc::get<double>(args);
-//     st_update_set();
-// }
-//
-// void frequency_converter::st_update_set()
-// {
-//     // Записываем уставки
-//     std::array<std::uint16_t, 3> iup{
-//         static_cast<std::uint16_t>(std::lround(iup_[0] * 10.0f)),
-//         static_cast<std::uint16_t>(std::lround(iup_[1])),
-//         static_cast<std::uint16_t>(std::lround(iup_[2] * 0.01f))
-//     };
-//     modbus_rtu_slave::write_multiple(0xA420, { iup.data(), iup.size() },
-//         &frequency_converter::st_set_done, &frequency_converter::device_offline);
-// }
-//
-// // Уставки записаны
-// void frequency_converter::st_set_done()
-// {
-//     node::wire_response(ictl_, true, { });
-//     init_next_read();
-// }
-//
-// /////////////////////////////////////////////////////////////////////////////////////////////
-//
-// void frequency_converter::read_device_offline()
-// {
-//     set_offline_state();
-//     init_next_read();
-// }
-//
-// void frequency_converter::init_next_read()
-// {
-//     // if (node::touch_signal(iwire_))
-//     //     return;
-//     //
-//     // node::enable_signals(iwire_);
-//     //
-//     // Повторяем попытку получить состояние
-//     read_internal_tid_ = eng::timer::once(std::chrono::seconds(1), [this]
-//     {
-//         update_internal_state();
-//     });
-// }
-//
-// void frequency_converter::update_internal_state()
-// {
-//     // Запрашиваем текущее состояние
-//     modbus_rtu_slave::read_holding(0xA411, 3,
-//         &frequency_converter::read_status_done, &frequency_converter::read_device_offline);
-// }
-//
-// // Прочитано 3 регистра
-// void frequency_converter::read_status_done(std::span<std::uint16_t const> regs)
-// {
-//     // Если ошибка
-//     if (regs[0] == 2)
-//     {
-//         std::uint32_t emask;
-//         std::memcpy(&emask, regs.data() + 1, sizeof(emask));
-//
-//         update_error_state(emask);
-//     }
-//     else
-//     {
-//         update_normal_state(regs[0] == 1);
-//     }
-//
-//     modbus_rtu_slave::read_holding(0xA430, 1,
-//         &frequency_converter::read_F_done, &frequency_converter::read_device_offline);
-// }
-//
-// // Прочитан 1 регистр
-// void frequency_converter::read_F_done(std::span<std::uint16_t const> regs)
-// {
-//     F_ = regs[0] * 10;
-//
-//     modbus_rtu_slave::read_holding(0xA432, 3,
-//         &frequency_converter::read_UI_done, &frequency_converter::read_device_offline);
-// }
-//
-// // Прочитано 3 регистра
-// void frequency_converter::read_UI_done(std::span<std::uint16_t const> regs)
-// {
-//     U_in_ = regs[0] * 1.0;
-//     U_out_ = regs[1] * 1.0;
-//     I_ = regs[2] * 0.1;
-//
-//     modbus_rtu_slave::read_holding(0xA437, 1,
-//         &frequency_converter::read_P_done, &frequency_converter::read_device_offline);
-// }
-//
-// // Прочитан 1 регистр
-// void frequency_converter::read_P_done(std::span<std::uint16_t const> regs)
-// {
-//     P_ = regs[0] * 100;
-//
-//     node::set_port_value(port_measure_, { P_, U_in_, U_out_, I_, F_ });
-//
-//     init_next_read();
-// }
-//
-// // [offline]
-// void frequency_converter::set_offline_state()
-// {
-//     if (offline_) return;
-//
-//     offline_ = true;
-//
-//     node::set_port_value(port_state_, { false });
-//     eng::log::info("state: online = false");
-//
-//     node::set_port_value(port_damage_, { true });
-//     eng::log::info("damage: true");
-//
-//     if (powered_)
-//     {
-//         node::set_port_value(port_powered_, { false });
-//         eng::log::info("powered: false");
-//         powered_ = false;
-//     }
-// }
-//
-// // [online, error, emask]
-// void frequency_converter::update_error_state(std::uint32_t emask)
-// {
-//     if (!offline_ && inerror_ && emask_ == emask)
-//         return;
-//
-//     if (offline_ || !inerror_)
-//     {
-//         node::set_port_value(port_damage_, { true });
-//         eng::log::info("damage: true");
-//     }
-//
-//     if (powered_)
-//     {
-//         node::set_port_value(port_powered_, { false });
-//         eng::log::info("powered: false");
-//         powered_ = false;
-//     }
-//
-//     offline_ = false;
-//     inerror_ = true;
-//     emask_ = emask;
-//
-//     node::set_port_value(port_state_, { true, true, emask });
-//     eng::log::info("state: online: true, error: true, emask: {}", emask);
-// }
-//
-// // [online, ok, powered]
-// void frequency_converter::update_normal_state(bool powered)
-// {
-//     if (!offline_ && !inerror_ && powered_ == powered)
-//         return;
-//
-//     if (offline_ || inerror_)
-//     {
-//         node::set_port_value(port_damage_, { false });
-//         eng::log::info("damage: false");
-//     }
-//
-//     offline_ = false;
-//     inerror_ = false;
-//     powered_ = powered;
-//
-//     node::set_port_value(port_state_, { true, false, powered });
-//     eng::log::info("state: online: true, error: false, powered: {}", powered);
-// }
-//
-//

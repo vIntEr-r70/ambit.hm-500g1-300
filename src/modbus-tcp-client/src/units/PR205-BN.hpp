@@ -17,19 +17,20 @@ class PR205_BN final
     std::unordered_map<std::size_t, read_handler_t> read_task_handlers_;
     std::unordered_map<std::size_t, write_handler_t> write_task_handlers_;
 
+    template <typename T>
     struct sens_t
     {
-        std::uint16_t value;
+        T value;
         bool initialized{ false };
         eng::sibus::output_port_id_t port_id;
     };
 
-    std::array<sens_t, 4> fc_;
-    std::array<sens_t, 4> dt_;
+    std::array<sens_t<std::uint16_t>, 4> fc_;
+    std::array<sens_t<std::uint32_t>, 4> dt_;
 
     struct pump_t
     {
-        void(PR205_BN::*state)(std::size_t);
+        // void(PR205_BN::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
         eng::sibus::output_port_id_t port_out;
     };
@@ -37,7 +38,7 @@ class PR205_BN final
 
     struct valve_t
     {
-        void(PR205_BN::*state)(std::size_t);
+        // void(PR205_BN::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
     };
     std::array<valve_t, 2> valves_;
@@ -47,6 +48,10 @@ class PR205_BN final
 public:
 
     PR205_BN(std::size_t, std::string_view, std::uint16_t);
+
+private:
+
+    void register_on_bus_done() override final;
 
 private:
 
@@ -60,28 +65,40 @@ private:
 
     void read_fc_done(readed_regs_t);
 
-    void read_dt_done(readed_regs_t);
+    void read_dtm_done(readed_regs_t);
+
+    void read_dts_done(readed_regs_t);
+
+    void read_dt_done(std::size_t, readed_regs_t);
 
     void read_state_done(readed_regs_t);
 
 private:
 
-    void s_pump_opening(std::size_t);
+    void start_pump(std::size_t);
 
-    void s_pump_opened(std::size_t);
+    void stop_pump(std::size_t);
 
-    void s_pump_closing(std::size_t);
-
-    void s_pump_closed(std::size_t);
+    // void s_pump_opening(std::size_t);
+    //
+    // void s_pump_opened(std::size_t);
+    //
+    // void s_pump_closing(std::size_t);
+    //
+    // void s_pump_closed(std::size_t);
 
 private:
 
-    void s_valve_opening(std::size_t);
+    void open_valve(std::size_t);
 
-    void s_valve_opened(std::size_t);
+    void close_valve(std::size_t);
 
-    void s_valve_closing(std::size_t);
-
-    void s_valve_closed(std::size_t);
+    // void s_valve_opening(std::size_t);
+    //
+    // void s_valve_opened(std::size_t);
+    //
+    // void s_valve_closing(std::size_t);
+    //
+    // void s_valve_closed(std::size_t);
 };
 

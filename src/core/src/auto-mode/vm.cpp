@@ -143,12 +143,23 @@ bool vm::try_add_next_phase(std::size_t &phase_id)
         auto it = std::ranges::find_if(phase_moving_, [this](auto &pair)
         {
             auto &axis = pair.second;
-            if (axis.moving_direction == 0 || axis.position == axis.next_position)
-                return false;
 
-            bool next_move = std::signbit(axis.next_position - axis.position);
-            bool prev_move = std::signbit(axis.moving_direction);
-            return next_move != prev_move;
+            int new_moving_direction = 0;
+            if (axis.position != axis.next_position)
+                new_moving_direction = (std::signbit(axis.next_position - axis.position) ? -1 : 1);
+
+            // eng::log::info("FIND IF {}: md = {}, new-md = {}, pos = {}, next-pos = {}",
+            //         pair.first, axis.moving_direction, new_moving_direction, axis.position, axis.next_position);
+
+            // Направление движения в рамках одной оси должно сохраняться
+            return axis.moving_direction && (axis.moving_direction != new_moving_direction);
+
+            // if (axis.moving_direction == 0 || )
+            //     return false;
+            //
+            // bool next_move = std::signbit(axis.next_position - axis.position);
+            // bool prev_move = std::signbit(axis.moving_direction);
+            // return next_move != prev_move;
         });
 
         // Если нашли инверсию, дальше не движемся
@@ -167,14 +178,13 @@ bool vm::try_add_next_phase(std::size_t &phase_id)
             {
                 auto &axis = pair.second;
 
-                // Обновляем значение направления движения
                 if (axis.position == axis.next_position)
                     return;
 
                 // Сохраняем пройденную дистанцию
-                double ds = axis.next_position - axis.position;
-                moving.distance[moving.axis_count] = { pair.first, ds };
+                moving.distance[moving.axis_count] = { pair.first, (axis.next_position - axis.position) };
                 moving.segments[moving.axis_count] = { pair.first, axis.position, axis.next_position };
+
                 moving.axis_count += 1;
             });
 
@@ -187,13 +197,9 @@ bool vm::try_add_next_phase(std::size_t &phase_id)
                 {
                     auto &axis = pair.second;
 
-                    // Обновляем значение направления движения
-                    if (axis.position == axis.next_position)
-                        axis.moving_direction = 0;
-                    else
+                    if (axis.position != axis.next_position)
                         axis.moving_direction = (std::signbit(axis.next_position - axis.position) ? -1 : 1);
 
-                    // Обновляем текущую позицию
                     axis.position = axis.next_position;
                 });
 
@@ -279,6 +285,14 @@ bool vm::check_in_position(std::unordered_map<char, double> const &positions) co
     if (ops_phases_.empty() > continuous_moving_list_.empty())
         throw std::runtime_error("check_in_position: moving list less then ops phases");
 
+    // std::stringstream ss;
+    // ss << "[ ";
+    // std::ranges::for_each(positions, [&ss](auto const &pair) {
+    //     ss << std::format(" {}: {:.3f} ", pair.first, pair.second);
+    // });
+    // ss << " ]";
+    // eng::log::info("check_in_position: {}", ss.view());
+
     std::size_t idx = continuous_moving_list_.size() - ops_phases_.size();
 
     // Никогда не анализируем последную позицию в движении,
@@ -294,18 +308,27 @@ bool vm::check_in_position(std::unordered_map<char, double> const &positions) co
     auto it = std::find_if_not(pmi.segments, end,
             [this, &positions](auto const &segment)
             {
-                // Ось не выполняет движения
-                if (segment.from == segment.to)
-                    return true;
-
                 double current_position = positions.find(segment.axis)->second;
 
-                // Если мы движемся в сторону увеличения
-                if (segment.from < segment.to)
-                    return current_position >= segment.to;
+                // Ось не выполняет движения
+                if (segment.from == segment.to)
+                {
+                    // eng::log::info("\t{}: {:.3f} == {:.3f}", segment.axis, segment.from, segment.to);
+                    return true;
+                }
 
+                // Если мы движемся в сторону увеличения
+                if (segment.from < segment.to )
+                {
+                    // eng::log::info("\t{}: {:.3f} >= {:.3f}", segment.axis, current_position, segment.to);
+                    return current_position >= segment.to;
+                }
+
+                // eng::log::info("\t{}: {:.3f} <= {:.3f}", segment.axis, current_position, segment.to);
                 return current_position <= segment.to;
             });
+
+    // eng::log::info("\t{}", (it == end) ? "OK" : "WAIT");
 
     // Если нашли хоть одну ось, которая еще не в координатах, ждем дальше
     // Иначе мы можем выполнить достигнутый этап

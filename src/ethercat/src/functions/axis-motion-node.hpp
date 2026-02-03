@@ -15,7 +15,7 @@ class axis_motion_node final
     char axis_;
     servo_motor &servo_motor_;
 
-    eng::sibus::input_wire_id_t iwire_;
+    eng::sibus::input_wire_id_t ictl_;
 
     eng::sibus::output_port_id_t position_out_;
     eng::sibus::output_port_id_t speed_out_;
@@ -55,4 +55,8 @@ private:
     void prepare_work_mode();
 
     void deactivate();
+
+private:
+
+    void register_on_bus_done() override final;
 };

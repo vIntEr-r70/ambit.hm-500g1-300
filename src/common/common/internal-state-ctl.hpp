@@ -50,8 +50,8 @@ protected:
         return true;
     };
 
-    bool is_in_state() const noexcept
+    bool is_in_state(state_handler_t state) const noexcept
     {
-        return state_ != nullptr;
+        return state_ == state;
     }
 };

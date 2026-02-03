@@ -1,7 +1,5 @@
 #pragma once
 
-#include "common/internal-state-ctl.hpp"
-
 #include <QWidget>
 
 #include <eng/sibus/node.hpp>
@@ -16,7 +14,6 @@ class problem_list_widget;
 class auto_ctl_page final
     : public QWidget
     , public eng::sibus::node
-    , public internal_state_ctl<auto_ctl_page>
 {
     Q_OBJECT
 
@@ -27,6 +24,7 @@ class auto_ctl_page final
     problem_list_widget *problem_list_widget_;
 
     eng::sibus::output_wire_id_t ctl_;
+    eng::sibus::output_port_id_t program_out_;
 
     RoundButton *btn_start_;
     RoundButton *btn_stop_;
@@ -35,7 +33,7 @@ class auto_ctl_page final
     std::optional<std::size_t> phase_id_;
     bool execution_error_;
 
-    std::size_t ctl_mode_{ 0 };
+    std::string program_base64_;
 
 public:
 
@@ -43,17 +41,7 @@ public:
 
 public:
 
-    void s_initialize();
-
-    void s_not_available();
-
-    void s_program_loaded();
-
-    void s_program_load_failed();
-
-public:
-
-    bool init();
+    void init();
 
 private:
 
@@ -64,6 +52,8 @@ private:
 private:
 
     void go_to_editor();
+
+    void go_to_main();
 
     void update_widget_view();
 

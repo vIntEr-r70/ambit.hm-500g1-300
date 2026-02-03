@@ -16,7 +16,7 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
     , by_time_(*this)
 {
     // Входящий провод для сигналов управления
-    iwire_ = node::add_input_wire();
+    ictl_ = node::add_input_wire();
 
     // Выходной порт с состоянием
     position_out_ = node::add_output_port("position");
@@ -36,12 +36,12 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
         servo_motor_.set_ratio(desc.ratio);
     });
 
-    node::set_activate_handler(iwire_, [this](eng::abc::pack args)
+    node::set_activate_handler(ictl_, [this](eng::abc::pack args)
     {
         start_command_execution(std::move(args));
     });
 
-    node::set_deactivate_handler(iwire_, [this]
+    node::set_deactivate_handler(ictl_, [this]
     {
         deactivate();
     });
@@ -62,7 +62,10 @@ void axis_motion_node::deactivate()
     // Если ресурс так и не получен либо не выполняет движений
     // нет необходимости его финализировать, просто освобождаем
     if (servo_motor_.control() == nullptr)
+    {
+        node::set_ready(ictl_);
         return;
+    }
 
     eng::log::info("axis_motion_node[{}]::node_offline: WAIT FOR DONE", axis_);
 
@@ -80,7 +83,8 @@ bool axis_motion_node::motion_done()
     node::set_port_value(speed_out_, { servo_motor_.speed() });
 
     eng::log::info("axis_motion_node[{}]::motion_done", axis_);
-    node::deactivated(iwire_);
+    node::set_ready(ictl_);
+
     return false;
 }
 
@@ -104,21 +108,16 @@ void axis_motion_node::start_command_execution(eng::abc::pack args)
     auto it = map.find(cmd);
     if (it == map.end())
     {
-        // node::deactivated(iwire_, { std::format("Незнакомая комманда: {}", cmd) });
-        node::deactivated(iwire_);
+        node::terminate(ictl_, std::format("Незнакомая комманда: {}", cmd));
         return;
     }
 
     args.pop_front();
 
     if ((this->*(it->second))(args))
-    {
-        node::activated(iwire_);
         return;
-    }
 
-    // node::deactivated(iwire_, { "Недопустимый режим движения" });
-    node::deactivated(iwire_);
+    node::terminate(ictl_, "Недопустимый режим движения");
 }
 
 bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)
@@ -178,7 +177,7 @@ bool axis_motion_node::cmd_stop(eng::abc::pack const &)
 
     if (mc == nullptr)
     {
-        node::wire_response(iwire_, true, { });
+        node::wire_response(ictl_, true, { });
         return true;
     }
 
@@ -219,5 +218,10 @@ bool axis_motion_node::cmd_timed_shift(eng::abc::pack const &args)
     servo_motor_.set_control(by_time_);
 
     return true;
+}
+
+void axis_motion_node::register_on_bus_done()
+{
+    node::set_ready(ictl_);
 }
 

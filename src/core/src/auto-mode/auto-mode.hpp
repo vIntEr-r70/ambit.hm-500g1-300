@@ -44,15 +44,15 @@ public:
 
 private:
 
-    bool activate();
+    void activate();
 
     void deactivate();
 
 private:
 
-    void s_initialize();
+    void s_wait_system_ready();
 
-    void s_deinitialize();
+    void s_initialize();
 
     void s_program_execution_loop();
 
@@ -82,9 +82,15 @@ private:
 
 private:
 
+    void upload_program(eng::abc::pack);
+
     bool prepare_program(bool&, std::array<bool, 3> &, std::vector<char> &);
 
     void create_operation(struct program const&, std::size_t, bool &, std::array<bool, 3> &) noexcept;
+
+private:
+
+    bool prepare_node_for_work();
 
 private:
 
@@ -92,9 +98,6 @@ private:
 
 private:
 
-    void handle_request(eng::abc::pack);
-
-    void cmd_upload_program(eng::abc::pack);
 
 private:
 

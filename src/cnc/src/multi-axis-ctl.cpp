@@ -64,10 +64,6 @@ multi_axis_ctl::multi_axis_ctl()
         deactivate();
     });
 
-    // node::set_wire_request_handler(ictl_, [this]()
-    // {
-    // });
-
     char const *LIAEM_RO_PATH = std::getenv("LIAEM_RO_PATH");
     if (LIAEM_RO_PATH == nullptr)
     {
@@ -108,6 +104,7 @@ multi_axis_ctl::multi_axis_ctl()
         return;
     }
 
+    // Создаем узлы управления с драйверами шаговых двигателей
     std::ranges::for_each(info_, [this](auto &info)
     {
         char axis = info.first;
@@ -118,19 +115,12 @@ multi_axis_ctl::multi_axis_ctl()
             wire_status_was_changed(axis);
         });
 
-        // node::set_wire_response_handler(ctl, [this,axis](bool success, eng::abc::pack args)
-        // {
-        //     if (!success)
-        //         eng::log::error("{}: {}: {}", name(), axis, eng::abc::get_sv(args));
-        //     response_handler(axis, success);
-        // });
+        node::link_wires(ictl_, ctl);
     });
 }
 
 void multi_axis_ctl::activate(eng::abc::pack args)
 {
-    eng::log::info("{}: ACTIVATE", name());
-
     tasks_.clear();
     in_proc_.clear();
 
@@ -145,14 +135,13 @@ void multi_axis_ctl::activate(eng::abc::pack args)
     });
 
     // Проверяем готовность осей, задействованных в задании
-    auto it = std::ranges::find_if_not(help_set_, [this](char axis) {
-        return info_.contains(axis) && node::is_ready(info_[axis].ctl);
+    auto it = std::ranges::find_if(help_set_, [this](char axis) {
+        return info_.contains(axis) && !node::is_ready(info_[axis].ctl);
     });
 
     if (it != help_set_.end())
     {
-        node::deactivated(ictl_);
-        eng::log::info("{}: DEACTIVATED", name());
+        node::terminate(ictl_, "Присутствуют оси, не готовые к движению");
         return;
     }
 
@@ -164,15 +153,17 @@ void multi_axis_ctl::activate(eng::abc::pack args)
     {
         execute_phase(pair.first);
     });
-
-    node::activated(ictl_);
 }
 
 void multi_axis_ctl::deactivate()
 {
-    std::ranges::for_each(info_, [this](auto const &pair) {
-        node::deactivate(pair.second.ctl);
-    });
+    if (in_proc_.empty())
+    {
+        node::set_ready(ictl_);
+        return;
+    }
+
+    tasks_.clear();
 }
 
 // Рассчитываем для каждой оси время выполнения движения
@@ -199,8 +190,7 @@ void multi_axis_ctl::execute_phase(char axis)
             // отправляем ответ нашему контроллеру
             eng::log::info("{}: ALL AXIS DONE", name());
 
-            // node::wire_response(ictl_, true, { });
-            node::deactivated(ictl_);
+            node::set_ready(ictl_);
         }
 
         return;
@@ -399,7 +389,7 @@ void multi_axis_ctl::calculate_moving(axis_group_t const &axis)
 
         for (;;)
         {
-            auto iaxis = axis.axis.begin();
+            std::vector<axis_group_item_t>::const_iterator iaxis;
 
             // Если в списке остался только один претендент
             if (help_set_.size() > 1)
@@ -419,14 +409,18 @@ void multi_axis_ctl::calculate_moving(axis_group_t const &axis)
                     return std::abs(move_a.ds) < std::abs(move_b.ds);
                 });
             }
-
-            if (iaxis == axis.axis.end())
-                throw std::runtime_error("bad acceleration search algorithm 1");
+            else
+            {
+                // Берем первый из списка
+                iaxis = std::ranges::find_if(axis.axis, [this](auto const &a) {
+                    return a.axis == *help_set_.begin();
+                });
+            }
 
             char axis_a_total = iaxis->axis;
             double a_total = info_[axis_a_total].acc;
-            double k_total = axis_phases_[iaxis->axis].phases[iaxis->phase_id].moves[i].k;
-            axis_phases_[iaxis->axis].phases[iaxis->phase_id].moves[i].a = a_total;
+            double k_total = axis_phases_[axis_a_total].phases[iaxis->phase_id].moves[i].k;
+            axis_phases_[axis_a_total].phases[iaxis->phase_id].moves[i].a = a_total;
 
             // Считаем ускорения
             std::ranges::for_each(axis.axis, [&](axis_group_item_t item)
@@ -442,7 +436,7 @@ void multi_axis_ctl::calculate_moving(axis_group_t const &axis)
             iaxis = std::ranges::find_if(axis.axis, [this, i](auto item)
             {
                 auto &move = axis_phases_[item.axis].phases[item.phase_id].moves[i];
-                return move.a > info_[item.axis].acc; 
+                return move.a > info_[item.axis].acc;
             });
 
             // Если таких нету значит мы все посчитали правильно
@@ -781,116 +775,7 @@ std::size_t multi_axis_ctl::calculate_group_axis_move_step(std::size_t istep, mo
 // Запускаем цикл выполнения движения по нескольким осям
 void multi_axis_ctl::register_on_bus_done()
 {
-    return;
-
-    eng::log::info("{}: multi_axis_ctl::register_on_bus_done", name());
-
-    eng::timer::once(std::chrono::milliseconds(100), [this]
-    {
-        eng::log::info("{}: multi_axis_ctl::once", name());
-
-        tasks_.emplace_back();
-        {
-            auto &task = tasks_.back();
-            task.axis[0] = { 'X', -20.0 };
-            task.axis[1] = { 'Y', 10.0 };
-            task.axis[2] = { 'Z', 40.0 };
-            task.axis[3] = { 'V', 60.0 };
-            task.axis_count = 4;
-            task.speed = 1.0;
-        }
-        tasks_.emplace_back();
-        {
-            auto &task = tasks_.back();
-            task.axis[0] = { 'X', -30.0 };
-            task.axis[1] = { 'Y', 60.0 };
-            task.axis[2] = { 'Z', 40.0 };
-            task.axis[3] = { 'V', 60.0 };
-            task.axis_count = 4;
-            task.speed = 2.0;
-        }
-        tasks_.emplace_back();
-        {
-            auto &task = tasks_.back();
-            task.axis[0] = { 'Z', 40.0 };
-            task.axis[1] = { 'V', 60.0 };
-            task.axis_count = 2;
-            task.speed = 2.5;
-        }
-        tasks_.emplace_back();
-        {
-            auto &task = tasks_.back();
-            task.axis[0] = { 'Z', 40.0 };
-            task.axis[1] = { 'V', 60.0 };
-            task.axis_count = 2;
-            task.speed = 3.0;
-        }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'X', 100.0 };
-        //     task.axis[1] = { 'Y', 300.0 };
-        //     task.axis_count = 2;
-        //     task.speed = 3.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'X', 100.0 };
-        //     task.axis[1] = { 'Y', 200.0 };
-        //     task.axis_count = 2;
-        //     task.speed = 4.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'Y', 50.0 };
-        //     task.axis[1] = { 'V', 50.0 };
-        //     task.axis_count = 2;
-        //     task.speed = 2.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'V', 50.0 };
-        //     task.axis_count = 1;
-        //     task.speed = 4.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'X', 100.0 };
-        //     task.axis[1] = { 'Y', 200.0 };
-        //     task.axis[2] = { 'Z', 300.0 };
-        //     task.axis_count = 3;
-        //     task.speed = 2.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'X', 100.0 };
-        //     task.axis[1] = { 'Y', 200.0 };
-        //     task.axis[2] = { 'Z', 300.0 };
-        //     task.axis_count = 3;
-        //     task.speed = 3.0;
-        // }
-        // tasks_.emplace_back();
-        // {
-        //     auto &task = tasks_.back();
-        //     task.axis[0] = { 'X', 100.0 };
-        //     task.axis[1] = { 'Y', 200.0 };
-        //     task.axis[2] = { 'Z', 300.0 };
-        //     task.axis_count = 3;
-        //     task.speed = 4.0;
-        // }
-
-        convert_tasks_to_phases();
-
-        std::ranges::for_each(axis_phases_, [this](auto const &pair)
-        {
-            execute_phase(pair.first);
-        });
-    });
+    node::set_ready(ictl_);
 }
 
 // Ось завершила выполнение движения либо вернула ошибку
@@ -902,7 +787,7 @@ void multi_axis_ctl::response_handler(char axis, bool success)
     if (!success) return;
 
     eng::log::info("{}: {}: {}", name(), axis,
-        "Отправляем на выполнение следующий этап если таковой имеется");
+        "1: Отправляем на выполнение следующий этап если таковой имеется");
 
     execute_phase(axis);
 }
@@ -911,6 +796,9 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
 {
     // Если ось не выполняется, значит ее состояние нам не интересно
     if (!in_proc_.contains(axis))
+        return;
+
+    if (node::is_transiting(info_[axis].ctl))
         return;
 
     if (!tasks_.empty())
@@ -923,7 +811,7 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
         if (node::is_ready(info_[axis].ctl))
         {
             eng::log::info("{}: {}: {}", name(), axis,
-                "Отправляем на выполнение следующий этап если таковой имеется");
+                "2: Отправляем на выполнение следующий этап если таковой имеется");
 
             execute_phase(axis);
             return;
@@ -953,13 +841,16 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
     else
     {
         if (node::is_active(info_[axis].ctl))
+        {
+            node::deactivate(info_[axis].ctl);
             return;
+        }
 
         in_proc_.erase(axis);
     }
 
     if (in_proc_.empty())
-        node::deactivated(ictl_);
+        node::set_ready(ictl_);
 }
 
 // Np, [ speed, Na, [ axis, distance ], ... ], ... 

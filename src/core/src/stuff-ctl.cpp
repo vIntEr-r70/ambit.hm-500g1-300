@@ -9,36 +9,35 @@
 
 stuff_ctl::stuff_ctl()
     : eng::sibus::node("stuff-ctl")
-    , state_(&stuff_ctl::s_ready_to_work)
 {
     ictl_ = node::add_input_wire();
 
     node::set_activate_handler(ictl_, [this](eng::abc::pack args)
     {
-        eng::log::info("{}: ACTIVATE", name());
         activate(std::move(args));
     });
     node::set_deactivate_handler(ictl_, [this]
     {
-        eng::log::info("{}: DEACTIVATE", name());
         deactivate();
     });
+
     node::set_wire_request_handler(ictl_, [this](eng::abc::pack args)
     {
         eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
         do_command(std::move(args));
+        touch_current_state();
     });
 
     fc_.ctl = node::add_output_wire("fc");
     node::set_wire_status_handler(fc_.ctl, [this] {
-        (this->*state_)();
+        touch_current_state();
     });
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
     {
         sp_[i].ctl = node::add_output_wire(std::format("sp{}", i));
         node::set_wire_status_handler(sp_[i].ctl, [this, i] {
-            (this->*state_)();
+            touch_current_state();
         });
     }
 
@@ -48,7 +47,7 @@ stuff_ctl::stuff_ctl()
     {
         desc.ctl = node::add_output_wire(std::format("{}", axis));
         node::set_wire_status_handler(desc.ctl, [this, axis] {
-            (this->*state_)();
+            touch_current_state();
         });
     }
 }
@@ -76,47 +75,81 @@ void stuff_ctl::activate(eng::abc::pack args)
     for (std::size_t i = 0; i < axis_count; ++i)
     {
         char axis = eng::abc::get<char>(args, iarg++);
-
-        if (!axis_.contains(axis))
-        {
-            eng::log::error("{}: Требуемая ось {} отсутствует в конфигурации системы", name(), axis);
-            node::deactivated(ictl_);
-            return;
-        }
-
         axis_[axis].in_use = true;
         eng::log::info("{}: init: {} = {}", name(), axis, axis_[axis].in_use);
     }
 
-    // Теперь нам надо убедиться что они доступны
+    // Проверяем готовность системы
     if (!is_stuff_usable())
     {
-        eng::log::error("{}: Система не готова к выполнению режима", name());
-        node::deactivated(ictl_);
+        node::terminate(ictl_, "Система не готова к выполнению режима");
         return;
     }
 
-    eng::log::info("{}: Система готова к выполнению режима", name());
-
-    node::activated(ictl_);
-
-    state_ = &stuff_ctl::s_in_proccess;
+    switch_to_state(in_use_any() ?
+        &stuff_ctl::s_ctl_state : &stuff_ctl::s_lazy_state);
 }
 
 void stuff_ctl::deactivate()
 {
-    state_ = &stuff_ctl::s_deactivating;
-    s_deactivating();
+    if (is_stuff_usable())
+    {
+        node::set_ready(ictl_);
+        switch_to_state(nullptr);
+        return;
+    }
+
+    // Деактивируем все с чем работали
+
+    if (fc_.in_use && !node::is_ready(fc_.ctl))
+        node::deactivate(fc_.ctl);
+
+    for (std::size_t i = 0; i < sp_.size(); ++i)
+    {
+        if (sp_[i].in_use && !node::is_ready(sp_[i].ctl))
+            node::deactivate(sp_[i].ctl);
+    }
+
+    for (auto const &[ axis, desc ] : axis_)
+    {
+        if (desc.in_use && !node::is_ready(desc.ctl))
+            node::deactivate(desc.ctl);
+    }
+
+    switch_to_state(&stuff_ctl::s_wait_system_ready);
+}
+
+void stuff_ctl::s_wait_system_ready()
+{
+    if (!is_stuff_usable())
+        return;
+
+    node::set_ready(ictl_);
+    switch_to_state(nullptr);
+}
+
+// Мы активны но задач нам приходить не будет
+void stuff_ctl::s_lazy_state()
+{
+    eng::log::info("{}: {}", name(), __func__);
+}
+
+// Мы активны и должны управлять периферией
+void stuff_ctl::s_ctl_state()
+{
+    eng::log::info("{}: {}", name(), __func__);
+
+    apply_fc_state();
+
+    for (std::size_t i = 0; i < sp_.size(); ++i)
+        apply_sp_state(i);
+
+    for (auto &[ axis, _ ] : axis_)
+        apply_axis_state(axis);
 }
 
 void stuff_ctl::do_command(eng::abc::pack args)
 {
-    if (state_ != &stuff_ctl::s_in_proccess)
-    {
-        node::wire_response(ictl_, false, { std::format("Система не готова выполнять команды") });
-        return;
-    }
-
     static std::unordered_map<std::string_view, activate_command> const map {
         { "operation", &stuff_ctl::cmd_operation   },
     };
@@ -133,8 +166,6 @@ void stuff_ctl::do_command(eng::abc::pack args)
     args.pop_front();
 
     (this->*(it->second))(std::move(args));
-
-    (this->*state_)();
 }
 
 // Разбираем операцию и передаем на выполнение
@@ -145,150 +176,125 @@ void stuff_ctl::cmd_operation(eng::abc::pack args)
 
     double fc_i = eng::abc::get<double>(args, iarg++);
     double fc_p = eng::abc::get<double>(args, iarg++);
-    apply_fc_state(fc_i, fc_p);
+    fc_.value = { .i = fc_i, .p = fc_p };
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
-        apply_sp_state(i, eng::abc::get<bool>(args, iarg++));
+        sp_[i].value = eng::abc::get<bool>(args, iarg++);
 
     std::size_t axis_count = eng::abc::get<std::uint8_t>(args, iarg++);
     for (std::size_t i = 0; i < axis_count; ++i)
     {
         char axis = eng::abc::get<char>(args, iarg++);
-        double speed = eng::abc::get<double>(args, iarg++);
-        apply_axis_state(axis, speed);
+        axis_[axis].value = eng::abc::get<double>(args, iarg++);
     }
 
     node::wire_response(ictl_, true, { });
 }
 
-void stuff_ctl::s_ready_to_work()
+void stuff_ctl::apply_fc_state()
 {
+    if (!fc_.in_use || !fc_.value.has_value())
+        return;
+
+    if (node::is_transiting(fc_.ctl))
+        return;
+
+    auto v = *fc_.value;
+
+    eng::log::info("{}: FC-I = {}", name(), v.i);
+    eng::log::info("{}: FC-P = {}", name(), v.p);
+
+#ifdef BUILDROOT
+    if (v.p != 0.0)
+    {
+        if (node::is_ready(fc_.ctl) || node::is_active(fc_.ctl))
+            node::activate(fc_.ctl, { v.i, v.p });
+    }
+    else
+    {
+        if (node::is_active(fc_.ctl))
+            node::deactivate(fc_.ctl);
+    }
+#endif
+
+    fc_.value.reset();
 }
 
-void stuff_ctl::s_in_proccess()
+void stuff_ctl::apply_sp_state(std::size_t idx)
 {
-    bool all_ok = true;
+    auto &sp = sp_[idx];
 
-    // all_ok &= is_state_correct(fc_);
-    //
-    // for (std::size_t i = 0; i < sp_.size(); ++i)
-    //     all_ok &= is_state_correct(sp_[i]);
-    //
-    // for (auto &[ _, desc ] : axis_)
-    //     all_ok &= is_state_correct(desc);
+    if (!sp.in_use || !sp.value.has_value())
+        return;
 
-    if (all_ok) return;
+    if (node::is_transiting(sp.ctl))
+        return;
 
-    eng::log::error("{}: Устройства не прошли проверку состояния", name());
+    eng::log::info("{}: SP{} = {}", name(), idx, *sp.value);
 
-    deactivate();
+#ifdef BUILDROOT
+    if (*sp.value)
+    {
+        if (node::is_ready(sp.ctl))
+            node::activate(sp.ctl, { });
+    }
+    else
+    {
+        if (node::is_active(sp.ctl))
+            node::deactivate(sp.ctl);
+    }
+#endif
+
+    sp.value.reset();
 }
 
-// Приводим все устройства в штатное состояние
-void stuff_ctl::s_deactivating()
+void stuff_ctl::apply_axis_state(char key)
 {
-    bool all_done = true;
+    auto &axis = axis_[key];
 
-    all_done &= is_deactivated(fc_);
+    if (!axis.in_use || !axis.value.has_value())
+        return;
+
+    if (node::is_transiting(axis.ctl))
+        return;
+
+    eng::log::info("{}: {} = {}", name(), key, *axis.value);
+
+#ifdef BUILDROOT
+    if (*axis.value)
+    {
+        if (node::is_ready(axis.ctl) || node::is_active(axis.ctl))
+            node::activate(axis.ctl, { *axis.value });
+    }
+    else
+    {
+        if (node::is_active(axis.ctl))
+            node::deactivate(axis.ctl);
+    }
+#endif
+
+    axis.value.reset();
+}
+
+bool stuff_ctl::in_use_any() const
+{
+    if (fc_.in_use)
+        return true;
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
-        all_done &= is_deactivated(sp_[i]);
+        if (sp_[i].in_use) return true;
 
-    for (auto &[ _, desc ] : axis_)
-        all_done &= is_deactivated(desc);
-
-    if (!all_done) return;
-
-    node::deactivated(ictl_);
-    state_ = &stuff_ctl::s_ready_to_work;
-}
-
-bool stuff_ctl::is_deactivated(unit_t &unit)
-{
-    if (!unit.in_use)
-        return true;
-
-    if (!node::is_allow(unit.ctl))
-    {
-        unit.in_use = false;
-        return true;
-    }
-
-    if (node::is_transiting(unit.ctl))
-        return false;
-
-    if (node::is_active(unit.ctl))
-    {
-        node::deactivate(unit.ctl);
-        return false;
-    }
-
-    if (node::is_ready(unit.ctl))
-    {
-        unit.in_use = false;
-        return true; 
-    }
+    for (auto const &[ axis, desc ] : axis_)
+        if (desc.in_use) return true;
 
     return false;
-}
-
-bool stuff_ctl::is_state_correct(unit_t &unit)
-{
-    if (!unit.in_use)
-        return true;
-
-    if (!node::is_allow(unit.ctl))
-        return false;
-
-    if (node::is_transiting(unit.ctl))
-        return true;
-
-    return node::is_active(unit.ctl) == unit.active;
-}
-
-void stuff_ctl::apply_fc_state(double i, double p)
-{
-    if (!fc_.in_use) return;
-
-    eng::log::info("{}: FC-I = {}", name(), i);
-    eng::log::info("{}: FC-P = {}", name(), p);
-
-    fc_.active = p != 0.0;
-    if (fc_.active)
-        node::activate(fc_.ctl, { i, p });
-    else
-        node::deactivate(fc_.ctl);
-}
-
-void stuff_ctl::apply_sp_state(std::size_t idx, bool value)
-{
-    if (!sp_[idx].in_use) return;
-
-    eng::log::info("{}: SP{} = {}", name(), idx, value);
-
-    sp_[idx].active = value;
-    if (value)
-        node::activate(sp_[idx].ctl, { });
-    else
-        node::deactivate(sp_[idx].ctl);
-}
-
-void stuff_ctl::apply_axis_state(char axis, double speed)
-{
-    if (!axis_[axis].in_use) return;
-
-    axis_[axis].active = speed != 0.0;
-    if (axis_[axis].active)
-        node::activate(axis_[axis].ctl, { speed });
-    else
-        node::deactivate(axis_[axis].ctl);
 }
 
 bool stuff_ctl::is_stuff_usable() const
 {
     bool result = true;
 
-    if (fc_.in_use && !node::is_allow(fc_.ctl))
+    if (fc_.in_use && !node::is_ready(fc_.ctl))
     {
         eng::log::error("{}: ПЧ недоступен для работы", name());
         result = false;
@@ -296,7 +302,7 @@ bool stuff_ctl::is_stuff_usable() const
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
     {
-        if (sp_[i].in_use && !node::is_allow(sp_[i].ctl))
+        if (sp_[i].in_use && !node::is_ready(sp_[i].ctl))
         {
             eng::log::error("{}: Спрейер №{} недоступен для работы", name(), i);
             result = false;
@@ -305,7 +311,7 @@ bool stuff_ctl::is_stuff_usable() const
 
     for (auto const &[ axis, desc ] : axis_)
     {
-        if (desc.in_use && !node::is_allow(desc.ctl))
+        if (desc.in_use && !node::is_ready(desc.ctl))
         {
             eng::log::error("{}: Ось {} недоступна для работы", name(), axis);
             result = false;
@@ -342,5 +348,10 @@ void stuff_ctl::load_axis_list()
         eng::log::error("{}: {}", name(), e.what());
         return;
     }
+}
+
+void stuff_ctl::register_on_bus_done()
+{
+    node::set_ready(ictl_);
 }
 

@@ -36,7 +36,7 @@ class PR205_A1 final
 
     struct valve_t
     {
-        void(PR205_A1::*state)(std::size_t);
+        // void(PR205_A1::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
         eng::sibus::output_port_id_t port_out;
     };
@@ -47,6 +47,10 @@ class PR205_A1 final
 public:
 
     PR205_A1(std::string_view, std::uint16_t);
+
+private:
+
+    void register_on_bus_done() override final;
 
 private:
 
@@ -72,11 +76,15 @@ private:
 
 private:
 
-    void s_valve_opening(std::size_t);
+    void open_valve(std::size_t);
 
-    void s_valve_opened(std::size_t);
+    void close_valve(std::size_t);
 
-    void s_valve_closing(std::size_t);
-
-    void s_valve_closed(std::size_t);
+    // void s_valve_opening(std::size_t);
+    //
+    // void s_valve_opened(std::size_t);
+    //
+    // void s_valve_closing(std::size_t);
+    //
+    // void s_valve_closed(std::size_t);
 };
