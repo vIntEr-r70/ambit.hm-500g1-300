@@ -5,6 +5,7 @@
 
 #include <eng/sibus/node.hpp>
 #include <eng/timer.hpp>
+#include <eng/stopwatch.hpp>
 
 class auto_mode final
     : public eng::sibus::node
@@ -21,13 +22,15 @@ class auto_mode final
     eng::sibus::output_wire_id_t stuff_ctl_;
 
     eng::sibus::output_port_id_t phase_id_out_;
+    eng::sibus::output_port_id_t times_out_;
 
     vm vm_;
     std::vector<VmPhase*> phases_;
 
     std::vector<char> target_axis_;
 
-    // eng::stopwatch stopwatch_;
+    eng::stopwatch stopwatch_;
+    eng::stopwatch pause_stopwatch_;
 
     std::string program_b64_;
 
@@ -37,6 +40,7 @@ class auto_mode final
     std::unordered_map<char, double> axis_program_pos_;
 
     eng::timer::id_t pause_timer_;
+    eng::timer::id_t proc_timer_;
 
 public:
 
@@ -92,12 +96,9 @@ private:
 
     bool prepare_node_for_work();
 
-private:
-
     void load_axis_list();
 
-private:
-
+    void update_output_times();
 
 private:
 

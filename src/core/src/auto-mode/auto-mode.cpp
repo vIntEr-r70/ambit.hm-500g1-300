@@ -48,6 +48,7 @@ auto_mode::auto_mode()
     });
 
     phase_id_out_ = node::add_output_port("phase-id");
+    times_out_ = node::add_output_port("times");
 
     load_axis_list();
 
@@ -56,6 +57,18 @@ auto_mode::auto_mode()
     {
         eng::timer::stop(pause_timer_);
         switch_to_state(&auto_mode::s_pause_done);
+    });
+
+    // Таймер выполнения режима
+    proc_timer_ = eng::timer::create([this]
+    {
+        // Общее время выполнения
+        double t0 = stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
+
+        // Время на паузе или на бесконечной паузе
+        double t1 = 0.0;
+
+        node::set_port_value(times_out_, { t0, t1 });
     });
 
     // Связываем свои входные и выходные провода
@@ -152,7 +165,7 @@ void auto_mode::s_initialize()
 
 void auto_mode::s_init_pause()
 {
-    // eng::log::info("{}: {}", name(), __func__);
+    eng::log::info("{}: {}", name(), __func__);
 
     auto msec = vm_.pause_timeout_ms();
     if (msec != 0)
@@ -164,7 +177,10 @@ void auto_mode::s_init_pause()
 // Контролируем доступность требуемых нам для работы модулей
 void auto_mode::s_pause()
 {
-    // eng::log::info("{}: {}", name(), __func__);
+    eng::log::info("{}: {}", name(), __func__);
+
+    if (node::is_transiting(axis_ctl_))
+        return;
 
     if (!node::is_ready(axis_ctl_))
     {
@@ -187,6 +203,9 @@ void auto_mode::s_pause()
 void auto_mode::s_infinity_pause()
 {
     eng::log::info("{}: {}", name(), __func__);
+
+    if (node::is_transiting(axis_ctl_))
+        return;
 
     if (!node::is_ready(axis_ctl_))
     {
@@ -265,7 +284,7 @@ void auto_mode::s_start_moving()
 
 void auto_mode::s_wait_moving_done()
 {
-    // eng::log::info("{}: {}", name(), __func__);
+    eng::log::info("{}: {}", name(), __func__);
 
     if (node::is_transiting(axis_ctl_))
         return;
@@ -281,7 +300,7 @@ void auto_mode::s_wait_moving_done()
     // Если движение все еще выполняется
     if (node::is_active(axis_ctl_))
     {
-        // eng::log::info("{}: {}", name(), __func__);
+        eng::log::info("{}: {}", name(), __func__);
 
         // Отслеживаем где мы находимся позиционно
         // инкрементируя номер выполняемой строчки программы
@@ -555,6 +574,10 @@ void auto_mode::load_axis_list()
         eng::log::error("{}: {}", name(), e.what());
         return;
     }
+}
+
+void auto_mode::update_output_times()
+{
 }
 
 

@@ -59,6 +59,8 @@ private:
 
     void update_phase_id(eng::abc::pack);
 
+    void update_times(eng::abc::pack);
+
 signals:
 
     void make_done();

@@ -18,6 +18,7 @@
 #include <QStackedWidget>
 
 #include <eng/log.hpp>
+#include <qnamespace.h>
 
 auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
     : QWidget(parent)
@@ -50,8 +51,33 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
                 btn_edit->setBgColor("#8a8a8a");
                 hL->addWidget(btn_edit);
 
-                hL->addStretch();
+                hL->addSpacing(50);
 
+                QHBoxLayout *hhL = new QHBoxLayout();
+                {
+                    hhL->addWidget(new QLabel("Общее\nвремя", this));
+
+                    QLabel *lbl = new QLabel(this);
+                    lbl->setStyleSheet("font-size: 18pt; color: #696969;");
+                    lbl->setText("00:00:00");
+                    lbl->setFrameShape(QFrame::StyledPanel);
+                    lbl->setAlignment(Qt::AlignCenter);
+                    lbl->setFixedWidth(120);
+                    hhL->addWidget(lbl);
+
+                    hhL->addSpacing(20);
+
+                    hhL->addWidget(new QLabel("Время\nпаузы", this));
+
+                    lbl = new QLabel(this);
+                    lbl->setStyleSheet("font-size: 18pt; color: #696969;");
+                    lbl->setFrameShape(QFrame::StyledPanel);
+                    lbl->setText("00:00:00");
+                    lbl->setAlignment(Qt::AlignCenter);
+                    lbl->setFixedWidth(120);
+                    hhL->addWidget(lbl);
+                }
+                hL->addLayout(hhL);
 
                 hL->addStretch();
 
@@ -98,6 +124,10 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 
     node::add_input_port_v2("phase-id", [this](eng::abc::pack args) {
         update_phase_id(std::move(args));
+    });
+
+    node::add_input_port_v2("times", [this](eng::abc::pack args) {
+        update_times(std::move(args));
     });
 
     ctl_ = node::add_output_wire();
@@ -202,5 +232,13 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
         execution_error_ = eng::abc::get<bool>(args, 1);
         model_.set_current_phase(*phase_id_);
     }
+}
+
+// общее время, время паузы
+// Общее время считается всегда с начала запуска программы
+// Время паузы идет в обратную сторону при нахождении на паузе
+// NaN когда не на паузе, Inf на бесконечной паузе
+void auto_ctl_page::update_times(eng::abc::pack args)
+{
 }
 
