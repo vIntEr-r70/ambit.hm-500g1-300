@@ -33,14 +33,14 @@ namespace axis_config
         double acc{ 1.0 };
 
         //! [мм/мин] [рад/мин]
-        double speed[3] { 1.0, 10.0, 100.0 };
+        std::array<double, 3> speed{ 1.0, 10.0, 100.0 };
 
         struct
         {
             double ratio{ 1.0 };
 
             //! [мм/мин] [рад/мин]
-            double speed[3] { 1.0, 10.0, 100.0 };
+            std::array<double, 3> speed{ 1.0, 10.0, 100.0 };
 
             char link_axis{ '\0' };
 

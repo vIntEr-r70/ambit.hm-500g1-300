@@ -62,6 +62,10 @@ public:
 
 private:
 
+    void register_on_bus_done() override final;
+
+private:
+
     void activate(eng::abc::pack);
 
     void deactivate();

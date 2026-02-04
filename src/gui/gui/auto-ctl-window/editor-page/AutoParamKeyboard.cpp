@@ -119,7 +119,19 @@ AutoParamKeyboard::AutoParamKeyboard(QWidget* parent)
     }
 }
 
-void AutoParamKeyboard::show_main(QString const& title, QString const &v, float min, float max, main_accept_cb_t &&cb)
+void AutoParamKeyboard::show_main(QString const& title, QString const &v, double min, double max, main_accept_cb_t &&cb)
+{
+    main_page_.position.reset();
+    show_main(title, v, std::move(cb));
+}
+
+void AutoParamKeyboard::show_main(QString const& title, QString const& v, double pos, double min, double max, main_accept_cb_t &&cb)
+{
+    main_page_.position = pos;
+    show_main(title, v, std::move(cb));
+}
+
+void AutoParamKeyboard::show_main(QString const& title, QString const &v, main_accept_cb_t &&cb)
 {
     title_->setText(title);
 
@@ -130,17 +142,12 @@ void AutoParamKeyboard::show_main(QString const& title, QString const &v, float 
     on_acc_handler_ = &AutoParamKeyboard::main_acc_handler;
 
     main_page_.le->setText(v);
+    main_page_.btn->setVisible(main_page_.position.has_value());
 
     le_.clear();
     le_.push_back(main_page_.le);
 
     InteractWidget::show();
-}
-
-void AutoParamKeyboard::show_main(QString const& title, QString const& v, float pos, float min, float max, main_accept_cb_t &&cb)
-{
-    show_main(title, v, min, max, std::move(cb));
-    // main_page_->update_pos_value(pos);
 }
 
 void AutoParamKeyboard::show_pause(std::uint64_t msec, pause_accept_cb_t &&cb)
@@ -318,11 +325,22 @@ QWidget* AutoParamKeyboard::create_main_page()
     main_page_.validator->setDecimals(3);
 
     {
-        QVBoxLayout *vL = new QVBoxLayout(w);
+        QHBoxLayout *hL = new QHBoxLayout(w);
         {
             main_page_.le = create_line_edit(w);
             main_page_.le->setValidator(main_page_.validator);
-            vL->addWidget(main_page_.le);
+            hL->addWidget(main_page_.le);
+
+            main_page_.btn = new RoundButton(w);
+            main_page_.btn->setFixedWidth(50);
+            connect(main_page_.btn, &RoundButton::clicked, [this]
+            {
+                double pos = main_page_.position ? *main_page_.position : 0.0;
+                main_page_.le->setText(QString::number(pos, 'f', 2));
+            });
+            main_page_.btn->setIcon(":/cnc.position");
+            main_page_.btn->setBgColor(QColor("#29AC39"));
+            hL->addWidget(main_page_.btn);
         }
     }
     return w;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <eng/sibus/node.hpp>
+
 #include <QWidget>
 
 class ProgramModel;
@@ -9,6 +11,7 @@ class program_widget;
 
 class editor_page final
     : public QWidget
+    , public eng::sibus::node
 {
     Q_OBJECT
 
@@ -18,7 +21,7 @@ class editor_page final
     editor_page_header_widget *header_;
     AutoParamKeyboard *kb_;
 
-    std::unordered_map<char, float> real_pos_;
+    std::unordered_map<char, double> positions_;
 
 public:
 

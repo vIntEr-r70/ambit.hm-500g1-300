@@ -29,9 +29,9 @@ public:
 
 public:
 
-    void show_main(QString const&, QString const&, float, float, main_accept_cb_t &&);
+    void show_main(QString const&, QString const&, double, double, main_accept_cb_t &&);
 
-    void show_main(QString const&, QString const&, float, float, float, main_accept_cb_t &&);
+    void show_main(QString const&, QString const&, double, double, double, main_accept_cb_t &&);
 
     void show_pause(std::uint64_t, pause_accept_cb_t &&);
 
@@ -40,6 +40,10 @@ public:
     void show_fc(float, float, float, fc_accept_cb_t &&);
 
     void show_center(centering_type, float, center_accept_cb_t &&);
+
+private:
+
+    void show_main(QString const&, QString const&, main_accept_cb_t &&);
 
 private slots:
 
@@ -98,6 +102,8 @@ private:
         QWidget *w;
         QDoubleValidator *validator;
         QLineEdit* le;
+        RoundButton *btn;
+        std::optional<double> position;
 
     } main_page_;
 

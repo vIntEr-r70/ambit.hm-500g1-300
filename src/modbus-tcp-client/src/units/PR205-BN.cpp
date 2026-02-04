@@ -10,20 +10,15 @@ PR205_BN::PR205_BN(std::size_t id, std::string_view host, std::uint16_t port)
 {
     std::size_t idx;
 
+    idx = modbus_unit::add_read_task(0x4002, 4, 1000);
+    read_task_handlers_[idx] = &PR205_BN::read_dt_done;
+    for (std::size_t i = 0; i < dt_.size(); ++i)
+        dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
+
     idx = modbus_unit::add_read_task(0x4006, fc_.size(), 1000);
     read_task_handlers_[idx] = &PR205_BN::read_fc_done;
     for (std::size_t i = 0; i < fc_.size(); ++i)
         fc_[i].port_id = add_output_port(std::format("FC{}", i + 1));
-
-    idx = modbus_unit::add_read_task(0x4002, 4, 1000);
-    read_task_handlers_[idx] = &PR205_BN::read_dtm_done;
-    for (std::size_t i = 0; i < 2; ++i)
-        dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
-
-    idx = modbus_unit::add_read_task(0x4010, 4, 1000);
-    read_task_handlers_[idx] = &PR205_BN::read_dts_done;
-    for (std::size_t i = 2; i < 4; ++i)
-        dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
 
     idx = modbus_unit::add_read_task(0x4001, 1, 200);
     read_task_handlers_[idx] = &PR205_BN::read_state_done;
@@ -108,39 +103,26 @@ void PR205_BN::read_fc_done(readed_regs_t regs)
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
 
-        eng::log::info("{}: FC{} = {}", name(), i + 1, v);
+        // eng::log::info("{}: FC{} = {}", name(), i + 1, v);
     }
 }
 
-void PR205_BN::read_dtm_done(readed_regs_t regs)
+void PR205_BN::read_dt_done(readed_regs_t regs)
 {
-    read_dt_done(0, regs);
-}
-
-void PR205_BN::read_dts_done(readed_regs_t regs)
-{
-    read_dt_done(1, regs);
-}
-
-void PR205_BN::read_dt_done(std::size_t idx, readed_regs_t regs)
-{
-    for (std::size_t i = 0; i < 2; ++i)
+    for (std::size_t i = 0; i < dt_.size(); ++i)
     {
-        auto &item = dt_[i + idx * 2];
+        auto &item = dt_[i];
 
-        std::uint32_t value;
-        std::memcpy(&value, regs.data() + i * 2, 4);
-
-        if (item.value == value && item.initialized)
+        if (item.value == regs[i] && item.initialized)
             continue;
 
-        item.value = value;
+        item.value = regs[i];
         item.initialized = true;
 
-        double v = static_cast<float>(item.value);
+        double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
 
-        eng::log::info("{}: DT{} = {}", name(), i + (idx * 2 + 1), v);
+        // eng::log::info("{}: DT{} = {}", name(), i + 1, v);
     }
 }
 
@@ -180,7 +162,7 @@ void PR205_BN::stop_pump(std::size_t idx)
     auto bitset = bs_0х4001_;
     bitset.set(idx, false);
     modbus_unit::write_single(0x4001, bitset.to_ulong());
-    node::set_ready(valves_[idx].ictl);
+    node::set_ready(pumps_[idx].ictl);
 }
 
 void PR205_BN::open_valve(std::size_t idx)

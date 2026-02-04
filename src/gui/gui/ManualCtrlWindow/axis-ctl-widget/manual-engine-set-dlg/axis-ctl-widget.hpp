@@ -30,6 +30,11 @@ class axis_ctl_widget final
         double max_speed{ 0.0 };
         double speed{ 0.0 };
         double position{ 0.0 };
+
+        double shift_value_;
+        double target_value_;
+
+        bool rotation;
     };
     std::unordered_map<char, axis_t> axis_;
 

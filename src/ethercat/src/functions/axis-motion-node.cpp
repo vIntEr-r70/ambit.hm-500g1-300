@@ -46,10 +46,8 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
         deactivate();
     });
 
-    auto tid = eng::timer::create([this]
-    {
-        node::set_port_value(position_out_, { servo_motor_.position() });
-        node::set_port_value(speed_out_, { servo_motor_.speed() });
+    auto tid = eng::timer::create([this] {
+        update_output_info();
     });
     eng::timer::start(tid, std::chrono::milliseconds(300));
 }
@@ -77,10 +75,20 @@ void axis_motion_node::deactivate()
     by_time_.reset();
 }
 
+double axis_motion_node::local_position() const noexcept
+{
+    return servo_motor_.position() - origin_offset_;
+}
+
+void axis_motion_node::update_output_info()
+{
+    node::set_port_value(position_out_, { local_position() });
+    node::set_port_value(speed_out_, { servo_motor_.speed() });
+}
+
 bool axis_motion_node::motion_done()
 {
-    node::set_port_value(position_out_, { servo_motor_.position() });
-    node::set_port_value(speed_out_, { servo_motor_.speed() });
+    update_output_info();
 
     eng::log::info("axis_motion_node[{}]::motion_done", axis_);
     node::set_ready(ictl_);
@@ -101,6 +109,7 @@ void axis_motion_node::start_command_execution(eng::abc::pack args)
         { "shift",          &axis_motion_node::cmd_shift            },
         { "spin",           &axis_motion_node::cmd_spin             },
         { "stop",           &axis_motion_node::cmd_stop             },
+        { "zerro",          &axis_motion_node::cmd_zerro            },
         { "timed-shift",    &axis_motion_node::cmd_timed_shift      }
     };
 
@@ -129,8 +138,12 @@ bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)
     if (mc != nullptr && mc != &by_position_)
         return false;
 
+#ifndef BUILDROOT
+    speed = 10.0;
+#endif
+
     by_position_.update_speed_limit(speed);
-    by_position_.update_absolute_target(pos);
+    by_position_.update_absolute_target(pos + origin_offset_);
 
     if (mc == nullptr)
         servo_motor_.set_control(by_position_);
@@ -186,6 +199,19 @@ bool axis_motion_node::cmd_stop(eng::abc::pack const &)
 
     by_position_.update_speed_limit(0.0);
     by_velocity_.update_speed_limit(0.0);
+
+    return true;
+}
+
+bool axis_motion_node::cmd_zerro(eng::abc::pack const &)
+{
+    // Ось находится в движении
+    if (servo_motor_.control())
+        return false;
+
+    origin_offset_ = servo_motor_.position();
+
+    update_output_info();
 
     return true;
 }

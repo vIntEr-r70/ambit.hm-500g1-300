@@ -1,13 +1,11 @@
 #include "AxisCtlWidget.hpp"
 #include "AxisCtlItemWidget.h"
 #include "manual-engine-set-dlg/manual-engine-set-dlg.h"
+#include "common/load-axis-list.hpp"
 
 #include <eng/log.hpp>
-#include <eng/json.hpp>
 
 #include <QVBoxLayout>
-
-#include <filesystem>
 
 AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
     : QWidget(parent)
@@ -29,68 +27,46 @@ AxisCtlWidget::AxisCtlWidget(QWidget *parent) noexcept
         vL->addLayout(vL_);
     }
 
-    char const *LIAEM_RO_PATH = std::getenv("LIAEM_RO_PATH");
-    if (LIAEM_RO_PATH == nullptr)
-        return;
+    QHBoxLayout* hL = nullptr;
 
-    std::filesystem::path path(LIAEM_RO_PATH);
-    path /= "axis.json";
-
-    try
+    ambit::load_axis_list([this, &hL](char axis, std::string_view name, bool rotation)
     {
-        QHBoxLayout* hL = nullptr;
+        manual_engine_set_dlg_->add_axis(axis, name, rotation);
 
-        eng::json::array cfg(path);
-        cfg.for_each([this, vL, &hL](std::size_t, eng::json::value v)
+        AxisCtlItemWidget* w = new AxisCtlItemWidget(this, axis, name, rotation);
+
+        if (hL == nullptr || hL->count() == 4)
         {
-            eng::json::object obj(v);
+            hL = new QHBoxLayout();
+            hL->setSpacing(15);
+            vL_->addLayout(hL);
+        }
+        hL->addWidget(w);
 
-            char axis = obj.get_sv("axis", "")[0];
-            bool rotation = obj.get<bool>("rotation", false);
-            auto name = obj.get_sv("name", "");
+        connect(w, &AxisCtlItemWidget::on_move_to_click,
+                [this, axis] { show_axis_move_dlg(axis); });
 
-            manual_engine_set_dlg_->add_axis(axis, name, rotation);
+        connect(w, &AxisCtlItemWidget::axis_real_speed,
+                [this, axis](double speed) {
+                    manual_engine_set_dlg_->set_axis_real_speed(axis, speed);
+                });
 
-            AxisCtlItemWidget* w = new AxisCtlItemWidget(this, axis, name, rotation);
+        connect(w, &AxisCtlItemWidget::axis_position,
+                [this, axis](double position) {
+                    manual_engine_set_dlg_->set_axis_position(axis, position);
+                });
 
-            if (hL == nullptr || hL->count() == 4)
-            {
-                hL = new QHBoxLayout();
-                hL->setSpacing(15);
-                vL_->addLayout(hL);
-            }
-            hL->addWidget(w);
+        connect(w, &AxisCtlItemWidget::axis_set_speed,
+                [this, axis](double value) {
+                    manual_engine_set_dlg_->set_axis_max_speed(axis, value);
+                });
 
-            connect(w, &AxisCtlItemWidget::on_move_to_click,
-                    [this, axis] { show_axis_move_dlg(axis); });
+        w->setMinimumWidth(240);
+        w->setMaximumWidth(240);
+        w->setMaximumHeight(110);
 
-            connect(w, &AxisCtlItemWidget::axis_real_speed,
-                    [this, axis](double speed) {
-                        manual_engine_set_dlg_->set_axis_real_speed(axis, speed);
-                    });
-
-            connect(w, &AxisCtlItemWidget::axis_position,
-                    [this, axis](double position) {
-                        manual_engine_set_dlg_->set_axis_position(axis, position);
-                    });
-
-            connect(w, &AxisCtlItemWidget::axis_set_speed,
-                    [this, axis](double value) {
-                        manual_engine_set_dlg_->set_axis_max_speed(axis, value);
-                    });
-
-            w->setMinimumWidth(240);
-            w->setMaximumWidth(240);
-            w->setMaximumHeight(110);
-
-            axis_[axis] = w;
-        });
-    }
-    catch(std::exception const &e)
-    {
-        axis_.clear();
-        return;
-    }
+        axis_[axis] = w;
+    });
 }
 
 void AxisCtlWidget::update_axis_ctl_access(bool active)

@@ -25,24 +25,22 @@ panel_button_ctl::panel_button_ctl(std::string_view name)
 
 void panel_button_ctl::turn_on_action()
 {
-    if (!node::is_allow(ctl_))
+    if (node::is_blocked(ctl_) || !node::is_ready(ctl_))
     {
         eng::log::error("{}: Включение с кнопки не доступно", name());
         return;
     }
-
     eng::log::info("{}: Включение", name());
     node::activate(ctl_, { });
 }
 
 void panel_button_ctl::turn_off_action()
 {
-    if (!node::is_allow(ctl_))
+    if (node::is_blocked(ctl_))
     {
         eng::log::error("{}: Выключение с кнопки не доступно", name());
         return;
     }
-
     eng::log::info("{}: Выключение", name());
     node::deactivate(ctl_);
 }

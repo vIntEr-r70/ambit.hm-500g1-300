@@ -22,34 +22,41 @@ manual_engine_set_dlg::manual_engine_set_dlg(QWidget* parent)
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("QWidget#manual_engine_set_dlg { border-radius: 20px; background-color: white }");
 
-    setFixedWidth(550);
+    setFixedWidth(650);
 
     QVBoxLayout* vL = new QVBoxLayout(this);
-    vL->setContentsMargins(10, 10, 10, 10);
+    vL->setContentsMargins(0, 0, 0, 0);
+    vL->setSpacing(0);
     {
+        QWidget *head = new QWidget(this);
+        head->setObjectName("dlg-head");
+        head->setStyleSheet("QWidget#dlg-head { border-radius: 19px;"
+            "border-bottom-left-radius: 0; border-bottom-right-radius: 0; background-color: #59AC69; }");
+        {
+            QHBoxLayout *hL = new QHBoxLayout(head);
+            hL->setContentsMargins(10, 5, 10, 5);
+            {
+                hL->addStretch();
+
+                RoundButton *btn = new RoundButton(this);
+                connect(btn, &RoundButton::clicked, [this]
+                {
+                    InteractWidget::hide();
+                });
+                btn->setIcon(":/kbd.dlg.cancel");
+                btn->setBgColor("#E55056");
+                btn->setFixedSize(50, 40);
+                hL->addWidget(btn);
+            }
+        }
+        vL->addWidget(head);
+
         axis_ctl_ = new axis_ctl_widget(this);
         connect(axis_ctl_, &axis_ctl_widget::axis_command,
             [this](char axis, eng::abc::pack args) {
                 emit axis_command(axis, std::move(args));
             });
         vL->addWidget(axis_ctl_);
-
-        QHBoxLayout *hL = new QHBoxLayout();
-        vL->setContentsMargins(10, 10, 10, 10);
-        {
-            RoundButton *btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this]
-            {
-                InteractWidget::hide();
-            });
-            btn->setIcon(":/kbd.dlg.cancel");
-            btn->setBgColor("#E55056");
-            btn->setMinimumWidth(90);
-            hL->addWidget(btn);
-
-            hL->addStretch();
-        }
-        vL->addLayout(hL);
     }
 
     // Канал для управления драйверами

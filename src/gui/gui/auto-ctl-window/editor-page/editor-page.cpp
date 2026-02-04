@@ -4,6 +4,7 @@
 #include "../common/ProgramModel.h"
 #include "../common/ProgramModelHeader.h"
 #include "AutoParamKeyboard.h"
+#include "common/load-axis-list.hpp"
 
 #include <QVBoxLayout>
 #include <QTableView>
@@ -12,6 +13,7 @@
 
 editor_page::editor_page(QWidget *parent, ProgramModel &model)
     : QWidget(parent)
+    , eng::sibus::node("program-editor")
     , model_(model)
 {
     QVBoxLayout *vL = new QVBoxLayout(this);
@@ -33,6 +35,14 @@ editor_page::editor_page(QWidget *parent, ProgramModel &model)
         });
         vL->addWidget(program_widget_);
     }
+
+    ambit::load_axis_list([this](char axis, std::string_view, bool)
+    {
+        node::add_input_port(std::string(1, axis), [this, axis](eng::abc::pack args)
+        {
+            positions_[axis] = eng::abc::get<double>(args);
+        });
+    });
 
     kb_ = new AutoParamKeyboard(this);
 }
@@ -89,8 +99,8 @@ void editor_page::table_cell_select(QModelIndex index)
         if (ctype == ProgramModelHeader::TargetPos)
         {
             // Пробуем получить текущую позицию
-            auto it = real_pos_.find(model_.prog().t_axis[id]);
-            if (it != real_pos_.end())
+            auto it = positions_.find(model_.prog().t_axis[id]);
+            if (it != positions_.end())
                 pos = it->second;
         }
 

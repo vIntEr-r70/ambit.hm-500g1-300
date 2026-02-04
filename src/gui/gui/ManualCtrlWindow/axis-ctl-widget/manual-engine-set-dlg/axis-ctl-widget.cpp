@@ -22,7 +22,7 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
     : QWidget(parent)
 {
     QHBoxLayout *hL = new QHBoxLayout(this);
-    hL->setContentsMargins(10, 10, 10, 10);
+    hL->setContentsMargins(20, 20, 20, 20);
     hL->setSpacing(30);
     {
         QTableWidget* tw = new QTableWidget(this);
@@ -78,92 +78,88 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
             {
                 QWidget *w = new QWidget(tab_);
                 {
-                    QVBoxLayout *vL = new QVBoxLayout(w);
-                    vL->setContentsMargins(20, 20, 20, 20);
+                    QHBoxLayout *hL = new QHBoxLayout(w);
+                    hL->setContentsMargins(20, 20, 20, 20);
                     {
                         vsr_abs_value_ = new ValueSetReal(w);
+                        vsr_abs_value_->setTitle("Целевая позиция");
+                        vsr_abs_value_->setFixedWidth(150);
                         connect(vsr_abs_value_, &ValueSetReal::onValueChanged, [this, parent]
                         {
                             std::cout << "Interact::dialog" << std::endl;
                             Interact::dialog(parent);
                         });
                         vsr_abs_value_->setValueFontSize(ValueView::H1);
-                        vL->addWidget(vsr_abs_value_);
+                        hL->addWidget(vsr_abs_value_);
 
-                        QHBoxLayout *hL = new QHBoxLayout();
+                        hL->addSpacing(30);
+
+                        auto btn = new RoundButton(w);
+                        connect(btn, &RoundButton::clicked, [this]
                         {
-                            auto btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this]
-                            {
-                                auto axis = get_selected_axis();
-                                auto pos = vsr_abs_value_->value();
-                                emit axis_command(axis, { "move-to", pos, axis_[axis].max_speed });
-                            });
-                            btn->setText("▶");
-                            btn->setBgColor(QColor("#29AC39"));
-                            btn->setTextColor(Qt::white);
-                            btn->setFontSize(20);
-                            hL->addWidget(btn);
+                            auto axis = get_selected_axis();
+                            auto pos = vsr_abs_value_->value();
+                            emit axis_command(axis, { "move-to", pos, axis_[axis].max_speed });
+                        });
+                        btn->setIcon(":/cnc.play");
+                        btn->setBgColor(QColor("#29AC39"));
+                        hL->addWidget(btn);
 
-                            btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this]
-                            {
-                                auto axis = get_selected_axis();
-                                emit axis_command(axis, { "stop" });
-                            });
-                            btn->setText("⏹");
-                            btn->setBgColor(QColor("#29AC39"));
-                            btn->setTextColor(Qt::white);
-                            btn->setFontSize(20);
-                            hL->addWidget(btn);
-                        }
-                        vL->addLayout(hL);
+                        hL->addSpacing(15);
+
+                        btn = new RoundButton(w);
+                        connect(btn, &RoundButton::clicked, [this]
+                        {
+                            auto axis = get_selected_axis();
+                            emit axis_command(axis, { "stop" });
+                        });
+                        btn->setIcon(":/cnc.stop");
+                        btn->setBgColor(QColor("#29AC39"));
+                        hL->addWidget(btn);
                     }
                 }
                 tab_->addTab(w, "Позиция");
 
                 w = new QWidget(tab_);
                 {
-                    QVBoxLayout *vL = new QVBoxLayout(w);
-                    vL->setContentsMargins(20, 20, 20, 20);
+                    QHBoxLayout *hL = new QHBoxLayout(w);
+                    hL->setContentsMargins(20, 20, 20, 20);
                     {
                         vsr_dx_value_ = new ValueSetReal(w);
+                        vsr_dx_value_->setTitle("Сместиться на");
+                        vsr_dx_value_->setFixedWidth(150);
                         connect(vsr_dx_value_, &ValueSetReal::onValueChanged, [this, parent]
                         {
                             std::cout << "Interact::dialog" << std::endl;
                             Interact::dialog(parent);
                         });
                         vsr_dx_value_->setValueFontSize(ValueView::H1);
-                        vL->addWidget(vsr_dx_value_);
+                        hL->addWidget(vsr_dx_value_);
 
-                        QHBoxLayout *hL = new QHBoxLayout();
+                        hL->addSpacing(30);
+
+                        auto btn = new RoundButton(w);
+                        connect(btn, &RoundButton::clicked, [this]
                         {
-                            auto btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this]
-                            {
-                                auto axis = get_selected_axis();
-                                auto pos = vsr_dx_value_->value();
-                                emit axis_command(axis, { "shift", pos, axis_[axis].max_speed });
-                            });
-                            btn->setText("▶");
-                            btn->setBgColor(QColor("#29AC39"));
-                            btn->setTextColor(Qt::white);
-                            btn->setFontSize(20);
-                            hL->addWidget(btn);
+                            auto axis = get_selected_axis();
+                            auto pos = vsr_dx_value_->value();
+                            emit axis_command(axis, { "shift", pos, axis_[axis].max_speed });
+                        });
+                        btn->setIcon(":/cnc.play");
+                        btn->setBgColor(QColor("#29AC39"));
+                        hL->addWidget(btn);
 
-                            btn = new RoundButton(w);
-                            connect(btn, &RoundButton::clicked, [this]
-                            {
-                                auto axis = get_selected_axis();
-                                emit axis_command(axis, { "stop" });
-                            });
-                            btn->setText("⏹");
-                            btn->setBgColor(QColor("#29AC39"));
-                            btn->setTextColor(Qt::white);
-                            btn->setFontSize(20);
-                            hL->addWidget(btn);
-                        }
-                        vL->addLayout(hL);
+                        hL->addSpacing(15);
+
+                        btn = new RoundButton(w);
+                        connect(btn, &RoundButton::clicked, [this]
+                        {
+                            auto axis = get_selected_axis();
+                            emit axis_command(axis, { "stop" });
+                        });
+                        btn->setIcon(":/cnc.stop");
+                        btn->setBgColor(QColor("#29AC39"));
+                        hL->addWidget(btn);
                     }
                 }
                 tab_->addTab(w, "Сдвиг");
@@ -172,17 +168,19 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                 {
                     QHBoxLayout *hL = new QHBoxLayout(w);
                     {
+                        hL->addSpacing(15);
+
                         auto btn = new RoundButton(w);
                         connect(btn, &RoundButton::clicked, [this]
                         {
                             auto axis = get_selected_axis();
                             emit axis_command(axis, { "spin", -axis_[axis].max_speed });
                         });
-                        btn->setText("↩");
+                        btn->setIcon(":/cnc.spin-ccw");
                         btn->setBgColor(QColor("#29AC39"));
-                        btn->setTextColor(Qt::white);
-                        btn->setFontSize(20);
                         hL->addWidget(btn);
+
+                        hL->addSpacing(15);
 
                         btn = new RoundButton(w);
                         connect(btn, &RoundButton::clicked, [this]
@@ -190,11 +188,11 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             auto axis = get_selected_axis();
                             emit axis_command(axis, { "stop" });
                         });
-                        btn->setText("⏹");
+                        btn->setIcon(":/cnc.stop");
                         btn->setBgColor(QColor("#29AC39"));
-                        btn->setTextColor(Qt::white);
-                        btn->setFontSize(20);
                         hL->addWidget(btn);
+
+                        hL->addSpacing(15);
 
                         btn = new RoundButton(w);
                         connect(btn, &RoundButton::clicked, [this]
@@ -202,16 +200,27 @@ axis_ctl_widget::axis_ctl_widget(InteractWidget *parent)
                             auto axis = get_selected_axis();
                             emit axis_command(axis, { "spin", axis_[axis].max_speed });
                         });
-                        btn->setText("↪");
+                        btn->setIcon(":/cnc.spin-cw");
                         btn->setBgColor(QColor("#29AC39"));
-                        btn->setTextColor(Qt::white);
-                        btn->setFontSize(20);
                         hL->addWidget(btn);
+
+                        hL->addSpacing(15);
                     }
                 }
                 tab_->addTab(w, "Вращение");
             }
             vL->addWidget(tab_);
+
+            auto btn = new RoundButton(this);
+            connect(btn, &RoundButton::clicked, [this]
+            {
+                auto axis = get_selected_axis();
+                emit axis_command(axis, { "zerro" });
+            });
+            btn->setText("Сбросить координату в ноль");
+            btn->setBgColor(QColor("#29AC39"));
+            btn->setTextColor(QColor("#FFFFFF"));
+            vL->addWidget(btn);
         }
         hL->addLayout(vL);
     }

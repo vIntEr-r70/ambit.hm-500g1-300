@@ -56,7 +56,7 @@ void PR200::read_fc_done(readed_regs_t regs)
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
 
-        eng::log::info("{}: FC{} = {}", name(), i + 1, v);
+        // eng::log::info("{}: FC{} = {}", name(), i + 1, v);
     }
 }
 
@@ -75,7 +75,7 @@ void PR200::read_dt_done(readed_regs_t regs)
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
 
-        eng::log::info("{}: DT{} = {}", name(), i + 1, v);
+        // eng::log::info("{}: DT{} = {}", name(), i + 1, v);
     }
 }
 

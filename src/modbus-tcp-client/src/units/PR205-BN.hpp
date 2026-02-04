@@ -17,20 +17,18 @@ class PR205_BN final
     std::unordered_map<std::size_t, read_handler_t> read_task_handlers_;
     std::unordered_map<std::size_t, write_handler_t> write_task_handlers_;
 
-    template <typename T>
     struct sens_t
     {
-        T value;
+        std::uint16_t value;
         bool initialized{ false };
         eng::sibus::output_port_id_t port_id;
     };
 
-    std::array<sens_t<std::uint16_t>, 4> fc_;
-    std::array<sens_t<std::uint32_t>, 4> dt_;
+    std::array<sens_t, 4> fc_;
+    std::array<sens_t, 4> dt_;
 
     struct pump_t
     {
-        // void(PR205_BN::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
         eng::sibus::output_port_id_t port_out;
     };
@@ -38,7 +36,6 @@ class PR205_BN final
 
     struct valve_t
     {
-        // void(PR205_BN::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
     };
     std::array<valve_t, 2> valves_;
@@ -65,11 +62,7 @@ private:
 
     void read_fc_done(readed_regs_t);
 
-    void read_dtm_done(readed_regs_t);
-
-    void read_dts_done(readed_regs_t);
-
-    void read_dt_done(std::size_t, readed_regs_t);
+    void read_dt_done(readed_regs_t);
 
     void read_state_done(readed_regs_t);
 

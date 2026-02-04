@@ -24,6 +24,8 @@ class axis_motion_node final
     velocity_motion<axis_motion_node> by_velocity_;
     timed_motion<axis_motion_node> by_time_;
 
+    double origin_offset_{ 0.0 };
+
 public:
 
     axis_motion_node(char, servo_motor &);
@@ -44,7 +46,15 @@ private:
 
     bool cmd_stop(eng::abc::pack const &);
 
+    bool cmd_zerro(eng::abc::pack const &);
+
     bool cmd_timed_shift(eng::abc::pack const &);
+
+private:
+
+    double local_position() const noexcept;
+
+    void update_output_info();
 
 private:
 

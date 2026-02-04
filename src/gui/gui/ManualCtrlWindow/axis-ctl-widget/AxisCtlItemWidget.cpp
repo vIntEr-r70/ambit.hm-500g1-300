@@ -79,25 +79,11 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     layout->addLayout(hL);
 
     // Канал для управления драйверами
-    octl_ = node::add_output_wire();
-
-    // Успешный ответ на вызов с аргументами
-    node::set_wire_response_handler(octl_, [this](bool success, eng::abc::pack args)
-    {
-        if (success)
-        {
-            eng::log::info("AxisCtlItemWidget[{}]: OK", axis_);
-            return;
-        }
-        // Системная ошибка на вызов
-        eng::log::error("AxisCtlItemWidget[{}]: {}", axis_, eng::abc::get_sv(args));
-    });
+    ctl_ = node::add_output_wire();
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_status_handler(octl_, [this]
-    {
-        active_ = node::is_ready(octl_);
-        update_gui();
+    node::set_wire_status_handler(ctl_, [this] {
+        update_axis_state();
     });
 
     node::add_input_port("position",
@@ -118,32 +104,31 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     node::add_input_port("set-speed",
         [this](eng::abc::pack const &args)
         {
+            eng::log::info("set-speed: {}", axis_);
             double speed = eng::abc::get<double>(args, 0);
             vvr_speed_->set_value(speed);
             emit axis_set_speed(speed);
         });
 
-    update_gui();
+    update_axis_state();
 }
 
 void AxisCtlItemWidget::execute(eng::abc::pack args)
 {
-    node::send_wire_signal(octl_, std::move(args));
+    if (node::is_ready(ctl_) || node::is_active(ctl_))
+        node::activate(ctl_, std::move(args));
 }
 
-void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
+void AxisCtlItemWidget::update_axis_state()
 {
-    if (active_) emit on_move_to_click();
-}
+    bool active = node::is_ready(ctl_);
 
-void AxisCtlItemWidget::update_gui()
-{
     static std::array<QColor, 2> const colors[] = {
         { Qt::gray, Qt::white }, { Qt::green, Qt::black }, { Qt::blue, Qt::white }
     };
 
     std::size_t color_scheme_id{ 0 };
-    if (active_)
+    if (active)
         color_scheme_id = 1;
 
     auto const& clr = colors[color_scheme_id];
@@ -151,52 +136,27 @@ void AxisCtlItemWidget::update_gui()
                 "background-color: %1; color: %2;").arg(clr[0].name()).arg(clr[1].name()));
 }
 
-void AxisCtlItemWidget::nf_speed(float v) noexcept
+void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
 {
-    speed_ = v;
-    updateGui();
+    if (node::is_ready(ctl_)) emit on_move_to_click();
 }
 
-void AxisCtlItemWidget::ls_min_max(std::size_t id, bool v) noexcept
-{
-    ls_[id] = v;
-    lblLS_[id]->setStyleSheet(QString("border: 3px solid %1").arg(v ? "#0000ff" : "#ffffff"));
+// void AxisCtlItemWidget::ls_min_max(std::size_t id, bool v) noexcept
+// {
+//     ls_[id] = v;
+//     lblLS_[id]->setStyleSheet(QString("border: 3px solid %1").arg(v ? "#0000ff" : "#ffffff"));
+//
+//     updateGui();
+// }
 
-    updateGui();
-}
+// void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept
+// {
+//     ctrlModeAxis_ = v;
+//     updateGui();
+// }
 
-void AxisCtlItemWidget::nf_pos(float v) noexcept
-{
-    pos_ = v;
-    updateGui();
-}
-
-void AxisCtlItemWidget::set_sys_mode(unsigned char v) noexcept
-{
-    // sysMode_ = v;
-    // updateGui();
-}
-
-void AxisCtlItemWidget::set_sys_ctrl(unsigned char v) noexcept
-{
-    // ctlMode_ = v;
-    // updateGui();
-}
-
-void AxisCtlItemWidget::set_sys_error(unsigned int v) noexcept
-{
-    // error_ = v;
-    // updateGui();
-}
-
-void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept
-{
-    ctrlModeAxis_ = v;
-    updateGui();
-}
-
-void AxisCtlItemWidget::updateGui()
-{
+// void AxisCtlItemWidget::updateGui()
+// {
     // uint8_t status = NotActive;
     //
     // switch(sysMode_)
@@ -224,5 +184,5 @@ void AxisCtlItemWidget::updateGui()
     // vvr_pos_->set_value(out);
     //
     // setStatus(status);
-}
+// }
 

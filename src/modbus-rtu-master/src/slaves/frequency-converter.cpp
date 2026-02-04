@@ -5,7 +5,6 @@
 #include <eng/json.hpp>
 #include <eng/sibus/client.hpp>
 
-
 frequency_converter::frequency_converter(std::size_t unit_id)
     : eng::sibus::node{ "fc-ctl" }
     , modbus_unit(unit_id)
@@ -22,17 +21,14 @@ frequency_converter::frequency_converter(std::size_t unit_id)
     p_out_[pout::U_out] = node::add_output_port("U-out");
 
     ictl_ = node::add_input_wire("");
-
-    node::set_activate_handler(ictl_, [this](eng::abc::pack args) {
+    node::set_activate_handler(ictl_, [this](eng::abc::pack args)
+    {
         activate(std::move(args));
     });
-
-    node::set_deactivate_handler(ictl_, [this] { deactivate(); });
-
-    // // Обработчик входящих сигналов
-    // node::set_wire_request_handler(ictl_, [this](eng::abc::pack args) {
-    //     start_command_execution(std::move(args));
-    // });
+    node::set_deactivate_handler(ictl_, [this]
+    {
+        deactivate();
+    });
 
     std::string key{ "fc/current-conductors" };
     eng::sibus::client::config_listener(key, [this](std::string_view json)
@@ -65,42 +61,18 @@ frequency_converter::frequency_converter(std::size_t unit_id)
     read_task_handlers_[idx] = &frequency_converter::read_P_done;
 }
 
-// void frequency_converter::start_command_execution(eng::abc::pack args)
-// {
-//     if (offline_)
-//     {
-//         node::wire_response(ictl_, false, { "Отсутствует связь" });
-//         return;
-//     }
-//
-//     static std::unordered_map<std::string_view, commands_handler> const map {
-//         { "start",  &frequency_converter::cmd_start  },
-//         { "stop",   &frequency_converter::cmd_stop   },
-//         { "set-i",  &frequency_converter::cmd_set_i  },
-//         { "set-p",  &frequency_converter::cmd_set_p  },
-//     };
-//
-//     std::string_view cmd = eng::abc::get<std::string_view>(args, 0);
-//     auto it = map.find(cmd);
-//     if (it == map.end())
-//     {
-//         node::wire_response(ictl_, false, { std::format("Незнакомая комманда: {}", cmd) });
-//         return;
-//     }
-//
-//     if (read_internal_tid_)
-//         eng::timer::kill_timer(read_internal_tid_);
-//
-//     args.pop_front();
-//
-//     (this->*(it->second))(std::move(args));
-// }
+void frequency_converter::register_on_bus_done()
+{
+    node::set_ready(ictl_);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Запускаем устройство в работу
 void frequency_converter::activate(eng::abc::pack args)
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (!is_online())
     {
         node::terminate(ictl_, "Отсутствует связь с устройством");
@@ -113,8 +85,11 @@ void frequency_converter::activate(eng::abc::pack args)
         return;
     }
 
-    if (hw_state_ == &frequency_converter::s_powered)
-        return;
+    if (args.size() == 2)
+    {
+        iup_[0] = eng::abc::get<double>(args, 0);
+        iup_[2] = eng::abc::get<double>(args, 1);
+    }
 
     // Записываем уставки
     std::array<std::uint16_t, 3> iup{
@@ -122,8 +97,10 @@ void frequency_converter::activate(eng::abc::pack args)
         static_cast<std::uint16_t>(std::lround(iup_[1])),
         static_cast<std::uint16_t>(std::lround(iup_[2] * 0.01f))
     };
-
     modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
+
+    if (hw_state_ == &frequency_converter::s_powered)
+        return;
 
     // Передаем команду на запуск
     write_task_handler_ = {
@@ -135,9 +112,11 @@ void frequency_converter::activate(eng::abc::pack args)
 // Останавливаем устройство
 void frequency_converter::deactivate()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (!is_online())
     {
-        node::terminate(ictl_, "Отсутствует связь с устройством");
+        node::set_ready(ictl_);
         return;
     }
 
@@ -156,6 +135,8 @@ void frequency_converter::deactivate()
         modbus_unit::write_single(0xA410, command),
         &frequency_converter::w_stop
     };
+
+    node::set_ready(ictl_);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +206,10 @@ void frequency_converter::s_damaged(std::uint16_t status)
 
 void frequency_converter::now_unit_online()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
+    node::set_ready(ictl_);
+
     eng::log::info("frequency_converter::now_unit_online");
 
     modbus_unit::write_single(0xA410, 0x0002);
@@ -233,6 +218,8 @@ void frequency_converter::now_unit_online()
 
 void frequency_converter::connection_was_lost()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (hw_state_ == &frequency_converter::s_powered)
         node::terminate(ictl_, "Связь с устройством потеряна");
 
@@ -257,6 +244,8 @@ void frequency_converter::connection_was_lost()
 
 void frequency_converter::write_task_done(std::size_t idx)
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     // Если логика в режиме ожидания завершения операции
     if (write_task_handler_.handler && write_task_handler_.idx == idx)
     {
@@ -267,13 +256,18 @@ void frequency_converter::write_task_done(std::size_t idx)
 
 void frequency_converter::w_start(bool success)
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (!success)
         node::terminate(ictl_, "Не удалось включить устройство");
 }
 
 void frequency_converter::w_stop(bool success)
 {
-    node::terminate(ictl_, "Не удалось выключить устройство");
+    eng::log::info("{}: {}", name(), __func__);
+
+    if (!success)
+        node::terminate(ictl_, "Не удалось выключить устройство");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
