@@ -17,6 +17,10 @@ class frequency_converter final
 
     eng::sibus::input_wire_id_t ictl_;
 
+    constexpr static std::size_t kI{ 0 };
+    constexpr static std::size_t kU{ 1 };
+    constexpr static std::size_t kP{ 2 };
+
     enum pout
     {
         F,
@@ -30,18 +34,15 @@ class frequency_converter final
     };
     std::array<eng::sibus::output_port_id_t, 8> p_out_;
 
-    struct
+    enum class estatus
     {
-        std::size_t idx;
-        void (frequency_converter::*handler)(bool);
-
-        bool in_proc() const { return handler != nullptr; }
-
-    } write_task_handler_;
+        idle,
+        powered,
+        damaged
+    };
+    std::optional<estatus> status_;
 
     std::array<std::uint16_t, 4> damages_;
-
-    void (frequency_converter::*hw_state_)(std::uint16_t);
 
     // Частота
     double F_;
@@ -53,8 +54,10 @@ class frequency_converter final
     // Ток
     double I_;
 
-    std::array<double, 3> iup_;
+    std::array<double, 3> iup_{ 0.0, 0.0, 0.0 };
+
     double I_max_{ 0.0 };
+    double P_max_{ 0.0 };
 
 public:
 
@@ -72,27 +75,11 @@ private:
 
 private:
 
-    void s_idle(std::uint16_t);
-
-    void s_powered(std::uint16_t);
-
-    void s_damaged(std::uint16_t);
-
-private:
-
     void now_unit_online() override final;
 
     void connection_was_lost() override final;
 
     void read_task_done(std::size_t, readed_regs_t) override final;
-
-    void write_task_done(std::size_t) override final;
-
-private:
-
-    void w_start(bool);
-
-    void w_stop(bool);
 
 private:
 

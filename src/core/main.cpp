@@ -4,6 +4,7 @@
 #include "src/speed-node.hpp"
 #include "src/panel-button-ctl.hpp"
 #include "src/panel-switch-2-ctl.hpp"
+#include "src/current-conductors.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -33,6 +34,8 @@ auto main() -> int
 
     panel_switch_2_ctl ps0{ "coolant-selector" };
     panel_switch_2_ctl ps1{ "drain-selector" };
+
+    current_conductors cc0;
 
 #ifdef BUILDROOT
     intervals intervals(conf_path);

@@ -1,5 +1,6 @@
 #include "auto-mode.hpp"
 #include "common/program.hpp"
+#include "eng/sibus/sibus.hpp"
 
 #include <eng/log.hpp>
 #include <eng/base64.hpp>
@@ -33,18 +34,22 @@ auto_mode::auto_mode()
 
     // Управление движением
     axis_ctl_ = node::add_output_wire("axis");
-    node::set_wire_status_handler(axis_ctl_, [this] {
+    node::set_wire_status_handler(axis_ctl_, [this]
+    {
         touch_current_state();
     });
 
     // Управление движением
     stuff_ctl_ = node::add_output_wire("stuff");
-    node::set_wire_status_handler(stuff_ctl_, [this] {
+    node::set_wire_status_handler(stuff_ctl_, [this]
+    {
         touch_current_state();
     });
 
-    node::add_input_port_v2("program", [this](eng::abc::pack args) {
+    node::add_input_port_v2("program", [this](eng::abc::pack args)
+    {
         upload_program(std::move(args));
+        touch_current_state();
     });
 
     phase_id_out_ = node::add_output_port("phase-id");
@@ -62,24 +67,31 @@ auto_mode::auto_mode()
     // Таймер выполнения режима
     proc_timer_ = eng::timer::create([this]
     {
-        // Общее время выполнения
-        double t0 = stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
-
-        // Время на паузе или на бесконечной паузе
-        double t1 = 0.0;
-
-        node::set_port_value(times_out_, { t0, t1 });
+        update_output_times();
     });
+
+    // output_wait_.emplace_back(axis_ctl_, eng::sibus::istatus::ready);
+    // output_wait_.emplace_back(stuff_ctl_, eng::sibus::istatus::ready);
+    // output_handler_ = &auto_mode::s_wait_system_ready;
 
     // Связываем свои входные и выходные провода
     // node::link_wires(ictl_, axis_ctl_);
     // node::link_wires(ictl_, stuff_ctl_);
 }
 
+// void auto_mode::output_wait_handler(eng::sibus::output_wire_id_t id, eng::sibus::istatus status)
+// {
+//     auto it = eng::sibus::output_wait_.find
+//
+// }
+
 void auto_mode::activate()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (!prepare_node_for_work())
     {
+        eng::log::info("\tGO: s_wait_system_ready");
         switch_to_state(&auto_mode::s_wait_system_ready);
         return;
     }
@@ -89,7 +101,10 @@ void auto_mode::activate()
 
 void auto_mode::deactivate()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     eng::timer::stop(pause_timer_);
+    eng::timer::stop(proc_timer_);
 
     if (node::is_ready(axis_ctl_) && node::is_ready(stuff_ctl_))
     {
@@ -102,6 +117,7 @@ void auto_mode::deactivate()
     node::deactivate(axis_ctl_);
     node::deactivate(stuff_ctl_);
 
+    eng::log::info("\tGO: s_wait_system_ready");
     switch_to_state(&auto_mode::s_wait_system_ready);
 }
 
@@ -128,8 +144,9 @@ void auto_mode::s_wait_system_ready()
         return;
     }
 
-    // Разрешаем себя активировать снова
-    node::set_ready(ictl_);
+    // Разрешаем себя активировать
+    node::ready(ictl_);
+
     switch_to_state(nullptr);
 }
 
@@ -145,9 +162,14 @@ void auto_mode::s_initialize()
     {
         eng::log::error("{}: Не удалось активировать систему управления периферией", name());
         node::terminate(ictl_, "Не удалось активировать систему управления периферией");
+
+        eng::log::info("\tGO: s_wait_system_ready");
         switch_to_state(&auto_mode::s_wait_system_ready);
         return;
     }
+
+    eng::timer::start(proc_timer_, std::chrono::milliseconds(200));
+    stopwatch_.restart();
 
     // Инициализируем наш процессор
     vm_.initialize();
@@ -166,6 +188,8 @@ void auto_mode::s_initialize()
 void auto_mode::s_init_pause()
 {
     eng::log::info("{}: {}", name(), __func__);
+
+    pause_stopwatch_.restart();
 
     auto msec = vm_.pause_timeout_ms();
     if (msec != 0)
@@ -533,6 +557,8 @@ bool auto_mode::prepare_node_for_work()
 
 void auto_mode::register_on_bus_done()
 {
+    eng::log::info("{}: {}", name(), __func__);
+    eng::log::info("\tGO: s_wait_system_ready");
     switch_to_state(&auto_mode::s_wait_system_ready);
 }
 
@@ -578,6 +604,15 @@ void auto_mode::load_axis_list()
 
 void auto_mode::update_output_times()
 {
+    // Общее время выполнения
+    double t0 = stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
+
+    double t1 = NAN;
+    // Время на паузе или на бесконечной паузе
+    if (is_in_state(&auto_mode::s_pause) || is_in_state(&auto_mode::s_infinity_pause))
+        t1 = pause_stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
+
+    node::set_port_value(times_out_, { t0, t1 });
 }
 
 

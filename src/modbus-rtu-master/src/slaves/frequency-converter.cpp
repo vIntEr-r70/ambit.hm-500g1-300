@@ -2,13 +2,10 @@
 
 #include <eng/timer.hpp>
 #include <eng/log.hpp>
-#include <eng/json.hpp>
-#include <eng/sibus/client.hpp>
 
 frequency_converter::frequency_converter(std::size_t unit_id)
     : eng::sibus::node{ "fc-ctl" }
     , modbus_unit(unit_id)
-    , hw_state_(nullptr)
 {
     p_out_[pout::powered] = node::add_output_port("powered");
     p_out_[pout::online] = node::add_output_port("online");
@@ -30,22 +27,15 @@ frequency_converter::frequency_converter(std::size_t unit_id)
         deactivate();
     });
 
-    std::string key{ "fc/current-conductors" };
-    eng::sibus::client::config_listener(key, [this](std::string_view json)
+    node::add_input_port("limits", [this](eng::abc::pack args)
     {
-        eng::json::object cfg(json);
-
-        auto id = cfg.get<std::size_t>("mask", 0);
-
-        eng::json::object item(cfg.get_array("records")[id]);
-        I_max_ = item.get<double>("I-max", 0.0);
-        iup_[1] = item.get<double>("U-max", 0.0);
+        I_max_ = eng::abc::get<double>(args, 1);
+        iup_[kU] = eng::abc::get<double>(args, 2);
+        P_max_ = I_max_ * iup_[kU];
     });
 
-    std::size_t idx;
-
     // Опрос текущего состояния устройства
-    idx = modbus_unit::add_read_task(0xA411, 5, 300);
+    std::size_t idx = modbus_unit::add_read_task(0xA411, 5, 300);
     read_task_handlers_[idx] = &frequency_converter::read_status_done;
 
     // Опрос частоты
@@ -63,7 +53,8 @@ frequency_converter::frequency_converter(std::size_t unit_id)
 
 void frequency_converter::register_on_bus_done()
 {
-    node::set_ready(ictl_);
+    if (is_online())
+        node::set_ready(ictl_);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,40 +64,50 @@ void frequency_converter::activate(eng::abc::pack args)
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!is_online())
+    if (!is_online() || !status_.has_value())
     {
         node::terminate(ictl_, "Отсутствует связь с устройством");
         return;
     }
 
-    if (hw_state_ == &frequency_converter::s_damaged)
+    // Команда на сброс аварии
+    if (!args.size())
     {
-        node::terminate(ictl_, "Устройство в состоянии аварии");
+        // Если мы не в аварии
+        if (status_.value() != estatus::damaged)
+        {
+            node::set_ready(ictl_);
+            return;
+        }
+
+        // Отправляем команду на сброс ошибки
+        eng::log::info("{}: CMD: reset errors", name());
+        modbus_unit::write_single(0xA410, 0x0002);
+
         return;
     }
 
-    if (args.size() == 2)
-    {
-        iup_[0] = eng::abc::get<double>(args, 0);
-        iup_[2] = eng::abc::get<double>(args, 1);
-    }
+    // Уставки
+    iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
+    iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
 
     // Записываем уставки
     std::array<std::uint16_t, 3> iup{
-        static_cast<std::uint16_t>(std::lround(iup_[0] * 10.0f)),
-        static_cast<std::uint16_t>(std::lround(iup_[1])),
-        static_cast<std::uint16_t>(std::lround(iup_[2] * 0.01f))
+        static_cast<std::uint16_t>(std::lround(iup_[kI] * 10.0)),
+        static_cast<std::uint16_t>(std::lround(iup_[kU])),
+        static_cast<std::uint16_t>(std::lround(iup_[kP] * 0.01))
     };
+    eng::log::info("{}: CMD: write sets", name());
     modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
 
-    if (hw_state_ == &frequency_converter::s_powered)
-        return;
+    eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
 
-    // Передаем команду на запуск
-    write_task_handler_ = {
-        modbus_unit::write_single(0xA410, 0x0001),
-        &frequency_converter::w_start
-    };
+    // Если еще не запущены, передаем команду на запуск
+    if (status_.value() != estatus::powered)
+    {
+        eng::log::info("{}: CMD: write start and reset errors", name());
+        modbus_unit::write_single(0xA410, 0x0003);
+    }
 }
 
 // Останавливаем устройство
@@ -114,105 +115,31 @@ void frequency_converter::deactivate()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!is_online())
+    if (!is_online() || !status_.has_value() || *status_ != estatus::powered)
     {
         node::set_ready(ictl_);
         return;
     }
 
-    if (hw_state_ == &frequency_converter::s_idle)
-    {
-        node::set_ready(ictl_);
-        return;
-    }
-
-    std::uint16_t command = 0x0000;
-    if (hw_state_ == &frequency_converter::s_damaged)
-        command = 0x0002;
-
-    // Передаем команду на остановку или сброс аварии
-    write_task_handler_ = {
-        modbus_unit::write_single(0xA410, command),
-        &frequency_converter::w_stop
-    };
+    // Отправляем команду на остановку
+    // Узел переходит в состояние блокировки
+    eng::log::info("{}: CMD: write stop", name());
+    modbus_unit::write_single(0xA410, 0x0000);
 
     node::set_ready(ictl_);
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-void frequency_converter::s_idle(std::uint16_t status)
-{
-    switch(status)
-    {
-    case 0:
-        return;
-    case 1:
-        node::set_port_value(p_out_[pout::powered], { true });
-        hw_state_ = &frequency_converter::s_powered;
-        return;
-    }
-
-    node::set_port_value(p_out_[pout::damaged],
-        { true, damages_[0], damages_[1], damages_[2], damages_[3] });
-
-    hw_state_ = &frequency_converter::s_damaged;
-}
-
-void frequency_converter::s_powered(std::uint16_t status)
-{
-    switch(status)
-    {
-    case 0:
-        node::set_port_value(p_out_[pout::powered], { false });
-        hw_state_ = &frequency_converter::s_idle;
-        node::set_ready(ictl_);
-        return;
-    case 1:
-        return;
-    }
-
-    node::set_ready(ictl_);
-
-    node::set_port_value(p_out_[pout::damaged],
-        { true, damages_[0], damages_[1], damages_[2], damages_[3] });
-
-    node::set_port_value(p_out_[pout::powered], { false });
-
-    hw_state_ = &frequency_converter::s_damaged;
-}
-
-void frequency_converter::s_damaged(std::uint16_t status)
-{
-    switch(status)
-    {
-    case 0:
-        node::set_port_value(p_out_[pout::damaged], { false });
-        node::set_port_value(p_out_[pout::powered], { false });
-        hw_state_ = &frequency_converter::s_idle;
-        return;
-    case 1:
-        node::set_port_value(p_out_[pout::damaged], { false });
-        node::set_port_value(p_out_[pout::powered], { true });
-        hw_state_ = &frequency_converter::s_powered;
-        return;
-    }
-
-    node::set_port_value(p_out_[pout::damaged],
-        { true, damages_[0], damages_[1], damages_[2], damages_[3] });
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 
 void frequency_converter::now_unit_online()
 {
     eng::log::info("{}: {}", name(), __func__);
 
+    // if (node::is_registered_on_bus())
     node::set_ready(ictl_);
 
-    eng::log::info("frequency_converter::now_unit_online");
-
+    // Отправляем команду на сброс ошибок
+    eng::log::info("{}: CMD: reset errors", name());
     modbus_unit::write_single(0xA410, 0x0002);
+
     node::set_port_value(p_out_[pout::online], { true });
 }
 
@@ -220,12 +147,10 @@ void frequency_converter::connection_was_lost()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (hw_state_ == &frequency_converter::s_powered)
+    if (node::is_active(ictl_))
         node::terminate(ictl_, "Связь с устройством потеряна");
 
-    hw_state_ = nullptr;
-    write_task_handler_.handler = nullptr;
-
+    // Мы не знаем какое состояние теперь у ПЧ
     std::ranges::fill(damages_, 0);
 
     node::set_port_value(p_out_[pout::powered], { });
@@ -238,36 +163,8 @@ void frequency_converter::connection_was_lost()
     node::set_port_value(p_out_[pout::P], { });
 
     node::set_port_value(p_out_[pout::online], { false });
-}
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-void frequency_converter::write_task_done(std::size_t idx)
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    // Если логика в режиме ожидания завершения операции
-    if (write_task_handler_.handler && write_task_handler_.idx == idx)
-    {
-        (this->*write_task_handler_.handler)(true);
-        write_task_handler_.handler = nullptr;
-    }
-}
-
-void frequency_converter::w_start(bool success)
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    if (!success)
-        node::terminate(ictl_, "Не удалось включить устройство");
-}
-
-void frequency_converter::w_stop(bool success)
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    if (!success)
-        node::terminate(ictl_, "Не удалось выключить устройство");
+    status_.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,22 +178,55 @@ void frequency_converter::read_task_done(std::size_t idx, readed_regs_t regs)
 
 void frequency_converter::read_status_done(readed_regs_t regs)
 {
-    std::uint16_t status = regs[0];
+    estatus status = static_cast<estatus>(regs[0]);
 
-    if (status == 2 && hw_state_ == &frequency_converter::s_damaged)
+    // Если статус не авария, достаточно проверить его изменение
+    if (status != estatus::damaged)
     {
-        auto src = regs.subspan(1);
-        if (std::ranges::equal(src, damages_))
+        // Значение статуса не изменилось
+        if (status == status_ && status_.has_value())
             return;
-        std::ranges::copy(src, damages_.begin());
-    }
-    else if (hw_state_ == nullptr)
-    {
-        hw_state_ = &frequency_converter::s_damaged;
-        std::ranges::copy(regs.subspan(1), damages_.begin());
     }
 
-    (this->*hw_state_)(status);
+    // Мы выключились либо была сброшена авария
+    if (status == estatus::idle)
+    {
+        eng::log::info("{}: status = idle", name());
+
+        node::set_port_value(p_out_[pout::damaged], { false });
+        node::set_port_value(p_out_[pout::powered], { false });
+    }
+    // Мы включились
+    else if (status == estatus::powered)
+    {
+        eng::log::info("{}: status = powered", name());
+
+        node::set_port_value(p_out_[pout::powered], { true });
+    }
+    // Мы оказались в аварии
+    else if (status == estatus::damaged)
+    {
+        // Если статус авария, могут измениться маски ошибок
+
+        auto src = regs.subspan(1);
+        if (status == status_ && status_.has_value() && std::ranges::equal(src, damages_))
+            return;
+
+        eng::log::info("{}: status = damaged", name());
+
+        // Запоминаем новые значения масок ошибок
+        std::ranges::copy(src, damages_.begin());
+
+        node::set_port_value(p_out_[pout::damaged],
+            { true, damages_[0], damages_[1], damages_[2], damages_[3] });
+    }
+    else
+    {
+        eng::log::info("{}: status = ???", name());
+    }
+
+    // Запоминаем новое значение статуса
+    status_ = status;
 }
 
 void frequency_converter::read_F_done(readed_regs_t regs)

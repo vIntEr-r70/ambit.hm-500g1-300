@@ -14,6 +14,8 @@ add_executable(${PROJECT_NAME}
     src/speed-node.cpp
     src/panel-button-ctl.cpp
     src/panel-switch-2-ctl.cpp
+
+    src/current-conductors.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

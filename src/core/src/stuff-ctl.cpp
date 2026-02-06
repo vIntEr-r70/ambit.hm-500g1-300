@@ -52,10 +52,19 @@ stuff_ctl::stuff_ctl()
     }
 }
 
+// Вызывается только если в состоянии ready или active
+
 // Нам сообщают, какие устройства задействованы в режиме
 // [ fc, sp0, sp1, sp2, N, [ X, Y, ... ] ]
 void stuff_ctl::activate(eng::abc::pack args)
 {
+    // Если мы уже активированы, повторная активация не допускается
+    if (!is_in_state(nullptr))
+    {
+        node::reject(ictl_, "Система уже активирована");
+        return;
+    }
+
     std::size_t iarg = 0;
 
     fc_.in_use = eng::abc::get<bool>(args, iarg++);
@@ -82,7 +91,7 @@ void stuff_ctl::activate(eng::abc::pack args)
     // Проверяем готовность системы
     if (!is_stuff_usable())
     {
-        node::terminate(ictl_, "Система не готова к выполнению режима");
+        node::reject(ictl_, "Система не готова к выполнению режима");
         return;
     }
 
@@ -90,15 +99,9 @@ void stuff_ctl::activate(eng::abc::pack args)
         &stuff_ctl::s_ctl_state : &stuff_ctl::s_lazy_state);
 }
 
+// Может быть 
 void stuff_ctl::deactivate()
 {
-    if (is_stuff_usable())
-    {
-        node::set_ready(ictl_);
-        switch_to_state(nullptr);
-        return;
-    }
-
     // Деактивируем все с чем работали
 
     if (fc_.in_use && !node::is_ready(fc_.ctl))
@@ -115,6 +118,8 @@ void stuff_ctl::deactivate()
         if (desc.in_use && !node::is_ready(desc.ctl))
             node::deactivate(desc.ctl);
     }
+
+    node::terminate(ictl_, "Приведение системы в штатное состояние");
 
     switch_to_state(&stuff_ctl::s_wait_system_ready);
 }
@@ -352,6 +357,6 @@ void stuff_ctl::load_axis_list()
 
 void stuff_ctl::register_on_bus_done()
 {
-    node::set_ready(ictl_);
+    node::ready(ictl_);
 }
 

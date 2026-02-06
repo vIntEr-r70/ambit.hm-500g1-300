@@ -59,10 +59,10 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 
                     QLabel *lbl = new QLabel(this);
                     lbl->setStyleSheet("font-size: 18pt; color: #696969;");
-                    lbl->setText("00:00:00");
                     lbl->setFrameShape(QFrame::StyledPanel);
                     lbl->setAlignment(Qt::AlignCenter);
                     lbl->setFixedWidth(120);
+                    lbl_common_time_ = lbl;
                     hhL->addWidget(lbl);
 
                     hhL->addSpacing(20);
@@ -72,9 +72,9 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
                     lbl = new QLabel(this);
                     lbl->setStyleSheet("font-size: 18pt; color: #696969;");
                     lbl->setFrameShape(QFrame::StyledPanel);
-                    lbl->setText("00:00:00");
                     lbl->setAlignment(Qt::AlignCenter);
                     lbl->setFixedWidth(120);
+                    lbl_pause_time_ = lbl;
                     hhL->addWidget(lbl);
                 }
                 hL->addLayout(hhL);
@@ -169,6 +169,9 @@ void auto_ctl_page::make_start()
     if (!node::is_ready(ctl_))
         return;
 
+    lbl_common_time_->setText("00:00:00");
+    lbl_pause_time_->setText("");
+
     btn_start_->setEnabled(false);
     node::activate(ctl_, { });
 }
@@ -234,11 +237,32 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
     }
 }
 
-// общее время, время паузы
-// Общее время считается всегда с начала запуска программы
-// Время паузы идет в обратную сторону при нахождении на паузе
-// NaN когда не на паузе, Inf на бесконечной паузе
+constexpr static std::tuple<int, int, int> hms(double sec)
+{
+    int seconds = static_cast<int>(sec);
+    int h = seconds / 3600;
+    int m = (seconds % 3600) / 60;
+    int s = seconds % 60;
+    return { h, m, s }; 
+}
+
 void auto_ctl_page::update_times(eng::abc::pack args)
 {
+    double t0 = eng::abc::get<double>(args, 0);
+
+    auto [h1, m1, s1] = hms(t0);
+    lbl_common_time_->setText(QString::fromStdString(
+        std::format("{:02}:{:02}:{:02}", h1, m1, s1)));
+
+    double t1 = eng::abc::get<double>(args, 1);
+    if (std::isnan(t1))
+    {
+        lbl_pause_time_->setText("");
+        return;
+    }
+
+    auto [h2, m2, s2] = hms(t1);
+    lbl_pause_time_->setText(QString::fromStdString(
+        std::format("{:02}:{:02}:{:02}", h2, m2, s2)));
 }
 

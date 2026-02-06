@@ -7,6 +7,7 @@
 class RoundButton;
 class ProgramModel;
 class QStackedWidget;
+class QLabel;
 
 class program_widget;
 class problem_list_widget;
@@ -29,6 +30,9 @@ class auto_ctl_page final
     RoundButton *btn_start_;
     RoundButton *btn_stop_;
     RoundButton *btn_continue_;
+
+    QLabel *lbl_common_time_;
+    QLabel *lbl_pause_time_;
 
     std::optional<std::size_t> phase_id_;
     bool execution_error_;

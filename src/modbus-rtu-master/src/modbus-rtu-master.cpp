@@ -49,8 +49,8 @@ namespace port
         master::client_t *client;
         modbus::rtu::frame frame;
         response_handler_t handler;
-
         std::size_t failed_count;
+        bool log;
     };
 
     static std::list<operation_t> requests;
@@ -93,6 +93,7 @@ namespace port
         op.client = client;
         op.handler = handler;
         op.failed_count = 0;
+        op.log = false;
 
         return op;
     }
@@ -188,10 +189,12 @@ namespace port
                     break;
             }
 
-#ifdef LOG
-            eng::log::info("[{}] modbus-rtu-master::do_reading: {}", port.name(),
-                    eng::utils::to_hex(receiver.frame().data(), receiver.frame().size()));
-#endif
+            operation_t &op = requests.front();
+            if (op.log)
+            {
+                eng::log::info("[{}] modbus-rtu-master::do_reading: {}", port.name(),
+                        eng::utils::to_hex(receiver.frame().data(), receiver.frame().size()));
+            }
 
             if (!receiver.frame().is_valid())
             {
@@ -221,10 +224,12 @@ namespace port
             // Открываем порт если он еще не открыт
             if (!port.is_open()) port.open();
 
-#ifdef LOG
-            eng::log::info("[{}] modbus-rtu-master::do_writing: {}", port.name(),
-                    eng::utils::to_hex(op.frame.data() + writed_bytes, op.frame.size() - writed_bytes));
-#endif
+            if (op.log)
+            {
+                eng::log::info("[{}] modbus-rtu-master::do_writing: {}", port.name(),
+                        eng::utils::to_hex(op.frame.data() + writed_bytes, op.frame.size() - writed_bytes));
+            }
+
             std::size_t writed = port.write(
                     op.frame.data() + writed_bytes,
                     op.frame.size() - writed_bytes);
@@ -260,9 +265,11 @@ namespace port
 
         timeout_ctl_timer_ = eng::timer::once(
                 std::chrono::milliseconds(100),
-                []
+                [log=op.log]
                 {
-                    eng::log::error("[{}] modbus-rtu-master: read operation timeout", port.name());
+                    if (log)
+                        eng::log::error("[{}] modbus-rtu-master: read operation timeout", port.name());
+
                     // Время ожидания на чтение команды вышло
                     // Останавливаем выполнение операции
                     eng::timer::kill_timer(operaton_delay_timer_);
@@ -270,9 +277,8 @@ namespace port
                     operation_failed_done();
                 });
 
-#ifdef LOG
-        eng::log::info("[{}] modbus-rtu-master::do_writing: start reading", port.name());
-#endif
+        if (op.log)
+            eng::log::info("[{}] modbus-rtu-master::do_writing: start reading", port.name());
 
         // Готовим приемник
         receiver.clear();
@@ -446,6 +452,7 @@ namespace modbus_rtu_master
         });
 
         op.frame.update_checksum();
+        op.log = true;
     }
 
     void write_single(modbus_unit const *unit, std::uint16_t address, std::uint16_t value)
@@ -460,6 +467,7 @@ namespace modbus_rtu_master
             <modbus::rtu::frame>{ op.frame, address, value };
 
         op.frame.update_checksum();
+        op.log = true;
     }
 
 }

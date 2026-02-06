@@ -207,11 +207,13 @@ bool axis_motion_node::cmd_zerro(eng::abc::pack const &)
 {
     // Ось находится в движении
     if (servo_motor_.control())
-        return false;
+        return true;
 
     origin_offset_ = servo_motor_.position();
 
     update_output_info();
+
+    node::set_ready(ictl_);
 
     return true;
 }

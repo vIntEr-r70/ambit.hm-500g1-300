@@ -105,18 +105,18 @@ multi_axis_ctl::multi_axis_ctl()
     }
 
     // Создаем узлы управления с драйверами шаговых двигателей
-    std::ranges::for_each(info_, [this](auto &info)
-    {
-        char axis = info.first;
-        auto ctl = node::add_output_wire(std::string(1, axis));
-        info.second.ctl = ctl;
-
-        node::set_wire_status_handler(ctl, [this,axis] {
-            wire_status_was_changed(axis);
-        });
-
-        node::link_wires(ictl_, ctl);
-    });
+    // std::ranges::for_each(info_, [this](auto &info)
+    // {
+    //     char axis = info.first;
+    //     auto ctl = node::add_output_wire(std::string(1, axis));
+    //     info.second.ctl = ctl;
+    //
+    //     node::set_wire_status_handler(ctl, [this,axis] {
+    //         wire_status_was_changed(axis);
+    //     });
+    //
+    //     node::link_wires(ictl_, ctl);
+    // });
 }
 
 void multi_axis_ctl::activate(eng::abc::pack args)
