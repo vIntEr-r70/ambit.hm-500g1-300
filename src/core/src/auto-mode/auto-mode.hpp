@@ -1,5 +1,6 @@
 #pragma once
 
+#include "eng/sibus/sibus.hpp"
 #include "vm.hpp"
 #include "common/internal-state-ctl.hpp"
 
@@ -7,11 +8,12 @@
 #include <eng/timer.hpp>
 #include <eng/stopwatch.hpp>
 
+#include <bitset>
+
 class auto_mode final
     : public eng::sibus::node
-    , public internal_state_ctl<auto_mode>
 {
-    typedef void (auto_mode::*command_handler)(eng::abc::pack);
+    internal_state_ctl<auto_mode> isc_;
 
     // Входящее управление
     eng::sibus::input_wire_id_t ictl_;
@@ -42,6 +44,9 @@ class auto_mode final
     eng::timer::id_t pause_timer_;
     eng::timer::id_t proc_timer_;
 
+    std::bitset<2> output_;
+    void(auto_mode::*sstate_)(std::size_t, eng::sibus::istatus);
+
 public:
 
     auto_mode();
@@ -54,7 +59,17 @@ private:
 
 private:
 
-    void s_wait_system_ready();
+    void ss_wait_system_ready(std::size_t, eng::sibus::istatus);
+
+    void ss_system_ready(std::size_t, eng::sibus::istatus);
+
+    void ss_system_in_proc(std::size_t, eng::sibus::istatus);
+
+    void ss_wait_moving_start(std::size_t, eng::sibus::istatus);
+
+    void ss_wait_moving_done(std::size_t, eng::sibus::istatus);
+
+private:
 
     void s_initialize();
 
@@ -72,9 +87,11 @@ private:
 
     void s_start_moving();
 
-    void s_wait_moving_done();
+    void s_moving_done();
 
 private:
+
+    void process_axis_positions();
 
     void execute_operation();
 
@@ -94,14 +111,8 @@ private:
 
 private:
 
-    bool prepare_node_for_work();
-
     void load_axis_list();
 
     void update_output_times();
-
-private:
-
-    void register_on_bus_done() override final;
 };
 

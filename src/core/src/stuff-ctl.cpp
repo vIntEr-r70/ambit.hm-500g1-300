@@ -9,6 +9,7 @@
 
 stuff_ctl::stuff_ctl()
     : eng::sibus::node("stuff-ctl")
+    , isc_(this)
 {
     ictl_ = node::add_input_wire();
 
@@ -25,19 +26,19 @@ stuff_ctl::stuff_ctl()
     {
         eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
         do_command(std::move(args));
-        touch_current_state();
+        isc_.touch_current_state();
     });
 
     fc_.ctl = node::add_output_wire("fc");
     node::set_wire_status_handler(fc_.ctl, [this] {
-        touch_current_state();
+        isc_.touch_current_state();
     });
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
     {
         sp_[i].ctl = node::add_output_wire(std::format("sp{}", i));
         node::set_wire_status_handler(sp_[i].ctl, [this, i] {
-            touch_current_state();
+            isc_.touch_current_state();
         });
     }
 
@@ -47,7 +48,7 @@ stuff_ctl::stuff_ctl()
     {
         desc.ctl = node::add_output_wire(std::format("{}", axis));
         node::set_wire_status_handler(desc.ctl, [this, axis] {
-            touch_current_state();
+            isc_.touch_current_state();
         });
     }
 }
@@ -59,7 +60,7 @@ stuff_ctl::stuff_ctl()
 void stuff_ctl::activate(eng::abc::pack args)
 {
     // Если мы уже активированы, повторная активация не допускается
-    if (!is_in_state(nullptr))
+    if (!isc_.is_in_state(nullptr))
     {
         node::reject(ictl_, "Система уже активирована");
         return;
@@ -95,7 +96,7 @@ void stuff_ctl::activate(eng::abc::pack args)
         return;
     }
 
-    switch_to_state(in_use_any() ?
+    isc_.switch_to_state(in_use_any() ?
         &stuff_ctl::s_ctl_state : &stuff_ctl::s_lazy_state);
 }
 
@@ -121,7 +122,7 @@ void stuff_ctl::deactivate()
 
     node::terminate(ictl_, "Приведение системы в штатное состояние");
 
-    switch_to_state(&stuff_ctl::s_wait_system_ready);
+    isc_.switch_to_state(&stuff_ctl::s_wait_system_ready);
 }
 
 void stuff_ctl::s_wait_system_ready()
@@ -130,7 +131,7 @@ void stuff_ctl::s_wait_system_ready()
         return;
 
     node::set_ready(ictl_);
-    switch_to_state(nullptr);
+    isc_.switch_to_state(nullptr);
 }
 
 // Мы активны но задач нам приходить не будет

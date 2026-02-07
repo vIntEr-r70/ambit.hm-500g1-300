@@ -5,12 +5,20 @@
 template <typename T>
 class internal_state_ctl
 {
+    T *owner_;
+
     typedef void(T::*state_handler_t)();
 
     state_handler_t state_{ nullptr };
     eng::timer::id_t state_call_timer_;
 
-protected:
+public:
+
+    internal_state_ctl(T *owner)
+        : owner_(owner)
+    { }
+
+public:
 
     void switch_to_state(state_handler_t new_state)
     {
@@ -45,7 +53,7 @@ protected:
         }
 
         // Производим вызов
-        (static_cast<T*>(this)->*state_)();
+        (owner_->*state_)();
 
         return true;
     };

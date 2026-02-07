@@ -1,5 +1,6 @@
 #include "multi-axis-ctl.hpp"
 #include "common/axis-config.hpp"
+#include "common/load-axis-list.hpp"
 
 #include <eng/json.hpp>
 #include <eng/sibus/client.hpp>
@@ -64,59 +65,39 @@ multi_axis_ctl::multi_axis_ctl()
         deactivate();
     });
 
-    char const *LIAEM_RO_PATH = std::getenv("LIAEM_RO_PATH");
-    if (LIAEM_RO_PATH == nullptr)
+    ambit::load_axis_list([this](char axis, std::string_view, bool)
     {
-        eng::log::error("{}: LIAEM_RO_PATH not set", name());
-        return;
-    }
+        info_[axis].acc = 0.0;
 
-    std::filesystem::path path(LIAEM_RO_PATH);
-    path /= "axis.json";
-
-    try
-    {
-        eng::json::array cfg(path);
-        cfg.for_each([this](std::size_t, eng::json::value v)
+        std::string key = std::format("axis/{}", axis);
+        eng::sibus::client::config_listener(key, [this, axis](std::string_view json)
         {
-            eng::json::object obj(v);
-            char axis = obj.get_sv("axis")[0];
-            info_[axis].acc = 0.0;
+            if (json.empty())
+                return;
 
-            std::string key = std::format("axis/{}", axis);
-            eng::sibus::client::config_listener(key, [this, axis](std::string_view json)
-            {
-                if (json.empty())
-                    return;
+            axis_config::desc desc;
+            axis_config::load(desc, json);
 
-                axis_config::desc desc;
-                axis_config::load(desc, json);
+            info_[axis].acc = desc.acc;
 
-                info_[axis].acc = desc.acc;
-
-                eng::log::info("{}: {}: acc = {}", name(), axis, desc.acc);
-            });
+            eng::log::info("{}: {}: acc = {}", name(), axis, desc.acc);
         });
-    }
-    catch(std::exception const &e)
-    {
-        eng::log::error("{}: {}", name(), e.what());
-        return;
-    }
+    });
 
     // Создаем узлы управления с драйверами шаговых двигателей
-    // std::ranges::for_each(info_, [this](auto &info)
-    // {
-    //     char axis = info.first;
-    //     auto ctl = node::add_output_wire(std::string(1, axis));
-    //     info.second.ctl = ctl;
-    //
-    //     node::set_wire_status_handler(ctl, [this,axis] {
-    //         wire_status_was_changed(axis);
-    //     });
-    //
-    //     node::link_wires(ictl_, ctl);
-    // });
+    std::ranges::for_each(info_, [this](auto &info)
+    {
+        char axis = info.first;
+
+        auto ctl = node::add_output_wire(std::string(1, axis));
+        info.second.ctl = ctl;
+
+        node::set_wire_status_handler(ctl, [this,axis] {
+            wire_status_was_changed(axis);
+        });
+
+        node::link_wires(ictl_, ctl);
+    });
 }
 
 void multi_axis_ctl::activate(eng::abc::pack args)

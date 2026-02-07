@@ -8,9 +8,10 @@
 
 class stuff_ctl final
     : public eng::sibus::node
-    , public internal_state_ctl<stuff_ctl>
 {
     typedef void (stuff_ctl::*activate_command)(eng::abc::pack);
+
+    internal_state_ctl<stuff_ctl> isc_;
 
     eng::sibus::input_wire_id_t ictl_;
 

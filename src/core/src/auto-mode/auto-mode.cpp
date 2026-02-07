@@ -1,5 +1,6 @@
 #include "auto-mode.hpp"
 #include "common/program.hpp"
+#include "common/load-axis-list.hpp"
 #include "eng/sibus/sibus.hpp"
 
 #include <eng/log.hpp>
@@ -9,7 +10,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <filesystem>
 
 template <typename T>
 static constexpr std::string to_string_axis_position(T const &list)
@@ -27,6 +27,7 @@ static constexpr std::string to_string_axis_position(T const &list)
 auto_mode::auto_mode()
     : eng::sibus::node("auto-mode")
     , vm_(phases_, target_axis_)
+    , isc_(this)
 {
     ictl_ = node::add_input_wire();
     node::set_activate_handler(ictl_, [this](eng::abc::pack) { activate(); });
@@ -36,20 +37,24 @@ auto_mode::auto_mode()
     axis_ctl_ = node::add_output_wire("axis");
     node::set_wire_status_handler(axis_ctl_, [this]
     {
-        touch_current_state();
+        eng::log::info("{}[axis-ctl]: -> {}", name(), eng::sibus::to_string(node::status(axis_ctl_)));
+        (this->*sstate_)(0, node::status(axis_ctl_));
     });
 
     // Управление движением
     stuff_ctl_ = node::add_output_wire("stuff");
     node::set_wire_status_handler(stuff_ctl_, [this]
     {
-        touch_current_state();
+        eng::log::info("{}[stuff-ctl]: -> {}", name(), eng::sibus::to_string(node::status(stuff_ctl_)));
+        (this->*sstate_)(1, node::status(stuff_ctl_));
     });
 
     node::add_input_port_v2("program", [this](eng::abc::pack args)
     {
         upload_program(std::move(args));
-        touch_current_state();
+
+        if (sstate_ == &auto_mode::ss_system_ready || sstate_ == &auto_mode::ss_wait_system_ready)
+            (this->*sstate_)(1, node::status(stuff_ctl_));
     });
 
     phase_id_out_ = node::add_output_port("phase-id");
@@ -61,7 +66,7 @@ auto_mode::auto_mode()
     pause_timer_ = eng::timer::create([this]
     {
         eng::timer::stop(pause_timer_);
-        switch_to_state(&auto_mode::s_pause_done);
+        isc_.switch_to_state(&auto_mode::s_pause_done);
     });
 
     // Таймер выполнения режима
@@ -70,33 +75,137 @@ auto_mode::auto_mode()
         update_output_times();
     });
 
-    // output_wait_.emplace_back(axis_ctl_, eng::sibus::istatus::ready);
-    // output_wait_.emplace_back(stuff_ctl_, eng::sibus::istatus::ready);
-    // output_handler_ = &auto_mode::s_wait_system_ready;
+    sstate_ = &auto_mode::ss_wait_system_ready;
 
     // Связываем свои входные и выходные провода
     // node::link_wires(ictl_, axis_ctl_);
     // node::link_wires(ictl_, stuff_ctl_);
 }
 
-// void auto_mode::output_wait_handler(eng::sibus::output_wire_id_t id, eng::sibus::istatus status)
-// {
-//     auto it = eng::sibus::output_wait_.find
-//
-// }
+void auto_mode::ss_wait_system_ready(std::size_t idx, eng::sibus::istatus status)
+{
+    output_.set(idx, status == eng::sibus::istatus::ready);
+    if (!output_.all() || program_b64_.empty()) return;
+    sstate_ = &auto_mode::ss_system_ready;
+    isc_.switch_to_state(nullptr);
+    node::ready(ictl_);
+}
+
+void auto_mode::ss_system_ready(std::size_t idx, eng::sibus::istatus status)
+{
+    output_.set(idx, status == eng::sibus::istatus::ready);
+    if (output_.all() && !program_b64_.empty()) return;
+    sstate_ = &auto_mode::ss_wait_system_ready;
+    node::terminate(ictl_, "Система не готова");
+}
+
+void auto_mode::ss_system_in_proc(std::size_t idx, eng::sibus::istatus status)
+{
+    constexpr static eng::sibus::istatus istatus[] {
+        eng::sibus::istatus::ready, eng::sibus::istatus::active
+    };
+
+    output_.set(idx, status == istatus[idx]);
+    if (output_.all())
+    {
+        isc_.switch_to_state(&auto_mode::s_initialize);
+        return;
+    }
+    sstate_ = &auto_mode::ss_wait_system_ready;
+    isc_.switch_to_state(nullptr);
+
+    node::deactivate(axis_ctl_);
+    node::deactivate(stuff_ctl_);
+
+    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
+}
+
+void auto_mode::ss_wait_moving_start(std::size_t idx, eng::sibus::istatus status)
+{
+    constexpr static eng::sibus::istatus istatus[] {
+        eng::sibus::istatus::active, eng::sibus::istatus::active
+    };
+
+    output_.set(idx, status == istatus[idx]);
+    if (output_.all())
+    {
+        sstate_ = &auto_mode::ss_wait_moving_done;
+        return;
+    }
+
+    sstate_ = &auto_mode::ss_wait_system_ready;
+    isc_.switch_to_state(nullptr);
+
+    node::deactivate(axis_ctl_);
+    node::deactivate(stuff_ctl_);
+
+    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
+}
+
+void auto_mode::ss_wait_moving_done(std::size_t idx, eng::sibus::istatus status)
+{
+    constexpr static eng::sibus::istatus istatus[] {
+        eng::sibus::istatus::ready, eng::sibus::istatus::active
+    };
+
+    output_.set(idx, status == istatus[idx]);
+    if (output_.all())
+    {
+        sstate_ = &auto_mode::ss_wait_moving_done;
+        isc_.switch_to_state(&auto_mode::s_moving_done);
+        return;
+    }
+
+    sstate_ = &auto_mode::ss_wait_system_ready;
+    isc_.switch_to_state(nullptr);
+
+    node::deactivate(axis_ctl_);
+    node::deactivate(stuff_ctl_);
+
+    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
+}
 
 void auto_mode::activate()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!prepare_node_for_work())
+    if (!isc_.is_in_state(nullptr))
     {
-        eng::log::info("\tGO: s_wait_system_ready");
-        switch_to_state(&auto_mode::s_wait_system_ready);
+        node::reject(ictl_, "Программа уже выполняется");
         return;
     }
 
-    switch_to_state(&auto_mode::s_initialize);
+    // Программа не задана
+    if (program_b64_.empty())
+    {
+        eng::log::error("{}: Необходимо задать программу", name());
+        node::reject(ictl_, "Необходимо задать программу");
+        return;
+    }
+
+    // Готовим программу к исполнению
+    bool use_fc{ false };
+    std::array<bool, 3> use_sp { false };
+    std::vector<char> use_spin_axis;
+    if (!prepare_program(use_fc, use_sp, use_spin_axis))
+    {
+        eng::log::error("{}: Программа содержит ошибки", name());
+        node::reject(ictl_, "Программа содержит ошибки");
+        return;
+    }
+
+    // Формируем требования к системе
+    eng::abc::pack args{ use_fc };
+    for (std::size_t i = 0; i < use_sp.size(); ++i)
+        args.push(use_sp[i]);
+    args.push<std::uint8_t>(use_spin_axis.size());
+    std::ranges::for_each(use_spin_axis, [&args](char axis)
+        { args.push(axis); });
+
+    // Запускаем в работу узел управляения устройствами
+    node::activate(stuff_ctl_, std::move(args));
+
+    sstate_ = &auto_mode::ss_system_in_proc;
 }
 
 void auto_mode::deactivate()
@@ -108,65 +217,21 @@ void auto_mode::deactivate()
 
     if (node::is_ready(axis_ctl_) && node::is_ready(stuff_ctl_))
     {
-        node::set_ready(ictl_);
-        switch_to_state(nullptr);
-
+        isc_.switch_to_state(nullptr);
         return;
     }
 
     node::deactivate(axis_ctl_);
     node::deactivate(stuff_ctl_);
 
-    eng::log::info("\tGO: s_wait_system_ready");
-    switch_to_state(&auto_mode::s_wait_system_ready);
-}
+    sstate_ = &auto_mode::ss_wait_system_ready;
 
-// Ожидаем пока выходные контакты перейдут в состояние готовности
-void auto_mode::s_wait_system_ready()
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::info("\taxit-ctl not ready");
-        return;
-    }
-
-    if (!node::is_ready(stuff_ctl_))
-    {
-        eng::log::info("\tstuff-ctl not ready");
-        return;
-    }
-
-    if (program_b64_.empty())
-    {
-        eng::log::info("\tprogramm was not set");
-        return;
-    }
-
-    // Разрешаем себя активировать
-    node::ready(ictl_);
-
-    switch_to_state(nullptr);
+    node::terminate(ictl_, "Выполнение программы остановлено");
 }
 
 void auto_mode::s_initialize()
 {
     eng::log::info("{}: {}", name(), __func__);
-
-    // Ждем пока управление периферией даст добро на работу
-    if (node::is_transiting(stuff_ctl_))
-        return;
-
-    if (!node::is_active(stuff_ctl_))
-    {
-        eng::log::error("{}: Не удалось активировать систему управления периферией", name());
-        node::terminate(ictl_, "Не удалось активировать систему управления периферией");
-
-        eng::log::info("\tGO: s_wait_system_ready");
-        switch_to_state(&auto_mode::s_wait_system_ready);
-        return;
-    }
 
     eng::timer::start(proc_timer_, std::chrono::milliseconds(200));
     stopwatch_.restart();
@@ -182,7 +247,7 @@ void auto_mode::s_initialize()
         axis_program_pos_[pair.first] = 0.0;
     });
 
-    switch_to_state(&auto_mode::s_program_execution_loop);
+    isc_.switch_to_state(&auto_mode::s_program_execution_loop);
 }
 
 void auto_mode::s_init_pause()
@@ -195,81 +260,27 @@ void auto_mode::s_init_pause()
     if (msec != 0)
         eng::timer::start(pause_timer_, std::chrono::milliseconds(msec));
 
-    switch_to_state(msec ? &auto_mode::s_pause : &auto_mode::s_infinity_pause);
+    isc_.switch_to_state(msec ? &auto_mode::s_pause : &auto_mode::s_infinity_pause);
 }
 
 // Контролируем доступность требуемых нам для работы модулей
 void auto_mode::s_pause()
 {
     eng::log::info("{}: {}", name(), __func__);
-
-    if (node::is_transiting(axis_ctl_))
-        return;
-
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система управления движения отвалилась", name());
-        node::terminate(ictl_, "Система управления движения отвалилась");
-        deactivate();
-        return;
-    }
-
-    if (!node::is_active(stuff_ctl_))
-    {
-        eng::log::error("{}: Система управления периферией отвалилась", name());
-        node::terminate(ictl_, "Система управления периферией отвалилась");
-        deactivate();
-        return;
-    }
 }
 
 // Контролируем доступность требуемых нам для работы модулей
 void auto_mode::s_infinity_pause()
 {
     eng::log::info("{}: {}", name(), __func__);
-
-    if (node::is_transiting(axis_ctl_))
-        return;
-
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система управления движения отвалилась", name());
-        node::terminate(ictl_, "Система управления движения отвалилась");
-        deactivate();
-        return;
-    }
-
-    if (!node::is_active(stuff_ctl_))
-    {
-        eng::log::error("{}: Система управления периферией отвалилась", name());
-        node::terminate(ictl_, "Система управления периферией отвалилась");
-        deactivate();
-        return;
-    }
 }
 
 void auto_mode::s_pause_done()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система управления движения отвалилась", name());
-        node::terminate(ictl_, "Система управления движения отвалилась");
-        deactivate();
-        return;
-    }
-
-    if (!node::is_active(stuff_ctl_))
-    {
-        eng::log::error("{}: Система управления периферией отвалилась", name());
-        node::terminate(ictl_, "Система управления периферией отвалилась");
-        deactivate();
-        return;
-    }
-
     vm_.to_next_phase();
-    switch_to_state(&auto_mode::s_program_execution_loop);
+    isc_.switch_to_state(&auto_mode::s_program_execution_loop);
 }
 
 void auto_mode::s_execute_operation()
@@ -279,7 +290,7 @@ void auto_mode::s_execute_operation()
     execute_operation();
     vm_.to_next_phase();
 
-    switch_to_state(vm_.has_phase_ops() ?
+    isc_.switch_to_state(vm_.has_phase_ops() ?
         &auto_mode::s_execute_operation : &auto_mode::s_program_execution_loop);
 }
 
@@ -291,66 +302,19 @@ void auto_mode::s_start_moving()
     eng::abc::pack args;
     vm_.fill_cnc_task(args);
 
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система управления движения отвалилась", name());
-        node::terminate(ictl_, "Система управления движения отвалилась");
-        deactivate();
-        return;
-    }
-
     node::activate(axis_ctl_, std::move(args));
 
-    execute_operation();
+    sstate_ = &auto_mode::ss_wait_moving_start;
 
-    switch_to_state(&auto_mode::s_wait_moving_done);
+    execute_operation();
 }
 
-void auto_mode::s_wait_moving_done()
+void auto_mode::s_moving_done()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (node::is_transiting(axis_ctl_))
-        return;
-
-    if (!node::is_active(stuff_ctl_))
-    {
-        eng::log::error("{}: Система управления периферией отвалилась", name());
-        node::terminate(ictl_, "Система управления периферией отвалилась");
-        deactivate();
-        return;
-    }
-
-    // Если движение все еще выполняется
-    if (node::is_active(axis_ctl_))
-    {
-        eng::log::info("{}: {}", name(), __func__);
-
-        // Отслеживаем где мы находимся позиционно
-        // инкрементируя номер выполняемой строчки программы
-        if (!vm_.check_in_position(axis_program_pos_))
-            return;
-
-        vm_.to_next_phase();
-        execute_operation();
-
-        std::uint32_t phase_id = vm_.phase_id();
-        node::set_port_value(phase_id_out_, { phase_id, true });
-
-        return;
-    }
-
-    // Мы можем продолжать
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система управления движения отвалилась", name());
-        node::terminate(ictl_, "Система управления движения отвалилась");
-        deactivate();
-        return;
-    }
-
     vm_.to_next_phase();
-    switch_to_state(&auto_mode::s_program_execution_loop);
+    isc_.switch_to_state(&auto_mode::s_program_execution_loop);
 }
 
 void auto_mode::s_program_execution_loop()
@@ -379,10 +343,10 @@ void auto_mode::s_program_execution_loop()
         switch(vm_.phase_type())
         {
         case VmPhaseType::Operation:
-            switch_to_state(&auto_mode::s_execute_operation);
+            isc_.switch_to_state(&auto_mode::s_execute_operation);
             break;
         case VmPhaseType::Pause:
-            switch_to_state(&auto_mode::s_init_pause);
+            isc_.switch_to_state(&auto_mode::s_init_pause);
             break;
 
         default:
@@ -394,7 +358,7 @@ void auto_mode::s_program_execution_loop()
         return;
     }
 
-    switch_to_state(&auto_mode::s_start_moving);
+    isc_.switch_to_state(&auto_mode::s_start_moving);
 }
 
 void auto_mode::execute_operation()
@@ -406,6 +370,25 @@ void auto_mode::execute_operation()
     std::println();
     eng::log::info("DO PHASE: {}", vm_.phase_id());
     eng::log::info("{}\n", to_string_axis_position(axis_program_pos_));
+}
+
+void auto_mode::process_axis_positions()
+{
+    if (!isc_.is_in_state(&auto_mode::s_start_moving))
+        return;
+
+    eng::log::info("{}: {}", name(), __func__);
+
+    // Отслеживаем где мы находимся позиционно
+    // инкрементируя номер выполняемой строчки программы
+    if (!vm_.check_in_position(axis_program_pos_))
+        return;
+
+    vm_.to_next_phase();
+    execute_operation();
+
+    std::uint32_t phase_id = vm_.phase_id();
+    node::set_port_value(phase_id_out_, { phase_id, true });
 }
 
 void auto_mode::upload_program(eng::abc::pack args)
@@ -503,103 +486,22 @@ void auto_mode::create_operation(program const& p, std::size_t rid, bool &use_fc
     phases_.push_back(pop);
 }
 
-// Проверяем готовность системы для работы
-bool auto_mode::prepare_node_for_work()
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    // Программа не задана
-    if (program_b64_.empty())
-    {
-        eng::log::error("{}: Необходимо выбрать программу", name());
-        node::terminate(ictl_, std::format("Необходимо задать программу"));
-        return false;
-    }
-
-    if (!node::is_ready(axis_ctl_))
-    {
-        eng::log::error("{}: Система движения не готова к работе", name());
-        node::terminate(ictl_, "Система движения не готова к работе");
-        return false;
-    }
-
-    if (!node::is_ready(stuff_ctl_))
-    {
-        eng::log::error("{}: Система управления периферией не готова к работе", name());
-        node::terminate(ictl_, "Система управления периферией не готова к работе");
-        return false;
-    }
-
-    // Готовим программу к исполнению
-    bool use_fc{ false };
-    std::array<bool, 3> use_sp { false };
-    std::vector<char> use_spin_axis;
-    if (!prepare_program(use_fc, use_sp, use_spin_axis))
-    {
-        eng::log::error("{}: Программа содержит ошибки", name());
-        node::terminate(ictl_, "Программа содержит ошибки");
-        return false;
-    }
-
-    // Формируем требования к системе
-    eng::abc::pack args{ use_fc };
-    for (std::size_t i = 0; i < use_sp.size(); ++i)
-        args.push(use_sp[i]);
-    args.push<std::uint8_t>(use_spin_axis.size());
-    std::ranges::for_each(use_spin_axis, [&args](char axis)
-        { args.push(axis); });
-
-    // Запускаем в работу узел управляения устройствами
-    node::activate(stuff_ctl_, std::move(args));
-
-    return true;
-}
-
-void auto_mode::register_on_bus_done()
-{
-    eng::log::info("{}: {}", name(), __func__);
-    eng::log::info("\tGO: s_wait_system_ready");
-    switch_to_state(&auto_mode::s_wait_system_ready);
-}
-
 void auto_mode::load_axis_list()
 {
-    char const *LIAEM_RO_PATH = std::getenv("LIAEM_RO_PATH");
-    if (LIAEM_RO_PATH == nullptr)
+    ambit::load_axis_list([this](char axis, std::string_view, bool)
     {
-        eng::log::error("{}: LIAEM_RO_PATH not set", name());
-        return;
-    }
+        axis_real_pos_[axis] = 0.0;
 
-    std::filesystem::path path(LIAEM_RO_PATH);
-    path /= "axis.json";
-
-    try
-    {
-        eng::json::array cfg(path);
-        cfg.for_each([this](std::size_t, eng::json::value v)
+        node::add_input_port(std::format("{}-position", axis), [this, axis](eng::abc::pack args)
         {
-            eng::json::object obj(v);
-            char axis = obj.get_sv("axis")[0];
+            double position = eng::abc::get<double>(args);
+            axis_real_pos_[axis] = position;
 
-            axis_real_pos_[axis] = 0.0;
+            axis_program_pos_[axis] = position - axis_initial_pos_[axis];
 
-            node::add_input_port(std::format("{}-position", axis), [this, axis](eng::abc::pack args)
-            {
-                double position = eng::abc::get<double>(args);
-                axis_real_pos_[axis] = position;
-
-                axis_program_pos_[axis] = position - axis_initial_pos_[axis];
-
-                touch_current_state();
-            });
+            process_axis_positions();
         });
-    }
-    catch(std::exception const &e)
-    {
-        eng::log::error("{}: {}", name(), e.what());
-        return;
-    }
+    });
 }
 
 void auto_mode::update_output_times()
@@ -609,7 +511,7 @@ void auto_mode::update_output_times()
 
     double t1 = NAN;
     // Время на паузе или на бесконечной паузе
-    if (is_in_state(&auto_mode::s_pause) || is_in_state(&auto_mode::s_infinity_pause))
+    if (isc_.is_in_state(&auto_mode::s_pause) || isc_.is_in_state(&auto_mode::s_infinity_pause))
         t1 = pause_stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
 
     node::set_port_value(times_out_, { t0, t1 });
