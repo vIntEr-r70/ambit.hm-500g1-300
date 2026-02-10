@@ -72,6 +72,8 @@ public:
 
     void reset() noexcept;
 
+    bool empty() const noexcept;
+
 private:
 
     int rowCount(QModelIndex const& = QModelIndex()) const override;

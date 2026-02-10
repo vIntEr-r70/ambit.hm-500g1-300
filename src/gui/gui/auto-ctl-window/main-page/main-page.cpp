@@ -1,4 +1,5 @@
 #include "main-page.hpp"
+#include "gui/gui/auto-ctl-window/main-page/copy-to-usb-page.hpp"
 #include "main-page-header-widget.hpp"
 #include "programs-list-widget.hpp"
 
@@ -37,6 +38,9 @@ main_page::main_page(QWidget *parent)
 
             w = new QWidget(this);
             tabs_->addTab(w, "Список архивов");
+
+            w = new copy_to_usb_page(this);
+            tabs_->addTab(w, "USB");
         }
         vL->addWidget(tabs_);
     }

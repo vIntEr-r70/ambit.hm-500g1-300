@@ -37,6 +37,8 @@ signals:
 
     void make_done();
 
+    void make_load();
+
     void rows_count_changed(bool);
 
 private:
@@ -46,6 +48,8 @@ private:
     void do_exit() noexcept;
 
     void do_save() noexcept;
+
+    void do_play() noexcept;
 
 private:
 
@@ -58,7 +62,9 @@ private:
     ValueSetString *name_;
     ValueSetString *comments_;
 
+    IconButton *btn_exit_;
     IconButton *btn_save_;
+    IconButton *btn_play_;
 
     bool need_save_{ false };
 

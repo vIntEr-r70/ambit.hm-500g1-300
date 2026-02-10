@@ -25,12 +25,9 @@ ManualCtrlWindow::ManualCtrlWindow(QWidget *parent) noexcept
         QHBoxLayout* hL = new QHBoxLayout();
         hL->setSpacing(15);
         {
-            spCtrlW_[0] = new SprayerCtrlWidget(this, "Sp-0",  "вода 1", true, true);
-            spCtrlW_[1] = new SprayerCtrlWidget(this, "Sp-1",  "вода 2", true, true);
-            spCtrlW_[2] = new SprayerCtrlWidget(this, "Sp-2",  "воздух", false, true);
-
-            for (auto w : spCtrlW_)
-                hL->addWidget(w);
+            hL->addWidget(new SprayerCtrlWidget(this, "sp0-gui-ctl",  "вода 1", true, true));
+            hL->addWidget(new SprayerCtrlWidget(this, "sp1-gui-ctl",  "вода 2", true, true));
+            hL->addWidget(new SprayerCtrlWidget(this, "sp2-gui-ctl",  "воздух", false, true));
         }
         vL->addLayout(hL);
 
@@ -83,9 +80,6 @@ void ManualCtrlWindow::nf_sys_mode(unsigned char v) noexcept
 {
     /* fcCtrlW_->nf_sys_mode(v); */
     cCfgW_->nf_sys_mode(v);
-
-    for (auto w : spCtrlW_)
-        w->nf_sys_mode(v);
 }
 
 void ManualCtrlWindow::nf_sys_calibrate(char v) noexcept

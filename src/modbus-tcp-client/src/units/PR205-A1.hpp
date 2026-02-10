@@ -26,23 +26,17 @@ class PR205_A1 final
     std::array<sens_t, 1> dt_;
     std::array<sens_t, 2> dp_;
 
-    enum class unit_state
-    {
-        starting,   // Включается
-        running,    // Включен
-        stopping,   // Выключается
-        stopped     // Выключен (или Off)
-    };
-
     struct valve_t
     {
-        // void(PR205_A1::*state)(std::size_t);
         eng::sibus::input_wire_id_t ictl;
         eng::sibus::output_port_id_t port_out;
     };
     std::array<valve_t, 3> valves_;
 
     std::bitset<8> bs_0х4005_{ 0 };
+
+    std::bitset<8> bs_0х4005_in_{ 0 };
+    bool initialized_{ false };
 
 public:
 

@@ -40,6 +40,11 @@ auto_ctl_window::auto_ctl_window(QWidget *parent) noexcept
     connect(editor_page_, &editor_page::make_done, [this] {
         QStackedWidget::setCurrentWidget(main_page_);
     });
+    connect(editor_page_, &editor_page::make_load, [this]
+    {
+        auto_ctl_page_->init();
+        QStackedWidget::setCurrentWidget(auto_ctl_page_);
+    });
     QStackedWidget::addWidget(editor_page_);
 
     msg_ = new MessageBox(this, MessageBox::HeadError);

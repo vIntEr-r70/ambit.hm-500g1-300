@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
     src/panel-switch-2-ctl.cpp
 
     src/current-conductors.cpp
+
+    src/working-mode-selector.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

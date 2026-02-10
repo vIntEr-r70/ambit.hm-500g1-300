@@ -22,6 +22,9 @@ editor_page::editor_page(QWidget *parent, ProgramModel &model)
         connect(header_, &editor_page_header_widget::make_done, [this] {
             emit make_done();
         });
+        connect(header_, &editor_page_header_widget::make_load, [this] {
+            emit make_load();
+        });
         connect(header_, &editor_page_header_widget::rows_count_changed, [this](bool all) {
             program_widget_->rows_count_changed(all);
         });

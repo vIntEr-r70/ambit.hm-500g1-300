@@ -42,17 +42,25 @@ editor_page_header_widget::editor_page_header_widget(QWidget *parent, ProgramMod
             name_->setMinimumWidth(400);
             hL->addWidget(name_);
 
-            hL->addSpacing(50);
+            hL->addSpacing(30);
 
-            IconButton *btn_exit = new IconButton(this, ":/check-mark");
-            connect(btn_exit, &IconButton::clicked, [this] { do_exit(); });
-            btn_exit->setBgColor("#8a8a8a");
-            hL->addWidget(btn_exit);
+            btn_exit_ = new IconButton(this, ":/editor.to-list");
+            connect(btn_exit_, &IconButton::clicked, [this] { do_exit(); });
+            btn_exit_->setBgColor("#29AC39");
+            hL->addWidget(btn_exit_);
 
-            btn_save_ = new IconButton(this, ":/SaveFile");
+            btn_play_ = new IconButton(this, ":/cnc.play");
+            connect(btn_play_, &IconButton::clicked, [this] { do_play();});
+            btn_play_->setBgColor("#29AC39");
+            hL->addWidget(btn_play_);
+
+            hL->addSpacing(10);
+
+            btn_save_ = new IconButton(this, ":/file.save");
             connect(btn_save_, &IconButton::clicked, [this] { do_save();});
-            btn_save_->setBgColor("#8a8a8a");
+            btn_save_->setBgColor("#29AC39");
             hL->addWidget(btn_save_);
+
 
             hL->addStretch();
 
@@ -62,14 +70,14 @@ editor_page_header_widget::editor_page_header_widget(QWidget *parent, ProgramMod
                 { ":/editor.pause",         AddPauseOp    },
                 { ":/editor.inductor",      AddTimedFCOp  },
                 { ":/editor.center",        AddCenterOp   },
-                { ":/AddGoTo",              AddGoToOp     },
-                { ":/PhaseRemove",          DeleteOp      }
+                { ":/editor.go-to",         AddGoToOp     },
+                { ":/editor.remove",        DeleteOp      }
             };
 
             for (auto const& ac : tableAcBtns)
             {
                 IconButton *btn = new IconButton(this, ac.first, ac.second);
-                btn->setBgColor("#8a8a8a");
+                btn->setBgColor("#29AC39");
                 connect(btn, &IconButton::clickedId, [this](int op) { make_table_op(static_cast<TableAc>(op)); });
                 hL->addWidget(btn);
             }
@@ -132,6 +140,9 @@ void editor_page_header_widget::make_table_op(TableAc ac) noexcept
 void editor_page_header_widget::need_save(bool dirty) noexcept
 {
     btn_save_->setVisible(dirty);
+
+    btn_exit_->setEnabled(!dirty);
+    btn_play_->setEnabled(!dirty && !model_.empty());
 }
 
 void editor_page_header_widget::do_exit() noexcept
@@ -166,3 +177,7 @@ void editor_page_header_widget::do_save() noexcept
     need_save(false);
 }
 
+void editor_page_header_widget::do_play() noexcept
+{
+    emit make_load();
+}

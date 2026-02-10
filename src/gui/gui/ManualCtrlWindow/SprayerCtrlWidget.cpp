@@ -1,4 +1,5 @@
 #include "SprayerCtrlWidget.h"
+#include "eng/abc/pack.hpp"
 
 #include <QLabel>
 #include <QGraphicsDropShadowEffect>
@@ -7,9 +8,9 @@
 #include <Widgets/ValueViewReal.h>
 #include <Widgets/ValueSetBool.h>
 
-SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QString const& title, bool fc, bool dp)
+SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string_view name, QString const& title, bool fc, bool dp)
     : QWidget(parent)
-    , sid_(sid)
+    , eng::sibus::node(name)
 {
 	setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("border-radius: 20px; background-color: white");
@@ -42,7 +43,6 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QS
             {
                 vvr_fc_ = new ValueViewReal(this, "л/мин");
                 vvr_fc_->set_precision(1);
-                vvr_fc_->set_value(12.9);
                 vvr_fc_->setTitle("Проток");
                 vvr_fc_->setVisible(fc);
                 hL->addWidget(vvr_fc_);
@@ -56,7 +56,6 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QS
             {
                 vvr_dp_ = new ValueViewReal(this, "Бар");
                 vvr_dp_->set_precision(1);
-                vvr_dp_->set_value(12.9);
                 vvr_dp_->setTitle("Давление");
                 vvr_dp_->setVisible(dp);
                 hL->addWidget(vvr_dp_);
@@ -69,44 +68,54 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string const &sid, QS
         vL->addLayout(hL);
     }
 
-    // if (dp) 
-    // {
-    //     global::subscribe(fmt::format("{}.DP", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-    //         if (vvr_dp_) vvr_dp_->setJsonValue(value);
-    //     });
-    // }
-    //
-    // if (fc) 
-    // {
-    //     global::subscribe(fmt::format("{}.FC", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-    //         if (vvr_fc_) vvr_fc_->setJsonValue(value);
-    //     });
-    // }
-    //
-    // global::subscribe(fmt::format("{}.V", sid), [this](nlohmann::json::array_t const&, nlohmann::json const& value) {
-    //     vsb_->setJsonValue(value);
-    // });
-}
+    ctl_ = node::add_output_wire();
+    node::set_wire_status_handler(ctl_, [this]
+    {
+        update_widget_view();
+    });
 
-void SprayerCtrlWidget::nf_sys_mode(unsigned char v) noexcept
-{
-    // if (mode_ == v)
-    //     return;
-    // mode_ = v;
-    // updateGui();
+    if (vvr_dp_)
+    {
+        node::add_input_port_v2("DP", [this](eng::abc::pack args)
+        {
+            vvr_dp_->setEnabled(args.size() != 0);
+            if (args) vvr_dp_->set_value(eng::abc::get<double>(args));
+        });
+    }
+
+    if (vvr_fc_)
+    {
+        node::add_input_port_v2("FC", [this](eng::abc::pack args)
+        {
+            vvr_fc_->setEnabled(args.size() != 0);
+            if (args) vvr_fc_->set_value(eng::abc::get<double>(args));
+        });
+    }
+
+    vsb_->setReadOnly(true);
+
+    if (vvr_dp_)
+        vvr_dp_->setEnabled(false);
+
+    if (vvr_fc_)
+        vvr_fc_->setEnabled(false);
 }
 
 void SprayerCtrlWidget::change_state() noexcept
 {
-    // if (vsb_->value())
-    //     global::rpc().call("start", { sid_ });
-    // else
-    //     global::rpc().call("stop", { sid_ });
+    if (vsb_->value())
+        node::activate(ctl_, { });
+    else
+        node::deactivate(ctl_);
 }
 
-void SprayerCtrlWidget::updateGui()
+void SprayerCtrlWidget::update_widget_view()
 {
-    // bool allow = (mode_ == Core::SysMode::Manual);
-    // vsb_->setEnabled(allow);
+    vsb_->setReadOnly(node::is_blocked(ctl_));
+
+    if (node::is_active(ctl_))
+        vsb_->set_value(true);
+    else if (node::is_ready(ctl_))
+        vsb_->set_value(false);
 }
 

@@ -33,6 +33,7 @@ class auto_ctl_page final
 
     QLabel *lbl_common_time_;
     QLabel *lbl_pause_time_;
+    QLabel *lbl_program_name_;
 
     std::optional<std::size_t> phase_id_;
     bool execution_error_;

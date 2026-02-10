@@ -2,39 +2,31 @@
 
 #include <QWidget>
 
-// #include "common/Defs.h"
-// #include <aem/json.hpp>
+#include <eng/sibus/node.hpp>
 
 class ValueViewReal;
 class ValueSetBool;
 
 class SprayerCtrlWidget
     : public QWidget
+    , public eng::sibus::node
 {
-    Q_OBJECT
+    eng::sibus::output_wire_id_t ctl_;
 
 public:
 
-    SprayerCtrlWidget(QWidget*, std::string const&, QString const&, bool, bool);
-
-public:
-
-    void nf_sys_mode(unsigned char) noexcept;
+    SprayerCtrlWidget(QWidget*, std::string_view, QString const&, bool, bool);
 
 private:
 
     void change_state() noexcept;
 
-    void updateGui();
+    void update_widget_view();
 
 private:
-
-    std::string sid_;
 
     ValueSetBool *vsb_;
     ValueViewReal *vvr_fc_{ nullptr };
     ValueViewReal *vvr_dp_{ nullptr };
-
-    // unsigned char mode_ = Core::SysMode::No;
 };
 

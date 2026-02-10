@@ -2,6 +2,8 @@
 
 #include <QWidget>
 
+#include <eng/sibus/node.hpp>
+
 class BkiLockMessage;
 class EmgStopMessage;
 class NavigationPanel;
@@ -10,6 +12,7 @@ class auto_ctl_window;
 
 class MainFrame
     : public QWidget
+    , public eng::sibus::node
 {
     Q_OBJECT
 
@@ -21,9 +24,7 @@ public:
 
 public:
 
-    void nf_sys_mode(std::uint8_t) noexcept;
-
-    void nf_sys_ctrl(std::uint8_t) noexcept;
+    void nf_sys_mode(std::string_view) noexcept;
 
     void nf_sys_bki_lock(bool) noexcept;
 

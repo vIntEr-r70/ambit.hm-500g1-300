@@ -31,6 +31,8 @@ signals:
 
     void make_done();
 
+    void make_load();
+
 public:
 
     void init(QString const &);

@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
     gui/auto-ctl-window/main-page/main-page.cpp
     gui/auto-ctl-window/main-page/main-page-header-widget.cpp
     gui/auto-ctl-window/main-page/programs-list-widget.cpp
+    gui/auto-ctl-window/main-page/copy-to-usb-page.cpp
     gui/auto-ctl-window/auto-ctl-page/auto-ctl-page.cpp
     gui/auto-ctl-window/auto-ctl-page/problem-list-widget.cpp
     gui/auto-ctl-window/editor-page/editor-page.cpp

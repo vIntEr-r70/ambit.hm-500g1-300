@@ -4,10 +4,9 @@
 
 class FcCtrlWidget;
 class CenteringCfgWidget;
-class SprayerCtrlWidget;
 
 class ManualCtrlWindow
-    : public QWidget 
+    : public QWidget
 {
     Q_OBJECT
 
@@ -41,6 +40,5 @@ private:
 
     FcCtrlWidget* fcCtrlW_;
     CenteringCfgWidget *cCfgW_;
-    std::array<SprayerCtrlWidget*, 3> spCtrlW_;
 };
 

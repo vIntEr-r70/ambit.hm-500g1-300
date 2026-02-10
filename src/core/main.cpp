@@ -5,6 +5,7 @@
 #include "src/panel-button-ctl.hpp"
 #include "src/panel-switch-2-ctl.hpp"
 #include "src/current-conductors.hpp"
+#include "src/working-mode-selector.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -37,14 +38,14 @@ auto main() -> int
 
     current_conductors cc0;
 
-#ifdef BUILDROOT
+    working_mode_selector wms0;
+
     intervals intervals(conf_path);
 
     speed_node speed_x{ 'X' };
     speed_node speed_y{ 'Y' };
     speed_node speed_z{ 'Z' };
     speed_node speed_v{ 'V' };
-#endif
 
     return eng::run();
 }

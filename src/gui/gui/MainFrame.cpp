@@ -24,6 +24,7 @@
 
 MainFrame::MainFrame()
     : QWidget()
+    , eng::sibus::node("main-gui-frame")
 {
     // Создаем верхний слой на данном окне
     Interact::create(this);
@@ -55,6 +56,13 @@ MainFrame::MainFrame()
 
     emg_stop_msg_ = new EmgStopMessage(this);
     bki_lock_msg_ = new BkiLockMessage(this);
+
+    node::add_input_port_v2("mode", [this](eng::abc::pack args)
+    {
+        nf_sys_mode(args ? eng::abc::get_sv(args) : "");
+    });
+
+    nf_sys_mode("");
 }
 
 MainFrame::~MainFrame()
@@ -88,8 +96,6 @@ void MainFrame::on_connected() noexcept
     // auto dw = new DiagnosticWindow(this);
     // NavigationPanel_->add(dw, "diag", true);
 
-    // sys_key_map_.add("mode",            mcw, &ManualCtrlWindow::nf_sys_mode);
-    // // sys_key_map_.add("ctrl",            mcw, &ManualCtrlWindow::nf_sys_ctrl);
     // // sys_key_map_.add("error",           mcw, &ManualCtrlWindow::nf_sys_error);
     // // sys_key_map_.add("ctrl-mode-axis",  mcw, &ManualCtrlWindow::nf_sys_ctrl_mode_axis);
     // sys_key_map_.add("calibrate",       mcw, &ManualCtrlWindow::nf_sys_calibrate);
@@ -146,39 +152,20 @@ void MainFrame::on_logout() noexcept
     // global::rpc().call("set", { "sys", "login", { false } });
 }
 
-void MainFrame::nf_sys_mode(std::uint8_t mode) noexcept
+void MainFrame::nf_sys_mode(std::string_view mode) noexcept
 {
-    // switch(mode)
-    // {
-    // case Core::SysMode::No:
-    //     NavigationPanel_->set_top_label("- - -", Qt::white);
-    //     break;
-    // case Core::SysMode::Manual:
-    //     NavigationPanel_->set_top_label("Ручной", QColor(0xFFB800));
-    //     break;
-    // case Core::SysMode::Auto:
-    //     NavigationPanel_->set_top_label("Авто", QColor(0xFFB800));
-    //     break;
-    // case Core::SysMode::Error:
-    //     NavigationPanel_->set_top_label("Ошибка", QColor(0xF83232));
-    //     break;
-    // }
-}
+    NavigationPanel_->set_top_label("- - -", Qt::white);
+    NavigationPanel_->set_bottom_label("- - -", Qt::white);
 
-void MainFrame::nf_sys_ctrl(std::uint8_t ctrl) noexcept
-{
-    // switch(ctrl)
-    // {
-    // case Core::CtlMode::No:
-    //     NavigationPanel_->set_bottom_label("- - -", Qt::white);
-    //     break;
-    // case Core::CtlMode::Panel:
-    //     NavigationPanel_->set_bottom_label("Панель", QColor(0xFFB800));
-    //     break;
-    // case Core::CtlMode::Rcu:
-    //     NavigationPanel_->set_bottom_label("Пульт", QColor(0xFFB800));
-    //     break;
-    // }
+    if (mode == "manual" || mode == "rcu")
+    {
+        NavigationPanel_->set_top_label("Ручной", QColor(0xFFB800));
+        NavigationPanel_->set_bottom_label((mode == "rcu") ? "Пульт" : "Панель", QColor(0xFFB800));
+    }
+    else if (mode == "auto")
+    {
+        NavigationPanel_->set_top_label("Авто", QColor(0xFFB800));
+    }
 }
 
 void MainFrame::nf_sys_bki_lock(bool lock) noexcept

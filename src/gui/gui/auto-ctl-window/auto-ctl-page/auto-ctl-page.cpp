@@ -41,45 +41,51 @@ auto_ctl_page::auto_ctl_page(QWidget *parent, ProgramModel &model) noexcept
 
             QHBoxLayout *hL = new QHBoxLayout(w);
             {
-                IconButton *btn_exit = new IconButton(this, ":/check-mark");
+                IconButton *btn_exit = new IconButton(this, ":/editor.to-list");
                 connect(btn_exit, &IconButton::clicked, [this] { go_to_main(); });
-                btn_exit->setBgColor("#8a8a8a");
+                btn_exit->setBgColor("#29AC39");
                 hL->addWidget(btn_exit);
 
-                IconButton *btn_edit = new IconButton(this, ":/EditFile");
+                IconButton *btn_edit = new IconButton(this, ":/file.edit");
                 connect(btn_edit, &IconButton::clicked, [this] { go_to_editor(); });
-                btn_edit->setBgColor("#8a8a8a");
+                btn_edit->setBgColor("#29AC39");
                 hL->addWidget(btn_edit);
 
-                hL->addSpacing(50);
+                hL->addSpacing(30);
 
-                QHBoxLayout *hhL = new QHBoxLayout();
                 {
-                    hhL->addWidget(new QLabel("Общее\nвремя", this));
-
+                    hL->addWidget(new QLabel("Общее\nвремя", this));
                     QLabel *lbl = new QLabel(this);
                     lbl->setStyleSheet("font-size: 18pt; color: #696969;");
                     lbl->setFrameShape(QFrame::StyledPanel);
                     lbl->setAlignment(Qt::AlignCenter);
                     lbl->setFixedWidth(120);
                     lbl_common_time_ = lbl;
-                    hhL->addWidget(lbl);
+                    hL->addWidget(lbl);
+                }
 
-                    hhL->addSpacing(20);
+                hL->addSpacing(20);
 
-                    hhL->addWidget(new QLabel("Время\nпаузы", this));
-
-                    lbl = new QLabel(this);
+                {
+                    hL->addWidget(new QLabel("Время\nпаузы", this));
+                    QLabel *lbl = new QLabel(this);
                     lbl->setStyleSheet("font-size: 18pt; color: #696969;");
                     lbl->setFrameShape(QFrame::StyledPanel);
                     lbl->setAlignment(Qt::AlignCenter);
                     lbl->setFixedWidth(120);
                     lbl_pause_time_ = lbl;
-                    hhL->addWidget(lbl);
+                    hL->addWidget(lbl);
                 }
-                hL->addLayout(hhL);
 
-                hL->addStretch();
+                hL->addSpacing(20);
+
+                lbl_program_name_ = new QLabel(this);
+                lbl_program_name_->setStyleSheet("font-size: 14pt; color: #696969;");
+                lbl_program_name_->setAlignment(Qt::AlignCenter);
+                lbl_program_name_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+                hL->addWidget(lbl_program_name_);
+
+                hL->addSpacing(20);
 
                 RoundButton *btn = new RoundButton(w);
                 connect(btn, &RoundButton::clicked, [this] { make_start(); });
@@ -160,6 +166,9 @@ void auto_ctl_page::go_to_main()
 
 void auto_ctl_page::init()
 {
+    // Выводим имя текущей загруженной программы
+    lbl_program_name_->setText(model_.name());
+
     // Задаем программу в модуль режима
     node::set_port_value(program_out_, { model_.get_base64_program() });
 }

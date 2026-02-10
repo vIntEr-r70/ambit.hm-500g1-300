@@ -472,6 +472,11 @@ void ProgramModel::reset() noexcept
     program_.t_axis = { 'X', 'Y', 'Z', 'V' };
 }
 
+bool ProgramModel::empty() const noexcept
+{
+    return program_.rows() == 0;
+}
+
 bool ProgramModel::save_to_file() const noexcept
 {
     if (!std::filesystem::exists(path_))

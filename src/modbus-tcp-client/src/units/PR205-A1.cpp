@@ -1,4 +1,5 @@
 #include "units/PR205-A1.hpp"
+#include "eng/sibus/client.hpp"
 #include "modbus-unit.hpp"
 
 #include <eng/log.hpp>
@@ -36,15 +37,12 @@ PR205_A1::PR205_A1(std::string_view host, std::uint16_t port)
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
         valves_[i].ictl = node::add_input_wire(std::format("A{}", i + 1));
-        // valves_[i].state = &PR205_A1::s_valve_closed;
-        node::set_activate_handler(valves_[i].ictl, [this, i](eng::abc::pack)
-        {
-            // (this->*valves_[i].state)(i);
+
+        node::set_activate_handler(valves_[i].ictl, [this, i](eng::abc::pack) {
             open_valve(i);
         });
-        node::set_deactivate_handler(valves_[i].ictl, [this, i]
-        {
-            // (this->*valves_[i].state)(i);
+
+        node::set_deactivate_handler(valves_[i].ictl, [this, i] {
             close_valve(i);
         });
 
@@ -83,11 +81,9 @@ void PR205_A1::connection_was_lost()
         node::set_port_value(item.port_id, { });
     });
 
+    initialized_ = false;
     for (std::size_t i = 0; i < valves_.size(); ++i)
-    {
-        // auto &valve = valves_[i];
-        // (this->*valve.state)(i);
-    };
+        node::set_port_value(valves_[i].port_out, {});
 }
 
 void PR205_A1::read_fc_done(readed_regs_t regs)
@@ -143,31 +139,33 @@ void PR205_A1::read_dp_done(readed_regs_t regs)
 
 void PR205_A1::read_state_done(readed_regs_t regs)
 {
-    decltype(bs_0х4005_) bitset{ regs[0] };
+    decltype(bs_0х4005_in_) bitset{ regs[0] };
+    decltype(bs_0х4005_in_) diff_bits = bitset ^ bs_0х4005_in_;
 
-    if (bs_0х4005_ == bitset) return;
-    bs_0х4005_ = bitset;
+    if (!diff_bits.count() && initialized_)
+        return;
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
         auto &valve = valves_[i];
-        // (this->*valve.state)(i);
-        node::set_port_value(valve.port_out, { bs_0х4005_.test(i) });
+        if (diff_bits.test(i))
+            node::set_port_value(valve.port_out, { bitset.test(i) });
     };
+
+    bs_0х4005_in_ = bitset;
+    initialized_ = true;
 }
 
 void PR205_A1::open_valve(std::size_t idx)
 {
-    auto bitset = bs_0х4005_;
-    bitset.set(idx, true);
-    modbus_unit::write_single(0x4005, bitset.to_ulong());
+    bs_0х4005_.set(idx, true);
+    modbus_unit::write_single(0x4005, bs_0х4005_.to_ulong());
 }
 
 void PR205_A1::close_valve(std::size_t idx)
 {
-    auto bitset = bs_0х4005_;
-    bitset.set(idx, false);
-    modbus_unit::write_single(0x4005, bitset.to_ulong());
+    bs_0х4005_.set(idx, false);
+    modbus_unit::write_single(0x4005, bs_0х4005_.to_ulong());
     node::set_ready(valves_[idx].ictl);
 }
 
