@@ -35,6 +35,8 @@ auto main() -> int
     // for (auto const& dir_entry : std::filesystem::directory_iterator{ conf_path })
     //     new unit_node(dir_entry.path());
 
+#ifdef BUILDROOT
+
     PLC110 plc110("10.0.0.10", 502);
 
     PR205_A1  pr205_a1 ("10.0.0.11", 502);
@@ -44,6 +46,20 @@ auto main() -> int
     PR205_BN pr205_b2 (2,  "10.0.0.13", 502);
     PR205_BN pr205_b6 (6,  "10.0.0.14", 502);
     PR205_BN pr205_b10(10, "10.0.0.15", 502);
+
+#else
+
+    PLC110 plc110("127.0.0.1", 1200);
+
+    PR205_A1  pr205_a1 ("127.0.0.1", 1200);
+    PR205_A2  pr205_a2 ("127.0.0.1", 1200);
+    PR205_A14 pr205_a14("127.0.0.1", 1200);
+
+    PR205_BN pr205_b2 (2,  "127.0.0.1", 1200);
+    PR205_BN pr205_b6 (6,  "127.0.0.1", 1200);
+    PR205_BN pr205_b10(10, "127.0.0.1", 1200);
+
+#endif
 
     eng::sibus::client::init();
 

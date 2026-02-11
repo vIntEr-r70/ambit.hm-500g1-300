@@ -4,7 +4,6 @@
 #include <eng/json/builder.hpp>
 
 #include <string>
-#include <cstdint>
 
 namespace axis_config
 {

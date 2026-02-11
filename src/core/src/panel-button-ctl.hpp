@@ -5,7 +5,7 @@
 class panel_button_ctl final
     : public eng::sibus::node
 {
-    eng::sibus::output_wire_id_t ctl_;
+    eng::sibus::output_port_id_t out_;
 
 public:
 

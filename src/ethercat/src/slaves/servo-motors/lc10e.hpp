@@ -3,19 +3,22 @@
 #include "slaves/servo-motor.hpp"
 #include "value-holder.hpp"
 
-#include <eng/sibus/actor-node.hpp>
-
 class lc10e final
     : public servo_motor
 {
     value_holder_rw<std::int8_t> working_mode_;
     value_holder_rw<std::uint16_t> control_word_;
-    // value_holder_rw<std::int32_t> target_speed_;
     value_holder_rw<std::int32_t> target_pos_;
+    // value_holder_rw<std::uint16_t> probe_function_;
 
     value_holder_ro<std::uint16_t> status_word_;
     value_holder_ro<std::uint16_t> error_code_;
     value_holder_ro<std::int32_t> real_pos_;
+    // value_holder_ro<std::uint16_t> probe_status_;
+
+    // value_holder_ro<std::int32_t> real_pos_lf0_;
+    // value_holder_ro<std::int32_t> real_pos_lf1_;
+    value_holder_ro<std::uint32_t> DI_state_;
 
 public:
 
@@ -34,4 +37,6 @@ private:
     void set_control_mode(control_mode) override final;
 
     std::int32_t real_pos() const override final;
+
+    void activate_probe() override final;
 };

@@ -59,8 +59,8 @@ void servo_motor::turning_on()
     if (!std::isnan(ratio_))
         position_ = rpos / ratio_;
 
-    eng::log::info("servo_motor[{}]::turning_on: real-pos = {}, ratio = {}, position = {}, new-real-pos = {}",
-            info().target.position, rpos, ratio_, position_, std::lround(position_ * ratio_));
+    // eng::log::info("servo_motor[{}]::turning_on: real-pos = {}, ratio = {}, position = {}, new-real-pos = {}",
+    //         info().target.position, rpos, ratio_, position_, std::lround(position_ * ratio_));
 
     switch(get_status())
     {
@@ -88,6 +88,8 @@ void servo_motor::turning_on()
 
     mode_ = &servo_motor::running;
     motion_ = &servo_motor::control_mode_csp;
+
+    activate_probe();
 }
 
 void servo_motor::turning_off()

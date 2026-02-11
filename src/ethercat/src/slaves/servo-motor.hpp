@@ -88,5 +88,7 @@ private:
     virtual void set_control_mode(control_mode) = 0;
 
     virtual std::int32_t real_pos() const = 0;
+
+    virtual void activate_probe() = 0;
 };
 

@@ -20,29 +20,17 @@ panel_button_ctl::panel_button_ctl(std::string_view name)
     });
 
     // Управляющий провод
-    ctl_ = node::add_output_wire();
+    out_ = node::add_output_port("out");
 }
 
 void panel_button_ctl::turn_on_action()
 {
-    if (node::is_blocked(ctl_) || !node::is_ready(ctl_))
-    {
-        eng::log::error("{}: Включение с кнопки не доступно", name());
-        return;
-    }
-    eng::log::info("{}: Включение", name());
-    node::activate(ctl_, { });
+    node::set_port_value(out_, { true });
 }
 
 void panel_button_ctl::turn_off_action()
 {
-    if (node::is_blocked(ctl_))
-    {
-        eng::log::error("{}: Выключение с кнопки не доступно", name());
-        return;
-    }
-    eng::log::info("{}: Выключение", name());
-    node::deactivate(ctl_);
+    node::set_port_value(out_, { false });
 }
 
 

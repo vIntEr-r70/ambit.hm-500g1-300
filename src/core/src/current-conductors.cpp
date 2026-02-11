@@ -10,6 +10,8 @@ current_conductors::current_conductors()
     std::string key{ "fc/current-conductors" };
     eng::sibus::client::config_listener(key, [this](std::string_view json)
     {
+        records_.clear();
+
         eng::json::array cfg(json);
         cfg.for_each([this](std::size_t, eng::json::value v)
         {

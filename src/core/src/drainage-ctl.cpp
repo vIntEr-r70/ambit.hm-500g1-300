@@ -1,4 +1,6 @@
-#include "drainage-ctl.h"
+#include "drainage-ctl.hpp"
+
+#include <eng/log.hpp>
 
 // Данная система контроллирует уровень жидкости в некой емкости
 // основываясь на значениях датчиков уровня.
@@ -10,74 +12,76 @@
 
 drainage_ctl::drainage_ctl()
     : eng::sibus::node("drainage-ctl")
-    // , H7_ctl_(hw.get_unit_by_class(sid, "H7"), "H7")
 {
-    // hw.LSET.add(sid, "min", [this](nlohmann::json const &value) 
-    // {
-    //     if (value.get<bool>())
-    //     {
-    //         hw_.log_message(LogMsg::Warning, name(), "Уровень достиг минимума, выключаем насос");
-    //         pump_ = false;
-    //     }
-    // });
+    // Сигналы с датчиков
+    node::add_input_port("PMAX", [this](eng::abc::pack args)
+    {
+        pmax_ = eng::abc::get<bool>(args);
+        (this->*pump_)();
+    });
+    node::add_input_port("PMIN", [this](eng::abc::pack args)
+    {
+        pmin_ = eng::abc::get<bool>(args);
+        (this->*pump_)();
+    });
 
-    // hw.LSET.add(sid, "max", [this](nlohmann::json const &value) 
-    // {
-    //     if (value.get<bool>())
-    //     {
-    //         hw_.log_message(LogMsg::Warning, name(), "Уровень достиг максимума, включаем насос");
-    //         pump_ = true;
-    //     }
-    // });
+    // Сигнал управления насосом
+    pump_out_ = node::add_output_port("H");
 
-    // hw.LSET.add(sid, "H7", [this](nlohmann::json const &value) 
-    // {
-    //     hw_.log_message(LogMsg::Info, name(), 
-    //         fmt::format("Насос H7 {}", value.get<bool>() ? "включен" : "выключен"));
-    // });
+    va_ctl_ = node::add_output_wire();
+    node::set_wire_status_handler(va_ctl_, [this] {
+        (this->*pump_)();
+    });
+
+    pump_ = &drainage_ctl::turned_off;
 }
 
-// void drainage_ctl::update_state()
-// {
-//     if (насос включен)
-// }
+void drainage_ctl::turned_off()
+{
+    // Нет необходимости включать насос
+    if (!pmax_ || !pmax_.value())
+        return;
 
-// void drainage_ctl::on_activate() noexcept
-// {
-//     hw_.log_message(LogMsg::Info, name(), "Контроллер успешно активирован");
-//
-//     pump_on_off_ = false;
-//     next_state(&drainage_ctl::turn_on_off_pump);
-// }
+    eng::log::info("{}: Уровень достиг максимума", name());
 
-// void drainage_ctl::on_deactivate() noexcept
-// { 
-//     hw_.log_message(LogMsg::Info, name(), "Контроллер деактивирован");
-// }
+    // Включение насоса заблокировано задвижкой
+    if (!node::is_blocked(va_ctl_) && !node::is_ready(va_ctl_))
+    {
+        eng::log::info("{}: Задвижка блокирует включение насоса", name());
+        return;
+    }
 
-// void drainage_ctl::wait_state_changed()
-// {
-//     if (!pump_) return;
-//
-//     pump_on_off_ = pump_.value();
-//     pump_.reset();
-//
-//     next_state(&drainage_ctl::turn_on_off_pump);
-// }
+    eng::log::info("{}: Включаем насос", name());
 
-// void drainage_ctl::turn_on_off_pump()
-// {
-//     auto [ done, error ] = H7_ctl_.set(pump_on_off_);
-//     if (!dhresult::check(done, error, [this] { next_state(&drainage_ctl::turn_on_off_pump_error); }))
-//         return;
-//     // hw_.log_message(LogMsg::Info, name(), fmt::format("Насос {}", pump_on_off_ ? "включен" : "выключен"));
-//     next_state(&drainage_ctl::wait_state_changed);
-// }
+    // Включаем насос
+    node::set_port_value(pump_out_, { true });
 
-// void drainage_ctl::turn_on_off_pump_error()
-// {
-//     hw_.log_message(LogMsg::Error, name(), "Не удалось выполнить команду");
-//     next_state(&drainage_ctl::wait_state_changed);
-// }
+    // Обновляем внутренее состояние
+    pump_ = &drainage_ctl::turned_on;
+}
 
+void drainage_ctl::turned_on()
+{
+    // Если задвижка не производит переключений
+    if (!node::is_active(va_ctl_))
+    {
+        // Если насос должен продолжать работать
+        if (!pmin_ || !pmin_.value())
+            return;
+
+        eng::log::info("{}: Уровень достиг минимума", name());
+    }
+    else
+    {
+        eng::log::info("{}: Задвижка пришла в движение", name());
+    }
+
+    eng::log::info("{}: Выключаем насос", name());
+
+    // Выключаем насос
+    node::set_port_value(pump_out_, { false });
+
+    // Обновляем внутренее состояние
+    pump_ = &drainage_ctl::turned_off;
+}
 

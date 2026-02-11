@@ -34,4 +34,6 @@ private:
     void set_control_mode(control_mode) override final;
 
     std::int32_t real_pos() const override final;
+
+    void activate_probe() override final;
 };

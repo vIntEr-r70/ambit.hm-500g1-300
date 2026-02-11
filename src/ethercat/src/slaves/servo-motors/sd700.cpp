@@ -101,6 +101,10 @@ void sd700::set_control_word(std::uint16_t ControlWord)
     control_word_.set(ControlWord);
 }
 
+void sd700::activate_probe()
+{
+}
+
 void sd700::set_control_mode(control_mode mode)
 {
     static std::unordered_map<control_mode, std::int8_t> const modes{
