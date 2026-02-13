@@ -1,6 +1,6 @@
 #include "LiquidSystemWindow.h"
 
-#include <HardeningEnvironmentWidget/HardeningEnvironmentWidget.h>
+#include <QuenchMediaWidget/QuenchMediaWidget.h>
 #include <QVBoxLayout>
 
 LiquidSystemWindow::LiquidSystemWindow(QWidget *parent)
@@ -14,13 +14,13 @@ LiquidSystemWindow::LiquidSystemWindow(QWidget *parent)
         {
             hL->addStretch();
 
-            auto *w1 = new HardeningEnvironmentWidget(this, "barrel-0", "Вода ТВЧ");
+            auto *w1 = new QuenchMediaWidget(this, "fc", "Вода ТВЧ");
             w1->setFixedWidth(280);
             hL->addWidget(w1);
-            auto *w2 = new HardeningEnvironmentWidget(this, "barrel-1", "Закалочная вода");
+            auto *w2 = new QuenchMediaWidget(this, "water", "Закалочная вода");
             w2->setFixedWidth(280);
             hL->addWidget(w2);
-            auto *w3 = new HardeningEnvironmentWidget(this, "barrel-2", "Закалочная жидкость");
+            auto *w3 = new QuenchMediaWidget(this, "fluid", "Закалочная жидкость");
             w3->setFixedWidth(280);
             hL->addWidget(w3);
 

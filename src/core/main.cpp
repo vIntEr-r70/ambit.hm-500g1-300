@@ -6,6 +6,9 @@
 #include "src/panel-switch-2-ctl.hpp"
 #include "src/current-conductors.hpp"
 #include "src/working-mode-selector.hpp"
+#include "src/barrel-ctl.hpp"
+#include "src/barrel-lvl-ctl.hpp"
+#include "src/drainage-ctl.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -46,6 +49,16 @@ auto main() -> int
     speed_node speed_y{ 'Y' };
     speed_node speed_z{ 'Z' };
     speed_node speed_v{ 'V' };
+
+    drainage_ctl dc0;
+
+    barrel_ctl bc0{ "fc" };
+    barrel_ctl bc1{ "water" };
+    barrel_ctl bc2{ "fluid" };
+
+    barrel_lvl_ctl blc0{ "fc" };
+    barrel_lvl_ctl blc1{ "water" };
+    barrel_lvl_ctl blc2{ "fluid" };
 
     return eng::run();
 }

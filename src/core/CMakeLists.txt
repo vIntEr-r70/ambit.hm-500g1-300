@@ -18,6 +18,10 @@ add_executable(${PROJECT_NAME}
     src/current-conductors.cpp
 
     src/working-mode-selector.cpp
+
+    src/drainage-ctl.cpp
+    src/barrel-ctl.cpp
+    src/barrel-lvl-ctl.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
