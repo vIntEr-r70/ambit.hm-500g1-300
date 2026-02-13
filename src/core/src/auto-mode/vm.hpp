@@ -79,7 +79,9 @@ public:
 
     std::size_t to_next_phase();
 
-    std::size_t phase_id() const noexcept;
+    std::size_t next_phase_id() const;
+
+    std::size_t op_phase_id() const;
 
     bool has_phase_ops() const noexcept { return !ops_phases_.empty(); }
 
@@ -94,6 +96,8 @@ public:
     void fill_stuff_task(std::size_t, eng::abc::pack &) const;
 
 private:
+
+    std::size_t next_phase_id(std::size_t) const;
 
     bool try_add_next_phase(std::size_t &);
 

@@ -321,7 +321,8 @@ void auto_mode::s_program_execution_loop()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    std::uint32_t phase_id = vm_.phase_id();
+    // Программа продолжит анализ с данного этапа
+    std::uint32_t phase_id = vm_.next_phase_id();
     node::set_port_value(phase_id_out_, { phase_id, true });
 
     // Задач движения на данном этапе нету
@@ -332,8 +333,7 @@ void auto_mode::s_program_execution_loop()
         {
             eng::log::info("{}: Программа штатно завершила выполнение", name());
 
-            std::uint32_t phase_id = vm_.phase_id();
-            node::set_port_value(phase_id_out_, { phase_id, true });
+            node::set_port_value(phase_id_out_, { });
 
             deactivate();
 
@@ -364,11 +364,11 @@ void auto_mode::s_program_execution_loop()
 void auto_mode::execute_operation()
 {
     eng::abc::pack args;
-    vm_.fill_stuff_task(vm_.phase_id(), args);
+    vm_.fill_stuff_task(vm_.op_phase_id(), args);
     node::send_wire_signal(stuff_ctl_, std::move(args));
 
     std::println();
-    eng::log::info("DO PHASE: {}", vm_.phase_id());
+    eng::log::info("DO PHASE: {}", vm_.op_phase_id());
     eng::log::info("{}\n", to_string_axis_position(axis_program_pos_));
 }
 
@@ -387,7 +387,9 @@ void auto_mode::process_axis_positions()
     vm_.to_next_phase();
     execute_operation();
 
-    std::uint32_t phase_id = vm_.phase_id();
+    // Тут у нас всегда есть следующий этап потому как
+    // check_in_position не обрабатывает последний этап
+    std::uint32_t phase_id = vm_.op_phase_id();
     node::set_port_value(phase_id_out_, { phase_id, true });
 }
 

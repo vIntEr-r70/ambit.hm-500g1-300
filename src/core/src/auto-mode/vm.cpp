@@ -33,19 +33,50 @@ void vm::initialize()
 
 bool vm::is_program_done() const
 {
-    return phase_id() == phases_.size();
+    return phase_id_ == phases_.size();
 }
 
 VmPhaseType vm::phase_type() const
 {
     if (phase_id_ >= phases_.size())
-        throw std::runtime_error("try to continue with finished programm");
+        throw std::runtime_error("phase_type: try to continue with finished programm");
     return phases_[phase_id_]->cmd();
 }
 
-std::size_t vm::phase_id() const noexcept
+std::size_t vm::next_phase_id(std::size_t pid) const
 {
-    return ops_phases_.empty() ? phase_id_ : ops_phases_.back();
+    if (pid >= phases_.size())
+        throw std::runtime_error("next_phase_id: try to continue with finished programm");
+
+    // В случае когда этап не является циклом, возвращаем текущее значение
+    // с которого будет произведен анализ и поиск операций
+    VmPhase const *phase = phases_[phase_id_];
+    if (phase->cmd() != VmPhaseType::GoTo)
+        return phase_id_;
+
+    // А если это цикл, мы должны понять, он еще актуален
+    // или его можно проскочить
+    VmGoTo const &item = *static_cast<VmGoTo const*>(phase);
+
+    // Точка перехода может сама оказаться циклом, учитываем это
+
+    auto it = known_goto_.find(phase_id_);
+    if ((it == known_goto_.end()) || (it->second > 0))
+        return next_phase_id(item.phase_id);
+
+    return next_phase_id(phase_id_ + 1);
+}
+
+std::size_t vm::next_phase_id() const
+{
+    return next_phase_id(phase_id_);
+}
+
+std::size_t vm::op_phase_id() const
+{
+    if (ops_phases_.empty())
+        throw std::runtime_error("try to get wrong operation phase id");
+    return ops_phases_.back();
 }
 
 std::size_t vm::to_next_phase()
@@ -93,22 +124,18 @@ bool vm::create_continuous_moving_list()
         phase_id += 1;
     }
 
-    if (continuous_moving_list_.empty())
+    if (!continuous_moving_list_.empty())
     {
-        eng::log::info("OPS: [ {} ]", phase_id);
-        ops_phases_.push_back(phase_id);
-        return false;
+        auto const &cml = continuous_moving_list_;
+        std::for_each(cml.rbegin(), cml.rend(), [this](auto const &phase) {
+            ops_phases_.push_back(phase.phase_id);
+        });
+
+        std::stringstream ss;
+        for(std::size_t i = 0; i < ops_phases_.size(); ++i)
+            ss << ((i == 0) ? "" : ",") << ops_phases_[i];
+        eng::log::info("OPS: [ {} ]", ss.view());
     }
-
-    auto const &cml = continuous_moving_list_;
-    std::for_each(cml.rbegin(), cml.rend(), [this](auto const &phase) {
-        ops_phases_.push_back(phase.phase_id);
-    });
-
-    std::stringstream ss;
-    for(std::size_t i = 0; i < ops_phases_.size(); ++i)
-        ss << ((i == 0) ? "" : ",") << ops_phases_[i];
-    eng::log::info("OPS: [ {} ]", ss.view());
 
     return !continuous_moving_list_.empty();
 }
