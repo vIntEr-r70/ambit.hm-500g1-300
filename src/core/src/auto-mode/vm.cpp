@@ -46,13 +46,13 @@ VmPhaseType vm::phase_type() const
 std::size_t vm::next_phase_id(std::size_t pid) const
 {
     if (pid >= phases_.size())
-        throw std::runtime_error("next_phase_id: try to continue with finished programm");
+        return pid;
 
     // В случае когда этап не является циклом, возвращаем текущее значение
     // с которого будет произведен анализ и поиск операций
-    VmPhase const *phase = phases_[phase_id_];
+    VmPhase const *phase = phases_[pid];
     if (phase->cmd() != VmPhaseType::GoTo)
-        return phase_id_;
+        return pid;
 
     // А если это цикл, мы должны понять, он еще актуален
     // или его можно проскочить
@@ -60,11 +60,11 @@ std::size_t vm::next_phase_id(std::size_t pid) const
 
     // Точка перехода может сама оказаться циклом, учитываем это
 
-    auto it = known_goto_.find(phase_id_);
+    auto it = known_goto_.find(pid);
     if ((it == known_goto_.end()) || (it->second > 0))
         return next_phase_id(item.phase_id);
 
-    return next_phase_id(phase_id_ + 1);
+    return next_phase_id(pid + 1);
 }
 
 std::size_t vm::next_phase_id() const
@@ -79,7 +79,7 @@ std::size_t vm::op_phase_id() const
     return ops_phases_.back();
 }
 
-std::size_t vm::to_next_phase()
+void vm::to_next_phase()
 {
     if (ops_phases_.empty())
         throw std::runtime_error("ops phase list was empty");
@@ -89,8 +89,13 @@ std::size_t vm::to_next_phase()
 
     phase_id_ = ops_phases_.empty() ?
         phase_id + 1 : ops_phases_.back();
+}
 
-    return phase_id_;
+void vm::increment_phase()
+{
+    if (!ops_phases_.empty())
+        throw std::runtime_error("ops phase list was not empty");
+    phase_id_ += 1;
 }
 
 std::uint64_t vm::pause_timeout_ms() const

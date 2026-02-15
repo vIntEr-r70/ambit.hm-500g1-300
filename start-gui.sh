@@ -10,4 +10,4 @@ cmake --build ./build -j8
 
 cd ./system/etc/cnc-ctrl
 $SPWD/build/src/gui/gui
-# gdb $SPWD/build/src/gui/gui
+#gdb $SPWD/build/src/gui/gui

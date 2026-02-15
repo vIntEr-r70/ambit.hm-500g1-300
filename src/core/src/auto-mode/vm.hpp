@@ -77,7 +77,9 @@ public:
 
     VmPhaseType phase_type() const;
 
-    std::size_t to_next_phase();
+    void to_next_phase();
+
+    void increment_phase();
 
     std::size_t next_phase_id() const;
 

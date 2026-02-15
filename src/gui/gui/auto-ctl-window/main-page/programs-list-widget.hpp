@@ -2,34 +2,37 @@
 
 #include <QWidget>
 
-#include <filesystem>
-
-class QTableWidget;
+class QTableView;
 class MessageBox;
+class program_list_model;
+class RoundButton;
+class main_page_header_widget;
+class QLabel;
+
+struct program_record_t;
 
 class programs_list_widget final
     : public QWidget
 {
-    Q_OBJECT
+    main_page_header_widget *header_;
 
-    QTableWidget *local_list_;
-    std::filesystem::path path_;
+    program_list_model *model_;
+    QTableView *list_;
 
     MessageBox *question_msg_box_;
 
+    RoundButton *btn_to_hd_;
+    RoundButton *btn_to_usb_;
+
 public:
 
-    programs_list_widget(QWidget *);
+    programs_list_widget(QWidget *, main_page_header_widget *);
 
 public:
-
-    QString current() const;
 
     void remove_selected();
 
-signals:
-
-    void row_changed();
+    program_record_t const* selected_record() const;
 
 private:
 
@@ -42,5 +45,11 @@ private:
     void make_scroll(int);
 
     void make_load_file();
+
+    void update_selection();
+
+    void copy_to_hd();
+
+    void copy_to_usb();
 };
 

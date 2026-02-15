@@ -2,9 +2,8 @@
 
 #include <QWidget>
 
-#include <filesystem>
-
 class ValueViewString;
+class RoundButton;
 
 class main_page_header_widget final
     : public QWidget
@@ -14,7 +13,9 @@ class main_page_header_widget final
     ValueViewString *name_;
     ValueViewString *comments_;
 
-    std::filesystem::path path_;
+    RoundButton *btn_edit_;
+    RoundButton *btn_mode_;
+    RoundButton *btn_remove_;
 
 public:
 
@@ -22,7 +23,7 @@ public:
 
 public:
 
-    void set_program_name(QString);
+    void set_program_info(QString, QString);
 
 signals:
 

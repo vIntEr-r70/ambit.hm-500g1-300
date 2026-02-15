@@ -49,7 +49,7 @@ auto_mode::auto_mode()
         (this->*sstate_)(1, node::status(stuff_ctl_));
     });
 
-    node::add_input_port_v2("program", [this](eng::abc::pack args)
+    node::add_input_port_unsafe("program", [this](eng::abc::pack args)
     {
         upload_program(std::move(args));
 
@@ -279,7 +279,7 @@ void auto_mode::s_pause_done()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    vm_.to_next_phase();
+    vm_.increment_phase();
     isc_.switch_to_state(&auto_mode::s_program_execution_loop);
 }
 

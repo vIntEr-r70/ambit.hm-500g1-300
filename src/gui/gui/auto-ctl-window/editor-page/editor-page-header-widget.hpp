@@ -1,18 +1,18 @@
 #pragma once
 
 #include <QWidget>
-#include <QModelIndex>
 
-class ProgramModel;
+class program_model_editor;
 class QTableView;
 class ValueSetString;
-class EditorMessageBox;
 class IconButton;
 
 class editor_page_header_widget final
     : public QWidget
 {
     Q_OBJECT
+
+public:
 
     enum TableAc
     {
@@ -27,37 +27,31 @@ class editor_page_header_widget final
 
 public:
 
-    editor_page_header_widget(QWidget *, ProgramModel &) noexcept;
+    editor_page_header_widget(QWidget *) noexcept;
 
 public:
 
-    void need_save(bool) noexcept;
+    void need_save(bool);
+
+    bool need_save() const noexcept;
+
+    void set_program_info(QString const &, QString const &);
+
+    QString const &name() const noexcept;
+
+    QString const &comments() const noexcept;
 
 signals:
 
-    void make_done();
+    void do_save();
 
-    void make_load();
+    void do_exit();
 
-    void rows_count_changed(bool);
+    void do_play();
 
-private:
-
-    void make_table_op(TableAc) noexcept;
-
-    void do_exit() noexcept;
-
-    void do_save() noexcept;
-
-    void do_play() noexcept;
+    void make_table_op(TableAc);
 
 private:
-
-    void showEvent(QShowEvent *) override final;
-
-private:
-
-    ProgramModel &model_;
 
     ValueSetString *name_;
     ValueSetString *comments_;
@@ -65,9 +59,5 @@ private:
     IconButton *btn_exit_;
     IconButton *btn_save_;
     IconButton *btn_play_;
-
-    bool need_save_{ false };
-
-    EditorMessageBox *msg_;
 };
 

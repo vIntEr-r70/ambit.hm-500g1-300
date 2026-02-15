@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-class ProgramModel;
+class program_model;
 class QTableWidget;
 class QTableView;
 class VerticalScroll;
@@ -10,7 +10,7 @@ class VerticalScroll;
 class program_widget final
     : public QWidget
 {
-    ProgramModel &model_;
+    program_model &model_;
 
     QTableWidget *thead_;
     QTableView *tbody_;
@@ -19,13 +19,15 @@ class program_widget final
 
 public:
 
-    program_widget(QWidget *, ProgramModel &);
+    program_widget(QWidget *, program_model &);
 
 public:
 
     QTableView* tbody() { return tbody_; }
 
-    void rows_count_changed(bool);
+    void update_table_row_span(std::size_t);
+
+    void update_view();
 
 private:
 
@@ -34,8 +36,6 @@ private:
     void showEvent(QShowEvent *) override final;
 
 private:
-
-    void update_view();
 
     void make_scroll(int);
 };

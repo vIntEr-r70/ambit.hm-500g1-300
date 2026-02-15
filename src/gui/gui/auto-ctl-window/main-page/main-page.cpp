@@ -1,5 +1,4 @@
 #include "main-page.hpp"
-#include "gui/gui/auto-ctl-window/main-page/copy-to-usb-page.hpp"
 #include "main-page-header-widget.hpp"
 #include "programs-list-widget.hpp"
 
@@ -20,7 +19,7 @@ main_page::main_page(QWidget *parent)
         connect(header_, &main_page_header_widget::make_init_program,
                 [this] { make_init_program(); });
         connect(header_, &main_page_header_widget::make_remove_program,
-                [this] { make_remove_program(); });
+                [this] { programs_list_widget_->remove_selected(); });
 
         header_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         vL->addWidget(header_);
@@ -31,16 +30,11 @@ main_page::main_page(QWidget *parent)
         {
             QWidget *w = nullptr;
 
-            programs_list_widget_ = new programs_list_widget(this);
-            connect(programs_list_widget_, &programs_list_widget::row_changed,
-                    [this] { selected_program_changed(); });
+            programs_list_widget_ = new programs_list_widget(this, header_);
             tabs_->addTab(programs_list_widget_, "Список программ");
 
             w = new QWidget(this);
             tabs_->addTab(w, "Список архивов");
-
-            w = new copy_to_usb_page(this);
-            tabs_->addTab(w, "USB");
         }
         vL->addWidget(tabs_);
     }
@@ -48,32 +42,16 @@ main_page::main_page(QWidget *parent)
 
 void main_page::make_create_program()
 {
-    emit goto_editor_page("");
+    emit goto_editor_page(nullptr);
 }
 
 void main_page::make_edit_program()
 {
-    QString name = programs_list_widget_->current();
-    if (!name.isEmpty())
-        emit goto_editor_page(name);
+    emit goto_editor_page(programs_list_widget_->selected_record());
 }
 
-// Открываем программу для исполнения
 void main_page::make_init_program()
 {
-    QString name = programs_list_widget_->current();
-    if (!name.isEmpty())
-        emit goto_ctl_page(name);
-}
-
-void main_page::make_remove_program()
-{
-    programs_list_widget_->remove_selected();
-}
-
-void main_page::selected_program_changed()
-{
-    QString name = programs_list_widget_->current();
-    header_->set_program_name(name);
+    emit goto_ctl_page(programs_list_widget_->selected_record());
 }
 

@@ -1,34 +1,41 @@
 #include "programs-list-widget.hpp"
+#include "program-list-model.hpp"
+#include "main-page-header-widget.hpp"
+#include "../common/program-record.hpp"
 
 #include <QVBoxLayout>
-#include <QTableWidget>
+#include <QTableView>
 #include <QHeaderView>
 #include <QScrollBar>
+#include <QStyledItemDelegate>
 
 #include <Widgets/RoundButton.h>
 #include <Widgets/VerticalScroll.h>
 #include <InteractWidgets/MessageBox.h>
 
-#include <filesystem>
-
 #include <eng/log.hpp>
 
-programs_list_widget::programs_list_widget(QWidget* parent)
+programs_list_widget::programs_list_widget(QWidget* parent, main_page_header_widget *header)
     : QWidget(parent)
+    , header_(header)
 {
     auto LIAEM_RW_PATH = std::getenv("LIAEM_RW_PATH");
-    path_ = LIAEM_RW_PATH ? LIAEM_RW_PATH : ".";
-    path_ /= "programs";
+    std::filesystem::path path = LIAEM_RW_PATH ? LIAEM_RW_PATH : ".";
+    path /= "programs";
 
-    if (!std::filesystem::exists(path_))
-        std::filesystem::create_directories(path_);
+    if (!std::filesystem::exists(path))
+        std::filesystem::create_directories(path);
+
+    model_ = new program_list_model();
+    model_->add_local_path(std::move(path));
+    model_->add_usb_path("/mnt");
+
+    question_msg_box_ = new MessageBox(this, MessageBox::HeadQuestion);
 
     QFont f(QWidget::font());
     f.setPointSize(16);
 
     QVBoxLayout* vL = new QVBoxLayout(this);
-    vL->setContentsMargins(20, 20, 20, 20);
-    vL->setSpacing(30);
     {
         QHBoxLayout *hL = new QHBoxLayout();
         hL->setSpacing(0); 
@@ -36,116 +43,148 @@ programs_list_widget::programs_list_widget(QWidget* parent)
             VerticalScroll *vs = new VerticalScroll(this);
             connect(vs, &VerticalScroll::move, [this](int shift) { make_scroll(shift); });
 
-            local_list_ = new QTableWidget(this);
+            list_ = new QTableView(this);
+            list_->setModel(model_);
 
-            connect(local_list_, &QTableWidget::itemSelectionChanged,
-                    [this] { emit row_changed(); });
-            connect(local_list_->verticalScrollBar(), &QScrollBar::rangeChanged,
+            connect(list_->selectionModel(), &QItemSelectionModel::currentRowChanged,
+                    [this] {
+                        update_selection();
+                    });
+
+            connect(list_->verticalScrollBar(), &QScrollBar::rangeChanged,
                     [vs](int min, int max) { vs->change_range(min, max); });
-            connect(local_list_->verticalScrollBar(), &QScrollBar::valueChanged,
+            connect(list_->verticalScrollBar(), &QScrollBar::valueChanged,
                     [vs](int value) { vs->change_value(value); });
-            local_list_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-            local_list_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-            local_list_->setFrameStyle(QFrame::Box);
-            local_list_->setSelectionMode(QAbstractItemView::SingleSelection);
-            local_list_->setSelectionBehavior(QAbstractItemView::SelectRows); 
-            local_list_->setAlternatingRowColors(true);
-            local_list_->setFont(f);
-            local_list_->setColumnCount(2);
-            local_list_->setColumnWidth(0, 400);
-            local_list_->verticalHeader()->hide();
-            local_list_->horizontalHeader()->setFont(f);
-            local_list_->setSortingEnabled(true);
-            local_list_->horizontalHeader()->setStretchLastSection(true);
-            hL->addWidget(local_list_);
+
+            list_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            list_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            list_->setFocusPolicy(Qt::NoFocus);
+            list_->setFrameStyle(QFrame::Box);
+            list_->setSelectionMode(QAbstractItemView::SingleSelection);
+            list_->setSelectionBehavior(QAbstractItemView::SelectRows);
+            list_->setAlternatingRowColors(true);
+            list_->setFont(f);
+            list_->setColumnWidth(0, 400);
+            list_->setColumnWidth(1, 170);
+            list_->setColumnWidth(2, 0);
+            list_->setColumnWidth(3, 0);
+            list_->verticalHeader()->hide();
+            list_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+            list_->horizontalHeader()->setFont(f);
+            list_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+            list_->setSortingEnabled(true);
+            hL->addWidget(list_);
 
             hL->addSpacing(5);
 
             hL->addWidget(vs);
         }
         vL->addLayout(hL);
+
+        hL = new QHBoxLayout();
+        hL->setSpacing(0);
+        {
+            btn_to_hd_ = new RoundButton(this);
+            btn_to_hd_->setIcon(":/file.folder-open");
+            connect(btn_to_hd_, &RoundButton::clicked, [this] { copy_to_hd(); });
+            hL->addWidget(btn_to_hd_);
+
+            QLabel *lbl = new QLabel(this);
+            lbl->setPixmap(QPixmap(":/file.sync"));
+            hL->addWidget(lbl);
+
+            btn_to_usb_ = new RoundButton(this);
+            btn_to_usb_->setIcon(":/file.usb");
+            connect(btn_to_usb_, &RoundButton::clicked, [this] { copy_to_usb(); });
+            hL->addWidget(btn_to_usb_);
+
+            hL->addStretch();
+        }
+        vL->addLayout(hL);
     }
 
-    question_msg_box_ = new MessageBox(this, MessageBox::HeadQuestion);
+    update_selection();
 }
 
-QString programs_list_widget::current() const
+void programs_list_widget::update_selection()
 {
-    int row = local_list_->currentRow();
-    if (row < 0) return "";
+    QModelIndex index = list_->currentIndex();
 
-    QTableWidgetItem* item = local_list_->item(row, 0);
-    return item->text();
+    if (index.isValid())
+    {
+        program_record_t const *r = model_->record(index.row());
+
+        auto const &fn = r->filename;
+        auto const &comm = r->comments;
+
+        header_->set_program_info(
+                QString::fromUtf8(fn.data(), fn.length()),
+                QString::fromUtf8(comm.data(), comm.length()));
+
+        btn_to_hd_->setEnabled(!r->source.test(program_record_t::hd_bit) && !r->syncing);
+        btn_to_usb_->setEnabled(!r->source.test(program_record_t::usb_bit) && !r->syncing);
+    }
+    else
+    {
+        btn_to_hd_->setEnabled(false);
+        btn_to_usb_->setEnabled(false);
+
+        header_->set_program_info("", "");
+    }
+}
+
+void programs_list_widget::copy_to_hd()
+{
+    btn_to_hd_->setEnabled(false);
+    model_->copy_to_hd(list_->currentIndex().row());
+}
+
+void programs_list_widget::copy_to_usb()
+{
+    btn_to_usb_->setEnabled(false);
+    model_->copy_to_usb(list_->currentIndex().row());
+}
+
+program_record_t const *programs_list_widget::selected_record() const
+{
+    QModelIndex index = list_->currentIndex();
+    return index.isValid() ? model_->record(index.row()) : nullptr;
 }
 
 void programs_list_widget::remove_selected()
 {
-    int row = local_list_->currentRow();
-    if (row < 0) return;
+    model_->remove(list_->currentIndex().row());
+    list_->setCurrentIndex(QModelIndex{});
 
-    question_msg_box_->set_message(QString("Удалить программу %1?")
-            .arg(local_list_->item(row, 0)->text()));
-    question_msg_box_->set_buttons({ "Да", "Нет" });
-    question_msg_box_->show([this, row](std::size_t ibtn)
-    {
-        question_msg_box_->hide();
-        if (ibtn != 0) return;
-
-        QString fname = local_list_->item(row, 0)->text();
-
-        std::filesystem::path path{ path_ };
-        path /= fname.toUtf8().constData();
-        std::filesystem::remove(path);
-
-        local_list_->removeRow(row);
-    });
+    // int row = local_list_->currentRow();
+    // if (row < 0) return;
+    //
+    // question_msg_box_->set_message(QString("Удалить программу %1?")
+    //         .arg(local_list_->item(row, 0)->text()));
+    // question_msg_box_->set_buttons({ "Да", "Нет" });
+    // question_msg_box_->show([this, row](std::size_t ibtn)
+    // {
+    //     question_msg_box_->hide();
+    //     if (ibtn != 0) return;
+    //
+    //     QString fname = local_list_->item(row, 0)->text();
+    //
+    //     std::filesystem::path path{ path_ };
+    //     path /= fname.toUtf8().constData();
+    //     std::filesystem::remove(path);
+    //
+    //     local_list_->removeRow(row);
+    // });
 }
 
 void programs_list_widget::make_scroll(int shift)
 {
-    auto bar = local_list_->verticalScrollBar();
+    auto bar = list_->verticalScrollBar();
     int pos = bar->sliderPosition();
     bar->setSliderPosition(pos + shift);
 }
 
-//! Необходимо загрузить список программ из базы
-//! Так-же диалог должен позволять загружать программы из файловой системы
-
 void programs_list_widget::showEvent(QShowEvent *)
 {
-    QString name;
-    int row = local_list_->currentRow();
-    if (row >= 0) name = local_list_->item(row, 0)->text();
-
-    std::vector<std::pair<std::string, std::string>> files;
-    for (auto const& dir_entry : std::filesystem::directory_iterator{path_})
-    {
-        if (!dir_entry.is_regular_file())
-            continue;
-
-        std::time_t cftime = std::chrono::system_clock::to_time_t(
-                std::chrono::file_clock::to_sys(dir_entry.last_write_time()));
-
-        std::tm *ptm = std::localtime(&cftime);
-        char buffer[32];
-        std::strftime(buffer, sizeof(buffer), "%d.%m.%Y", ptm);
-
-        files.push_back({ dir_entry.path().filename(), buffer });
-    }
-
-    local_list_->clear();
-    local_list_->setHorizontalHeaderLabels({ "Название", "Дата" });
-
-    local_list_->setRowCount(files.size());
-
-    local_list_->setSortingEnabled(false);
-    for (std::size_t i = 0; i < files.size(); ++i)
-    {
-        QString fname(QString::fromLocal8Bit(files[i].first.c_str()));
-        local_list_->setItem(i, 0, new QTableWidgetItem(fname));
-        local_list_->setItem(i, 1, new QTableWidgetItem(files[i].second.c_str()));
-        if (fname == name) local_list_->selectRow(i);
-    }
-    local_list_->setSortingEnabled(true);
 }
 

@@ -1,7 +1,5 @@
 #include "main-page-header-widget.hpp"
 
-#include "../common/ProgramModel.h"
-
 #include <Widgets/ValueViewString.h>
 #include <Widgets/RoundButton.h>
 
@@ -13,10 +11,6 @@
 main_page_header_widget::main_page_header_widget(QWidget *parent) noexcept
     : QWidget(parent)
 {
-    auto LIAEM_RW_PATH = std::getenv("LIAEM_RW_PATH");
-    path_ = LIAEM_RW_PATH ? LIAEM_RW_PATH : ".";
-    path_ /= "programs";
-
     setObjectName("common_page_header_widget");
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("QWidget#common_page_header_widget { border-radius: 20px; background-color: white; }");
@@ -41,36 +35,35 @@ main_page_header_widget::main_page_header_widget(QWidget *parent) noexcept
             hL->addStretch();
 
             RoundButton *btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { emit make_create_program(); });
-            btn->setText("Создать");
+            connect(btn, &RoundButton::clicked, [this] { emit make_init_program(); });
             btn->setBgColor("#29AC39");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
+            btn->setIcon(":/cnc.play");
+            hL->addWidget(btn);
+            btn_mode_ = btn;
+
+            hL->addSpacing(20);
+
+            btn = new RoundButton(this);
+            connect(btn, &RoundButton::clicked, [this] { emit make_create_program(); });
+            btn->setBgColor("#29AC39");
+            btn->setIcon(":/file.new");
             hL->addWidget(btn);
 
             btn = new RoundButton(this);
             connect(btn, &RoundButton::clicked, [this] { emit make_edit_program(); });
-            btn->setText("Изменить");
             btn->setBgColor("#29AC39");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
+            btn->setIcon(":/file.edit");
             hL->addWidget(btn);
+            btn_edit_ = btn;
 
-            btn = new RoundButton(this);
-            connect(btn, &RoundButton::clicked, [this] { emit make_init_program(); });
-            btn->setText("Загрузить");
-            btn->setBgColor("#29AC39");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
-            hL->addWidget(btn);
+            hL->addSpacing(20);
 
             btn = new RoundButton(this);
             connect(btn, &RoundButton::clicked, [this] { emit make_remove_program(); });
-            btn->setText("Удалить");
             btn->setBgColor("#E55056");
-            btn->setTextColor(Qt::white);
-            btn->setMinimumWidth(100);
+            btn->setIcon(":/file.delete");
             hL->addWidget(btn);
+            btn_remove_ = btn;
         }
         vL->addLayout(hL);
 
@@ -79,26 +72,17 @@ main_page_header_widget::main_page_header_widget(QWidget *parent) noexcept
         comments_->setTitle("Коментарии");
         vL->addWidget(comments_);
     }
+
+    set_program_info("", "");
 }
 
-void main_page_header_widget::set_program_name(QString name)
+void main_page_header_widget::set_program_info(QString name, QString comments)
 {
     name_->set_value(name);
+    comments_->set_value(comments);
 
-    if (name.isEmpty())
-    {
-        comments_->set_value("");
-        return;
-    }
-
-    QString fname{ QString::fromLocal8Bit(
-        (path_ / name.toUtf8().constData()).c_str()) };
-
-    QString comments;
-    if (ProgramModel::load_program_comments(fname, comments))
-        comments_->set_value(comments);
-    else
-        comments_->set_value("");
+    btn_edit_->setEnabled(!name.isEmpty());
+    btn_mode_->setEnabled(!name.isEmpty());
+    btn_remove_->setEnabled(!name.isEmpty());
 }
-
 

@@ -4,6 +4,7 @@
 
 class programs_list_widget;
 class main_page_header_widget;
+struct program_record_t;
 
 class main_page final
     : public QWidget
@@ -19,9 +20,9 @@ public:
 
 signals:
 
-    void goto_ctl_page(QString const &);
+    void goto_ctl_page(program_record_t const *);
 
-    void goto_editor_page(QString const &);
+    void goto_editor_page(program_record_t const *);
 
 private:
 
@@ -30,10 +31,4 @@ private:
     void make_edit_program();
 
     void make_init_program();
-
-    void make_remove_program();
-
-private:
-
-    void selected_program_changed();
 };

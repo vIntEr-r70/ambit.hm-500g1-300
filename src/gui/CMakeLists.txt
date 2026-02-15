@@ -34,14 +34,16 @@ add_executable(${PROJECT_NAME}
     gui/auto-ctl-window/main-page/main-page.cpp
     gui/auto-ctl-window/main-page/main-page-header-widget.cpp
     gui/auto-ctl-window/main-page/programs-list-widget.cpp
-    gui/auto-ctl-window/main-page/copy-to-usb-page.cpp
+    gui/auto-ctl-window/main-page/program-list-model.cpp
     gui/auto-ctl-window/auto-ctl-page/auto-ctl-page.cpp
     gui/auto-ctl-window/auto-ctl-page/problem-list-widget.cpp
+    gui/auto-ctl-window/auto-ctl-page/program-model-mode.cpp
     gui/auto-ctl-window/editor-page/editor-page.cpp
     gui/auto-ctl-window/editor-page/editor-page-header-widget.cpp
     gui/auto-ctl-window/editor-page/AutoParamKeyboard.cpp
     gui/auto-ctl-window/editor-page/EditorMessageBox.cpp
-    gui/auto-ctl-window/common/ProgramModel.cpp
+    gui/auto-ctl-window/editor-page/program-model-editor.cpp
+    gui/auto-ctl-window/common/program-model.cpp
     gui/auto-ctl-window/common/program-widget.cpp
     gui/auto-ctl-window/common/ProgramModelHeader.cpp
 

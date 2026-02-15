@@ -5,12 +5,13 @@
 #include <eng/sibus/node.hpp>
 
 class RoundButton;
-class ProgramModel;
 class QStackedWidget;
 class QLabel;
-
+class program_model_mode;
 class program_widget;
 class problem_list_widget;
+
+struct program_record_t;
 
 class auto_ctl_page final
     : public QWidget
@@ -18,14 +19,14 @@ class auto_ctl_page final
 {
     Q_OBJECT
 
-    ProgramModel &model_;
+    program_model_mode *model_;
 
     QStackedWidget *stack_;
     program_widget *program_widget_;
     problem_list_widget *problem_list_widget_;
 
     eng::sibus::output_wire_id_t ctl_;
-    eng::sibus::output_port_id_t program_out_;
+    eng::sibus::output_port_id_t program_;
 
     RoundButton *btn_start_;
     RoundButton *btn_stop_;
@@ -35,18 +36,13 @@ class auto_ctl_page final
     QLabel *lbl_pause_time_;
     QLabel *lbl_program_name_;
 
-    std::optional<std::size_t> phase_id_;
-    bool execution_error_;
+public:
 
-    std::string program_base64_;
+    auto_ctl_page(QWidget*) noexcept;
 
 public:
 
-    auto_ctl_page(QWidget*, ProgramModel &) noexcept;
-
-public:
-
-    void init();
+    void init(program_record_t const *);
 
 private:
 
@@ -72,3 +68,4 @@ signals:
 
     void make_edit();
 };
+

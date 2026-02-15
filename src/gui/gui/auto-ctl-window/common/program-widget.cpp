@@ -1,5 +1,5 @@
 #include "program-widget.hpp"
-#include "ProgramModel.h"
+#include "program-model.hpp"
 #include "ProgramModelHeader.h"
 
 #include <Widgets/VerticalScroll.h>
@@ -11,7 +11,7 @@
 
 #include <eng/log.hpp>
 
-program_widget::program_widget(QWidget *parent, ProgramModel &model)
+program_widget::program_widget(QWidget *parent, program_model &model)
     : QWidget(parent)
     , model_(model)
 {
@@ -59,25 +59,9 @@ program_widget::program_widget(QWidget *parent, ProgramModel &model)
     }
 }
 
-void program_widget::rows_count_changed(bool all)
+void program_widget::update_table_row_span(std::size_t irow)
 {
-    if (all)
-    {
-        std::size_t i = 0;
-        for (auto const& type : model_.prog().phases)
-        {
-            if (type != program::op_type::main)
-                tbody_->setSpan(i, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
-            i += 1;
-        }
-    }
-    else if (!model_.prog().phases.empty())
-    {
-        std::size_t irow = model_.last_insert_row();
-        if (model_.prog().phases[irow] != program::op_type::main)
-            tbody_->setSpan(irow, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
-    }
-
+    tbody_->setSpan(irow, 1, 1, ProgramModelHeader::column_count(model_.prog()) - 1);
     update_view();
 }
 
