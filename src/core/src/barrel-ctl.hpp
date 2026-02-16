@@ -22,6 +22,7 @@ class barrel_ctl final
     eng::sibus::output_port_id_t pump_;
     eng::sibus::output_port_id_t heater_;
     eng::sibus::output_port_id_t cooler_;
+    eng::sibus::output_port_id_t active_;
 
     void (barrel_ctl::*in_range_)();
 
@@ -34,8 +35,6 @@ private:
     void deactivate();
 
 private:
-
-    void update_liquid_state();
 
     void in_temperature_range();
 

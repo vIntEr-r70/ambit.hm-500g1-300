@@ -210,7 +210,7 @@ void AutoParamKeyboard::show_fc(float p, float i, float tv, fc_accept_cb_t &&cb)
     on_acc_handler_ = nullptr;
 
     le_.clear();
-    std::for_each(fc_page_.le, fc_page_.le + std::size(fc_page_.le), 
+    std::for_each(fc_page_.le, fc_page_.le + std::size(fc_page_.le),
             [this](auto le) { le_.push_back(le); });
 
     fc_page_.le[0]->setText(QString::number(p, 'f', 2));
@@ -321,7 +321,7 @@ QWidget* AutoParamKeyboard::create_main_page()
     main_page_.w = w;
 
     main_page_.validator = new QDoubleValidator(w);
-    main_page_.validator->setDecimals(3);
+    main_page_.validator->setDecimals(6);
 
     {
         QHBoxLayout *hL = new QHBoxLayout(w);

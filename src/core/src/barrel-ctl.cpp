@@ -12,23 +12,30 @@ barrel_ctl::barrel_ctl(std::string_view key)
     , in_range_(nullptr)
 {
     // Текущее значение температуры
-    node::add_input_port("DT", [this](eng::abc::pack args)
+    node::add_input_port_unsafe("DT", [this](eng::abc::pack args)
     {
-        current_temperature_ = eng::abc::get<double>(args);
-        if (in_range_) (this->*in_range_)();
+        if (!args)
+        {
+            if (in_range_) deactivate();
+            current_temperature_.reset();
+        }
+        else
+        {
+            current_temperature_ = eng::abc::get<double>(args);
+            if (in_range_) (this->*in_range_)();
+        }
     });
 
     node::add_input_port("on-off", [this](eng::abc::pack args)
     {
         if (eng::abc::get<bool>(args))
         {
-            if (!in_range_)
-                in_range_ = &barrel_ctl::in_temperature_range;
-
             if (current_temperature_)
-                (this->*in_range_)();
-
-            return;
+            {
+                node::set_port_value(active_, { true });
+                in_range_ = &barrel_ctl::in_temperature_range;
+                return;
+            }
         }
 
         deactivate();
@@ -52,10 +59,7 @@ barrel_ctl::barrel_ctl(std::string_view key)
     pump_ = node::add_output_port("pump");
     heater_ = node::add_output_port("heater");
     cooler_ = node::add_output_port("cooler");
-}
-
-void barrel_ctl::update_liquid_state()
-{
+    active_ = node::add_output_port("active");
 }
 
 void barrel_ctl::deactivate()
@@ -63,6 +67,7 @@ void barrel_ctl::deactivate()
     node::set_port_value(pump_, { false });
     node::set_port_value(heater_, { false });
     node::set_port_value(cooler_, { false });
+    node::set_port_value(active_, { false });
 
     in_range_ = nullptr;
 }

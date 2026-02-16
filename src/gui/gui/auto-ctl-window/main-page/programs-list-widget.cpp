@@ -81,6 +81,8 @@ programs_list_widget::programs_list_widget(QWidget* parent, main_page_header_wid
         }
         vL->addLayout(hL);
 
+        vL->addSpacing(10);
+
         hL = new QHBoxLayout();
         hL->setSpacing(0);
         {
