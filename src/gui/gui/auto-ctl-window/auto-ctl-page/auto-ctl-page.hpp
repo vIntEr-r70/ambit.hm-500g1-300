@@ -50,6 +50,8 @@ private:
 
     void make_start();
 
+    void make_continue();
+
     void make_stop();
 
 private:

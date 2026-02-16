@@ -60,8 +60,8 @@ class vm
 
     std::size_t phase_id_;
     std::unordered_map<std::size_t, std::size_t> known_goto_;
-    std::vector<std::size_t> dec_N_goto_pid_;
-    std::vector<std::size_t> dec_known_goto_pid_;
+    // std::vector<std::size_t> dec_N_goto_pid_;
+    // std::vector<std::size_t> dec_known_goto_pid_;
 
     std::vector<std::size_t> ops_phases_;
 
@@ -77,7 +77,7 @@ public:
 
     VmPhaseType phase_type() const;
 
-    void to_next_phase();
+    std::size_t to_next_phase();
 
     void increment_phase();
 
@@ -85,7 +85,7 @@ public:
 
     std::size_t op_phase_id() const;
 
-    bool has_phase_ops() const noexcept { return !ops_phases_.empty(); }
+    bool has_phase_ops() const noexcept { return ops_phases_.size() > 1; }
 
     std::uint64_t pause_timeout_ms() const;
 
@@ -101,9 +101,9 @@ private:
 
     std::size_t next_phase_id(std::size_t) const;
 
-    bool try_add_next_phase(std::size_t &);
+    bool try_add_next_phase(std::size_t);
 
-    VmPhase const* get_next_operation(std::size_t &) noexcept;
+    VmPhase const* get_next_operation(std::size_t) noexcept;
 
 private:
 

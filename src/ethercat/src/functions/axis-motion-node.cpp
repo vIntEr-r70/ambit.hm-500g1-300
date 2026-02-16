@@ -145,6 +145,8 @@ bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)
     by_position_.update_speed_limit(speed);
     by_position_.update_absolute_target(pos + origin_offset_);
 
+    eng::log::info("{}: {}: pos = {}, speed = {}", name(), __func__, pos + origin_offset_, speed);
+
     if (mc == nullptr)
         servo_motor_.set_control(by_position_);
 
@@ -163,6 +165,8 @@ bool axis_motion_node::cmd_shift(eng::abc::pack const &args)
     by_position_.update_speed_limit(speed);
     by_position_.update_relative_target(dpos);
 
+    eng::log::info("{}: {}: dpos = {}, speed = {}", name(), __func__, dpos, speed);
+
     if (mc == nullptr)
         servo_motor_.set_control(by_position_);
 
@@ -178,6 +182,9 @@ bool axis_motion_node::cmd_spin(eng::abc::pack const &args)
         return false;
 
     by_velocity_.update_speed_limit(speed);
+
+    eng::log::info("{}: {}: speed = {}", name(), __func__, speed);
+
     if (mc == nullptr)
         servo_motor_.set_control(by_velocity_);
 
@@ -193,6 +200,8 @@ bool axis_motion_node::cmd_stop(eng::abc::pack const &)
         node::wire_response(ictl_, true, { });
         return true;
     }
+
+    eng::log::info("{}: {}", name(), __func__);
 
     if (mc != &by_position_ && mc != &by_velocity_)
         return false;
@@ -210,6 +219,8 @@ bool axis_motion_node::cmd_zerro(eng::abc::pack const &)
         return true;
 
     origin_offset_ = servo_motor_.position();
+
+    eng::log::info("{}: {}: offset = {}", name(), __func__, origin_offset_);
 
     update_output_info();
 

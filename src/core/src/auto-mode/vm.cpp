@@ -18,7 +18,9 @@ vm::vm(std::vector<VmPhase*> const &phases, std::vector<char> const &target_axis
 void vm::initialize()
 {
     phase_id_ = 0;
+
     ops_phases_.clear();
+    ops_phases_.emplace_back(0);
 
     phase_moving_.clear();
 
@@ -79,16 +81,15 @@ std::size_t vm::op_phase_id() const
     return ops_phases_.back();
 }
 
-void vm::to_next_phase()
+std::size_t vm::to_next_phase()
 {
     if (ops_phases_.empty())
         throw std::runtime_error("ops phase list was empty");
 
-    auto phase_id = ops_phases_.back();
+    phase_id_ = ops_phases_.back();
     ops_phases_.pop_back();
 
-    phase_id_ = ops_phases_.empty() ?
-        phase_id + 1 : ops_phases_.back();
+    return phase_id_;
 }
 
 void vm::increment_phase()
@@ -110,10 +111,13 @@ std::uint64_t vm::pause_timeout_ms() const
 // Инициируем процесс формирования списка позиций непрерывного движения
 bool vm::create_continuous_moving_list()
 {
+    eng::log::info("{}: phase-id = {}", __func__, phase_id_);
+
+    if (is_program_done())
+        return false;
+
     if (!ops_phases_.empty())
         throw std::runtime_error("create_continuous_moving_list: ops phase list was not empty");
-
-    eng::log::info("CREATE MOVE LIST: phase-id = {}", phase_id_);
 
     continuous_moving_list_.clear();
 
@@ -129,28 +133,38 @@ bool vm::create_continuous_moving_list()
         phase_id += 1;
     }
 
-    if (!continuous_moving_list_.empty())
-    {
-        auto const &cml = continuous_moving_list_;
-        std::for_each(cml.rbegin(), cml.rend(), [this](auto const &phase) {
-            ops_phases_.push_back(phase.phase_id);
-        });
+    // ops_phases_.push_back(phase_id);
 
-        std::stringstream ss;
-        for(std::size_t i = 0; i < ops_phases_.size(); ++i)
-            ss << ((i == 0) ? "" : ",") << ops_phases_[i];
-        eng::log::info("OPS: [ {} ]", ss.view());
-    }
+    // if (!continuous_moving_list_.empty())
+    // {
+    //     auto const &cml = continuous_moving_list_;
+    //     std::for_each(cml.rbegin(), cml.rend(), [this](auto const &phase) {
+    //         ops_phases_.push_back(phase.phase_id);
+    //     });
+    //
+    //     if (!continuous_moving_list_.back().axis_count)
+    //         continuous_moving_list_.pop_back();
+    // }
+
+    if (continuous_moving_list_.empty() && phases_[phase_id_]->cmd() != VmPhaseType::GoTo)
+        ops_phases_.push_back(ops_phases_.back() + 1);
+
+    std::reverse(ops_phases_.begin(), ops_phases_.end()); 
+
+    std::stringstream ss;
+    for(std::size_t i = 0; i < ops_phases_.size(); ++i)
+        ss << ((i == 0) ? "" : ", ") << ops_phases_[i];
+    eng::log::info("OPS: [ {} ]", ss.view());
 
     return !continuous_moving_list_.empty();
 }
 
 // Поиск следующей позиции
-bool vm::try_add_next_phase(std::size_t &phase_id)
+bool vm::try_add_next_phase(std::size_t phase_id)
 {
     // Находим следующию операцию с учетом циклов
-    dec_N_goto_pid_.clear();
-    dec_known_goto_pid_.clear();
+    // dec_N_goto_pid_.clear();
+    // dec_known_goto_pid_.clear();
 
     VmPhase const* vm_phase = get_next_operation(phase_id);
 
@@ -241,36 +255,45 @@ bool vm::try_add_next_phase(std::size_t &phase_id)
             continuous_moving_list_.pop_back();
         }
 
-        // Откатываем назад циклы, которые были затронуты поиском данной операции
-        std::ranges::for_each(dec_N_goto_pid_, [this](std::size_t pid)
-        {
-            eng::log::info("GOTO N REVERT: {}", pid);
-            known_goto_[pid] += 1;
-        });
+        // // Откатываем назад циклы, которые были затронуты поиском данной операции
+        // std::ranges::for_each(dec_N_goto_pid_, [this](std::size_t pid)
+        // {
+        //     eng::log::info("GOTO N REVERT: {}", pid);
+        //     known_goto_[pid] += 1;
+        // });
     }
 
-    // Откатываем назад удаленный цикл, которые были затронуты поиском данной операции
-    std::ranges::for_each(dec_known_goto_pid_, [this](std::size_t pid)
-    {
-        eng::log::info("GOTO REVERT: {}", pid);
-        known_goto_[pid] = 0;
-    });
+    // // Откатываем назад удаленный цикл, которые были затронуты поиском данной операции
+    // std::ranges::for_each(dec_known_goto_pid_, [this](std::size_t pid)
+    // {
+    //     eng::log::info("GOTO REVERT: {}", pid);
+    //     known_goto_[pid] = 0;
+    // });
 
     return false;
 }
 
 // Находим следующию операцию с учетом циклов
-VmPhase const* vm::get_next_operation(std::size_t &pid) noexcept
+VmPhase const* vm::get_next_operation(std::size_t pid) noexcept
 {
     if (pid == phases_.size())
+    {
+        ops_phases_.push_back(pid);
         return nullptr;
+    }
 
     VmPhase const* phase = phases_[pid];
     if (phase->cmd() == VmPhaseType::Operation)
+    {
+        ops_phases_.push_back(pid);
         return phase;
+    }
 
     if (phase->cmd() != VmPhaseType::GoTo)
+    {
+        ops_phases_.push_back(pid);
         return nullptr;
+    }
 
     // Исследуем этап, на который ведет переход при условии что количество повторений еще осталось
     VmGoTo const &item = *static_cast<VmGoTo const*>(phase);
@@ -286,7 +309,7 @@ VmPhase const* vm::get_next_operation(std::size_t &pid) noexcept
     if (known_goto_[pid] == 0)
     {
         // Сохраняем использованный цикл этапа с переходом чтобы если что отменить их
-        dec_known_goto_pid_.push_back(pid);
+        // dec_known_goto_pid_.push_back(pid);
 
         known_goto_.erase(pid);
 
@@ -297,7 +320,7 @@ VmPhase const* vm::get_next_operation(std::size_t &pid) noexcept
     }
 
     // Сохраняем номер этапа с переходом чтобы если что отменить их
-    dec_N_goto_pid_.push_back(pid);
+    // dec_N_goto_pid_.push_back(pid);
 
     known_goto_[pid] -= 1;
     pid = item.phase_id;
@@ -325,7 +348,7 @@ bool vm::check_in_position(std::unordered_map<char, double> const &positions) co
     // ss << " ]";
     // eng::log::info("check_in_position: {}", ss.view());
 
-    std::size_t idx = continuous_moving_list_.size() - ops_phases_.size();
+    std::size_t idx = (continuous_moving_list_.size() + 1) - ops_phases_.size();
 
     // Никогда не анализируем последную позицию в движении,
     // она стартует по факту завершения всех заданий движения

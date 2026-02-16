@@ -87,6 +87,8 @@ void program_widget::resizeEvent(QResizeEvent *)
 
 void program_widget::showEvent(QShowEvent *)
 {
+    tbody_->clearSpans();
+
     std::size_t i = 0;
     for (auto const& type : model_.prog().phases)
     {

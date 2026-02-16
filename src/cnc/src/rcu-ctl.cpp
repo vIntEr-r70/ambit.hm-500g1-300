@@ -53,7 +53,7 @@ rcu_ctl::rcu_ctl()
         speed_select_.set(1, eng::abc::get<bool>(value));
     });
 
-    add_input_port_v2("spin", [this](eng::abc::pack args) {
+    add_input_port_unsafe("spin", [this](eng::abc::pack args) {
         spin_value_changed(std::move(args));
     });
 

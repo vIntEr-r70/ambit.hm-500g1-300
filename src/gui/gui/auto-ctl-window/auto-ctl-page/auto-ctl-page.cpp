@@ -92,6 +92,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
                 RoundButton *btn = new RoundButton(w);
                 connect(btn, &RoundButton::clicked, [this] { make_start(); });
                 btn->setText("СТАРТ");
+                btn->setTextColor(Qt::white);
                 btn->setBgColor("#29AC39");
                 btn->setFixedWidth(150);
                 btn_start_ = btn;
@@ -99,8 +100,9 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
                 hL->addWidget(btn);
 
                 btn = new RoundButton(w);
-                connect(btn, &RoundButton::clicked, [this] { make_start(); });
+                connect(btn, &RoundButton::clicked, [this] { make_continue(); });
                 btn->setText("ДАЛЕЕ");
+                btn->setTextColor(Qt::white);
                 btn->setBgColor("#29AC39");
                 btn->setFixedWidth(150);
                 btn_continue_ = btn;
@@ -110,6 +112,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
                 btn = new RoundButton(w);
                 connect(btn, &RoundButton::clicked, [this] { make_stop(); });
                 btn->setText("СТОП");
+                btn->setTextColor(Qt::white);
                 btn->setBgColor("#E55056");
                 btn->setFixedWidth(150);
                 btn_stop_ = btn;
@@ -194,6 +197,15 @@ void auto_ctl_page::make_start()
     node::activate(ctl_, { });
 }
 
+void auto_ctl_page::make_continue()
+{
+    if (!node::is_active(ctl_))
+        return;
+
+    btn_continue_->setEnabled(false);
+    node::activate(ctl_, { });
+}
+
 void auto_ctl_page::make_stop()
 {
     if (!node::is_active(ctl_))
@@ -268,14 +280,22 @@ void auto_ctl_page::update_times(eng::abc::pack args)
         std::format("{:02}:{:02}:{:02}", h1, m1, s1)));
 
     double t1 = eng::abc::get<double>(args, 1);
+
+    // Программа не находится на паузе
     if (std::isnan(t1))
     {
         lbl_pause_time_->setText("");
-        return;
+        btn_continue_->hide();
     }
+    else
+    {
+        auto [h2, m2, s2] = hms(t1);
+        lbl_pause_time_->setText(QString::fromStdString(
+            std::format("{:02}:{:02}:{:02}", h2, m2, s2)));
 
-    auto [h2, m2, s2] = hms(t1);
-    lbl_pause_time_->setText(QString::fromStdString(
-        std::format("{:02}:{:02}:{:02}", h2, m2, s2)));
+        bool inf = eng::abc::get<bool>(args, 2);
+        btn_continue_->setVisible(inf);
+        btn_continue_->setEnabled(inf);
+    }
 }
 

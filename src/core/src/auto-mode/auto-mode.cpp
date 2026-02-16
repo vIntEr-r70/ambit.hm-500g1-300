@@ -169,6 +169,13 @@ void auto_mode::activate()
 {
     eng::log::info("{}: {}", name(), __func__);
 
+    if (isc_.is_in_state(&auto_mode::s_infinity_pause))
+    {
+        eng::timer::stop(pause_timer_);
+        isc_.switch_to_state(&auto_mode::s_pause_done);
+        return;
+    }
+
     if (!isc_.is_in_state(nullptr))
     {
         node::reject(ictl_, "Программа уже выполняется");
@@ -215,6 +222,8 @@ void auto_mode::deactivate()
     eng::timer::stop(pause_timer_);
     eng::timer::stop(proc_timer_);
 
+    update_output_times();
+
     if (node::is_ready(axis_ctl_) && node::is_ready(stuff_ctl_))
     {
         isc_.switch_to_state(nullptr);
@@ -254,13 +263,17 @@ void auto_mode::s_init_pause()
 {
     eng::log::info("{}: {}", name(), __func__);
 
+    // Запускаем счетчик времени
     pause_stopwatch_.restart();
 
     auto msec = vm_.pause_timeout_ms();
     if (msec != 0)
         eng::timer::start(pause_timer_, std::chrono::milliseconds(msec));
+    pause_timeout_ = (msec != 0) ? (msec / 1000.0) : NAN;
 
     isc_.switch_to_state(msec ? &auto_mode::s_pause : &auto_mode::s_infinity_pause);
+
+    update_output_times();
 }
 
 // Контролируем доступность требуемых нам для работы модулей
@@ -279,7 +292,7 @@ void auto_mode::s_pause_done()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    vm_.increment_phase();
+    vm_.to_next_phase();
     isc_.switch_to_state(&auto_mode::s_program_execution_loop);
 }
 
@@ -322,7 +335,7 @@ void auto_mode::s_program_execution_loop()
     eng::log::info("{}: {}", name(), __func__);
 
     // Программа продолжит анализ с данного этапа
-    std::uint32_t phase_id = vm_.next_phase_id();
+    std::uint32_t phase_id = vm_.to_next_phase();
     node::set_port_value(phase_id_out_, { phase_id, true });
 
     // Задач движения на данном этапе нету
@@ -347,6 +360,9 @@ void auto_mode::s_program_execution_loop()
             break;
         case VmPhaseType::Pause:
             isc_.switch_to_state(&auto_mode::s_init_pause);
+            break;
+        case VmPhaseType::GoTo:
+            isc_.switch_to_state(&auto_mode::s_program_execution_loop);
             break;
 
         default:
@@ -377,12 +393,12 @@ void auto_mode::process_axis_positions()
     if (!isc_.is_in_state(&auto_mode::s_start_moving))
         return;
 
-    eng::log::info("{}: {}", name(), __func__);
-
     // Отслеживаем где мы находимся позиционно
     // инкрементируя номер выполняемой строчки программы
     if (!vm_.check_in_position(axis_program_pos_))
         return;
+
+    eng::log::info("{}: {}", name(), __func__);
 
     vm_.to_next_phase();
     execute_operation();
@@ -511,12 +527,16 @@ void auto_mode::update_output_times()
     // Общее время выполнения
     double t0 = stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
 
-    double t1 = NAN;
     // Время на паузе или на бесконечной паузе
-    if (isc_.is_in_state(&auto_mode::s_pause) || isc_.is_in_state(&auto_mode::s_infinity_pause))
-        t1 = pause_stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
+    double t1 = NAN;
+    if (isc_.is_in_state(&auto_mode::s_pause))
+        t1 = pause_timeout_ - pause_stopwatch_.elapsed<std::chrono::seconds, double>();
+    else if (isc_.is_in_state(&auto_mode::s_infinity_pause))
+        t1 = pause_stopwatch_.elapsed<std::chrono::seconds, double>();
 
-    node::set_port_value(times_out_, { t0, t1 });
+    bool inf = isc_.is_in_state(&auto_mode::s_infinity_pause);
+
+    node::set_port_value(times_out_, { t0, t1, inf });
 }
 
 

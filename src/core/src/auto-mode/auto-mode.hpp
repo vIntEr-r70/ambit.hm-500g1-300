@@ -33,6 +33,7 @@ class auto_mode final
 
     eng::stopwatch stopwatch_;
     eng::stopwatch pause_stopwatch_;
+    double pause_timeout_{ NAN };
 
     std::string program_b64_;
 
