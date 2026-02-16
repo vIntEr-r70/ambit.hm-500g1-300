@@ -92,13 +92,6 @@ std::size_t vm::to_next_phase()
     return phase_id_;
 }
 
-void vm::increment_phase()
-{
-    if (!ops_phases_.empty())
-        throw std::runtime_error("ops phase list was not empty");
-    phase_id_ += 1;
-}
-
 std::uint64_t vm::pause_timeout_ms() const
 {
     VmPhase const *phase = phases_[phase_id_];
@@ -133,28 +126,18 @@ bool vm::create_continuous_moving_list()
         phase_id += 1;
     }
 
-    // ops_phases_.push_back(phase_id);
-
-    // if (!continuous_moving_list_.empty())
-    // {
-    //     auto const &cml = continuous_moving_list_;
-    //     std::for_each(cml.rbegin(), cml.rend(), [this](auto const &phase) {
-    //         ops_phases_.push_back(phase.phase_id);
-    //     });
-    //
-    //     if (!continuous_moving_list_.back().axis_count)
-    //         continuous_moving_list_.pop_back();
-    // }
-
     if (continuous_moving_list_.empty() && phases_[phase_id_]->cmd() != VmPhaseType::GoTo)
+    {
         ops_phases_.push_back(ops_phases_.back() + 1);
+        eng::log::info("ADD+: {}", ops_phases_.back());
+    }
 
     std::reverse(ops_phases_.begin(), ops_phases_.end()); 
 
     std::stringstream ss;
     for(std::size_t i = 0; i < ops_phases_.size(); ++i)
         ss << ((i == 0) ? "" : ", ") << ops_phases_[i];
-    eng::log::info("OPS: [ {} ]", ss.view());
+    eng::log::info("{} OPS: [ {} ]", (continuous_moving_list_.empty() ? "SING" : "MOVE") , ss.view());
 
     return !continuous_moving_list_.empty();
 }
@@ -279,18 +262,21 @@ VmPhase const* vm::get_next_operation(std::size_t pid) noexcept
     if (pid == phases_.size())
     {
         ops_phases_.push_back(pid);
+        eng::log::info("ADD: {}", pid);
         return nullptr;
     }
 
     VmPhase const* phase = phases_[pid];
     if (phase->cmd() == VmPhaseType::Operation)
     {
+        eng::log::info("ADD: {}", pid);
         ops_phases_.push_back(pid);
         return phase;
     }
 
     if (phase->cmd() != VmPhaseType::GoTo)
     {
+        eng::log::info("ADD: {}", pid);
         ops_phases_.push_back(pid);
         return nullptr;
     }

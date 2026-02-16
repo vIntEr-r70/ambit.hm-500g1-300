@@ -79,8 +79,6 @@ public:
 
     std::size_t to_next_phase();
 
-    void increment_phase();
-
     std::size_t next_phase_id() const;
 
     std::size_t op_phase_id() const;
