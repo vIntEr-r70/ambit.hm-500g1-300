@@ -1,5 +1,4 @@
 #include "SprayerCtrlWidget.h"
-#include "eng/abc/pack.hpp"
 
 #include <QLabel>
 #include <QGraphicsDropShadowEffect>
@@ -25,13 +24,23 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string_view name, QSt
     QVBoxLayout* vL = new QVBoxLayout(this);
     vL->setContentsMargins(20, 20, 20, 20);
     {
-        QLabel *lbl = new QLabel(QString("Спрейер %1").arg(title), this);
-        lbl->setStyleSheet("color: gray; font: 14pt");
-        vL->addWidget(lbl);
+        QHBoxLayout *hL = new QHBoxLayout();
+        {
+            QLabel *lbl = new QLabel(QString("Спрейер %1").arg(title), this);
+            lbl->setStyleSheet("color: gray; font: 14pt");
+            hL->addWidget(lbl);
+
+            lbl_block_ = new QLabel(this);
+            lbl_block_->setFixedSize({ 24, 24 });
+            lbl_block_->setScaledContents(true);
+            lbl_block_->setPixmap(QPixmap(":/fc.block"));
+            hL->addWidget(lbl_block_);
+        }
+        vL->addLayout(hL);
 
         vL->addSpacing(20);
 
-        QHBoxLayout *hL = new QHBoxLayout();
+        hL = new QHBoxLayout();
         {
             vsb_ = new ValueSetBool(this, "");
             connect(vsb_, &ValueSetBool::onValueChanged, [this] { change_state(); });
@@ -76,7 +85,7 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string_view name, QSt
 
     if (vvr_dp_)
     {
-        node::add_input_port_v2("DP", [this](eng::abc::pack args)
+        node::add_input_port_unsafe("DP", [this](eng::abc::pack args)
         {
             vvr_dp_->setEnabled(args.size() != 0);
             if (args) vvr_dp_->set_value(eng::abc::get<double>(args));
@@ -85,20 +94,20 @@ SprayerCtrlWidget::SprayerCtrlWidget(QWidget* parent, std::string_view name, QSt
 
     if (vvr_fc_)
     {
-        node::add_input_port_v2("FC", [this](eng::abc::pack args)
+        node::add_input_port_unsafe("FC", [this](eng::abc::pack args)
         {
             vvr_fc_->setEnabled(args.size() != 0);
             if (args) vvr_fc_->set_value(eng::abc::get<double>(args));
         });
     }
 
-    vsb_->setReadOnly(true);
-
     if (vvr_dp_)
         vvr_dp_->setEnabled(false);
 
     if (vvr_fc_)
         vvr_fc_->setEnabled(false);
+
+    update_widget_view();
 }
 
 void SprayerCtrlWidget::change_state() noexcept
@@ -112,6 +121,8 @@ void SprayerCtrlWidget::change_state() noexcept
 void SprayerCtrlWidget::update_widget_view()
 {
     vsb_->setReadOnly(node::is_blocked(ctl_));
+
+    lbl_block_->setVisible(node::is_blocked(ctl_));
 
     if (node::is_active(ctl_))
         vsb_->set_value(true);

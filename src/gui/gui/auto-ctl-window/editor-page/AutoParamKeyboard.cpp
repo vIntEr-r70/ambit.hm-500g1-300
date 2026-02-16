@@ -266,7 +266,6 @@ void AutoParamKeyboard::showEvent(QShowEvent*)
 
 void AutoParamKeyboard::update_accept_button(bool allow)
 {
-    // aem::log::info("AutoParamKeyboard::update_accept_button: {}", allow);
     btn_accept_->setEnabled(allow);
 }
 
@@ -548,7 +547,7 @@ void AutoParamKeyboard::fc_accept_handler()
     float i = fc_page_.le[1]->text().toFloat();
     float tv = fc_page_.le[2]->text().toFloat();
 
-    fc_accept_cb_(p, i, tv); 
+    fc_accept_cb_(p, i, tv);
 }
 
 void AutoParamKeyboard::center_accept_handler()

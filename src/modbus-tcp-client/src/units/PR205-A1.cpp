@@ -36,8 +36,8 @@ PR205_A1::PR205_A1(std::string_view host, std::uint16_t port)
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
-        node::add_input_port(std::format("A{}", i + 1), [this, i](eng::abc::pack args) {
-            open_close_valve(i, eng::abc::get<bool>(args));
+        node::add_input_port_unsafe(std::format("A{}", i + 1), [this, i](eng::abc::pack args) {
+            open_close_valve(i, args ? eng::abc::get<bool>(args) : false);
         });
         valves_[i].port_id = node::add_output_port(std::format("A{}", i + 1));
     }

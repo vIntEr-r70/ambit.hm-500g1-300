@@ -6,6 +6,7 @@
 
 class ValueViewReal;
 class ValueSetBool;
+class QLabel;
 
 class SprayerCtrlWidget
     : public QWidget
@@ -28,5 +29,7 @@ private:
     ValueSetBool *vsb_;
     ValueViewReal *vvr_fc_{ nullptr };
     ValueViewReal *vvr_dp_{ nullptr };
+
+    QLabel *lbl_block_;
 };
 

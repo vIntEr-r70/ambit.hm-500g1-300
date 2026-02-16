@@ -22,6 +22,8 @@ add_executable(${PROJECT_NAME}
     src/drainage-ctl.cpp
     src/barrel-ctl.cpp
     src/barrel-lvl-ctl.cpp
+
+    src/sprayer-ctl.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

@@ -172,14 +172,14 @@ void auto_ctl_page::init(program_record_t const *r)
             r->data.size() - r->head_size
         };
 
+    // Задаем программу в модуль режима
+    node::set_port_value(program_, { eng::base64::encode(span) });
+
     {
         program prog;
         prog.load(span);
         model_->set_program(std::move(prog));
     }
-
-    // Задаем программу в модуль режима
-    node::set_port_value(program_, { eng::base64::encode(span) });
 }
 
 void auto_ctl_page::make_start()

@@ -1,4 +1,5 @@
 #include "src/stuff-ctl.hpp"
+#include "src/sprayer-ctl.hpp"
 #include "src/intervals.hpp"
 #include "src/auto-mode/auto-mode.hpp"
 #include "src/speed-node.hpp"
@@ -59,6 +60,10 @@ auto main() -> int
     barrel_lvl_ctl blc0{ "fc" };
     barrel_lvl_ctl blc1{ "water" };
     barrel_lvl_ctl blc2{ "fluid" };
+
+    sprayer_ctl spc0("sp0-ctl");
+    sprayer_ctl spc1("sp1-ctl");
+    sprayer_ctl spc2("sp2-ctl");
 
     return eng::run();
 }
