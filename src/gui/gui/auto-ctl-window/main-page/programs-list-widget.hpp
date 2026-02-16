@@ -32,7 +32,9 @@ public:
 
     void remove_selected();
 
-    program_record_t const* selected_record() const;
+    program_record_t const* selected_program() const;
+
+    program_record_t const *find_program_by_name(std::string const &) const;
 
 private:
 

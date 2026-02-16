@@ -43,7 +43,7 @@ signals:
 
     void make_done();
 
-    void make_load();
+    void make_load(std::string const &);
 
 public:
 

@@ -305,6 +305,8 @@ void editor_page::make_save()
 
 void editor_page::make_play()
 {
+    // Передаем программу в автоматический режим
+    emit make_load(fname_);
 }
 
 void editor_page::make_exit()

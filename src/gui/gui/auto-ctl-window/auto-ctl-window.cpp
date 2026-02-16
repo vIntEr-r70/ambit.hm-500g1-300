@@ -15,7 +15,8 @@ auto_ctl_window::auto_ctl_window(QWidget *parent) noexcept
         auto_ctl_page_->init(pr);
         QStackedWidget::setCurrentWidget(auto_ctl_page_);
     });
-    connect(main_page_, &main_page::goto_editor_page, [this](program_record_t const *pr) {
+    connect(main_page_, &main_page::goto_editor_page, [this](program_record_t const *pr)
+    {
         editor_page_->init(pr);
         QStackedWidget::setCurrentWidget(editor_page_);
     });
@@ -23,23 +24,35 @@ auto_ctl_window::auto_ctl_window(QWidget *parent) noexcept
 
 
     auto_ctl_page_ = new auto_ctl_page(this);
-    connect(auto_ctl_page_, &auto_ctl_page::make_done, [this] {
+    connect(auto_ctl_page_, &auto_ctl_page::make_done, [this]
+    {
         QStackedWidget::setCurrentWidget(main_page_);
     });
-    connect(auto_ctl_page_, &auto_ctl_page::make_edit, [this] {
-        QStackedWidget::setCurrentWidget(editor_page_);
+    connect(auto_ctl_page_, &auto_ctl_page::make_edit, [this](std::string const &fname)
+    {
+        program_record_t const *pr = main_page_->find_program_by_name(fname);
+        if (pr != nullptr)
+        {
+            editor_page_->init(pr);
+            QStackedWidget::setCurrentWidget(editor_page_);
+        }
     });
     QStackedWidget::addWidget(auto_ctl_page_);
 
 
     editor_page_ = new editor_page(this);
-    connect(editor_page_, &editor_page::make_done, [this] {
+    connect(editor_page_, &editor_page::make_done, [this]
+    {
         QStackedWidget::setCurrentWidget(main_page_);
     });
-    connect(editor_page_, &editor_page::make_load, [this]
+    connect(editor_page_, &editor_page::make_load, [this](std::string const &fname)
     {
-        // auto_ctl_page_->init();
-        QStackedWidget::setCurrentWidget(auto_ctl_page_);
+        program_record_t const *pr = main_page_->find_program_by_name(fname);
+        if (pr != nullptr)
+        {
+            auto_ctl_page_->init(pr);
+            QStackedWidget::setCurrentWidget(auto_ctl_page_);
+        }
     });
     QStackedWidget::addWidget(editor_page_);
 }

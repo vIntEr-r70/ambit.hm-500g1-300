@@ -113,6 +113,14 @@ program_record_t const* program_list_model::record(std::size_t row) const
     return records_index_map_[row];
 }
 
+program_record_t const* program_list_model::record(std::string const &fname) const
+{
+    auto it = std::ranges::find_if(records_index_map_, [&](auto const &item) {
+        return item->filename == fname;
+    });
+    return it == records_index_map_.end() ? nullptr : *it;
+}
+
 void program_list_model::start_monitoring_directory(context_t &ctx)
 {
     eng::log::info("{}: {}", __func__, ctx.path.native());

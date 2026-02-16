@@ -36,6 +36,8 @@ class auto_ctl_page final
     QLabel *lbl_pause_time_;
     QLabel *lbl_program_name_;
 
+    std::string fname_;
+
 public:
 
     auto_ctl_page(QWidget*) noexcept;
@@ -66,6 +68,6 @@ signals:
 
     void make_done();
 
-    void make_edit();
+    void make_edit(std::string const &);
 };
 

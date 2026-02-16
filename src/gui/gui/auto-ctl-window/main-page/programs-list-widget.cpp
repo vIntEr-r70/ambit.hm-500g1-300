@@ -147,10 +147,15 @@ void programs_list_widget::copy_to_usb()
     model_->copy_to_usb(list_->currentIndex().row());
 }
 
-program_record_t const *programs_list_widget::selected_record() const
+program_record_t const *programs_list_widget::selected_program() const
 {
     QModelIndex index = list_->currentIndex();
     return index.isValid() ? model_->record(index.row()) : nullptr;
+}
+
+program_record_t const *programs_list_widget::find_program_by_name(std::string const &fname) const
+{
+    return model_->record(fname);
 }
 
 void programs_list_widget::remove_selected()

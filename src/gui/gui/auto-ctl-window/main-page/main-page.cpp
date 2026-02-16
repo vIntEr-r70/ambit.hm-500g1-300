@@ -40,6 +40,11 @@ main_page::main_page(QWidget *parent)
     }
 }
 
+program_record_t const *main_page::find_program_by_name(std::string const &fname) const
+{
+    return programs_list_widget_->find_program_by_name(fname);
+}
+
 void main_page::make_create_program()
 {
     emit goto_editor_page(nullptr);
@@ -47,11 +52,11 @@ void main_page::make_create_program()
 
 void main_page::make_edit_program()
 {
-    emit goto_editor_page(programs_list_widget_->selected_record());
+    emit goto_editor_page(programs_list_widget_->selected_program());
 }
 
 void main_page::make_init_program()
 {
-    emit goto_ctl_page(programs_list_widget_->selected_record());
+    emit goto_ctl_page(programs_list_widget_->selected_program());
 }
 

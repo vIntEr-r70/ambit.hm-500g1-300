@@ -151,7 +151,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
 void auto_ctl_page::go_to_editor()
 {
     node::set_port_value(program_, { });
-    emit make_edit();
+    emit make_edit(fname_);
 }
 
 void auto_ctl_page::go_to_main()
@@ -163,8 +163,8 @@ void auto_ctl_page::go_to_main()
 void auto_ctl_page::init(program_record_t const *r)
 {
     // Выводим имя текущей загруженной программы
-    auto const &fn = r->filename;
-    lbl_program_name_->setText(QString::fromUtf8(fn.data(), fn.length()));
+    fname_ = r->filename;
+    lbl_program_name_->setText(QString::fromUtf8(fname_.data(), fname_.length()));
 
     // Данные самой программы
     auto span = std::span<std::byte const>{

@@ -50,6 +50,8 @@ public:
 
     program_record_t const* record(std::size_t) const;
 
+    program_record_t const* record(std::string const &) const;
+
     void copy_to_hd(std::size_t);
 
     void copy_to_usb(std::size_t);

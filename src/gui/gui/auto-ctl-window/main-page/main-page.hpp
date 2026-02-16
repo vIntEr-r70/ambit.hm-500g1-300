@@ -18,6 +18,10 @@ public:
 
     main_page(QWidget *);
 
+public:
+
+    program_record_t const *find_program_by_name(std::string const &) const;
+
 signals:
 
     void goto_ctl_page(program_record_t const *);
