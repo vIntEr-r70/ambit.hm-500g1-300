@@ -45,35 +45,6 @@ VmPhaseType vm::phase_type() const
     return phases_[phase_id_]->cmd();
 }
 
-std::size_t vm::next_phase_id(std::size_t pid) const
-{
-    if (pid >= phases_.size())
-        return pid;
-
-    // В случае когда этап не является циклом, возвращаем текущее значение
-    // с которого будет произведен анализ и поиск операций
-    VmPhase const *phase = phases_[pid];
-    if (phase->cmd() != VmPhaseType::GoTo)
-        return pid;
-
-    // А если это цикл, мы должны понять, он еще актуален
-    // или его можно проскочить
-    VmGoTo const &item = *static_cast<VmGoTo const*>(phase);
-
-    // Точка перехода может сама оказаться циклом, учитываем это
-
-    auto it = known_goto_.find(pid);
-    if ((it == known_goto_.end()) || (it->second > 0))
-        return next_phase_id(item.phase_id);
-
-    return next_phase_id(pid + 1);
-}
-
-std::size_t vm::next_phase_id() const
-{
-    return next_phase_id(phase_id_);
-}
-
 std::size_t vm::op_phase_id() const
 {
     if (ops_phases_.empty())
@@ -143,12 +114,8 @@ bool vm::create_continuous_moving_list()
 }
 
 // Поиск следующей позиции
-bool vm::try_add_next_phase(std::size_t phase_id)
+bool vm::try_add_next_phase(std::size_t &phase_id)
 {
-    // Находим следующию операцию с учетом циклов
-    // dec_N_goto_pid_.clear();
-    // dec_known_goto_pid_.clear();
-
     VmPhase const* vm_phase = get_next_operation(phase_id);
 
     // Если сейчас выполняется последний этап либо следующий этап не операция
@@ -177,18 +144,8 @@ bool vm::try_add_next_phase(std::size_t phase_id)
             if (axis.position != axis.next_position)
                 new_moving_direction = (std::signbit(axis.next_position - axis.position) ? -1 : 1);
 
-            // eng::log::info("FIND IF {}: md = {}, new-md = {}, pos = {}, next-pos = {}",
-            //         pair.first, axis.moving_direction, new_moving_direction, axis.position, axis.next_position);
-
             // Направление движения в рамках одной оси должно сохраняться
             return axis.moving_direction && (axis.moving_direction != new_moving_direction);
-
-            // if (axis.moving_direction == 0 || )
-            //     return false;
-            //
-            // bool next_move = std::signbit(axis.next_position - axis.position);
-            // bool prev_move = std::signbit(axis.moving_direction);
-            // return next_move != prev_move;
         });
 
         // Если нашли инверсию, дальше не движемся
@@ -237,46 +194,32 @@ bool vm::try_add_next_phase(std::size_t phase_id)
 
             continuous_moving_list_.pop_back();
         }
-
-        // // Откатываем назад циклы, которые были затронуты поиском данной операции
-        // std::ranges::for_each(dec_N_goto_pid_, [this](std::size_t pid)
-        // {
-        //     eng::log::info("GOTO N REVERT: {}", pid);
-        //     known_goto_[pid] += 1;
-        // });
     }
-
-    // // Откатываем назад удаленный цикл, которые были затронуты поиском данной операции
-    // std::ranges::for_each(dec_known_goto_pid_, [this](std::size_t pid)
-    // {
-    //     eng::log::info("GOTO REVERT: {}", pid);
-    //     known_goto_[pid] = 0;
-    // });
 
     return false;
 }
 
 // Находим следующию операцию с учетом циклов
-VmPhase const* vm::get_next_operation(std::size_t pid) noexcept
+VmPhase const* vm::get_next_operation(std::size_t &pid) noexcept
 {
     if (pid == phases_.size())
     {
         ops_phases_.push_back(pid);
-        eng::log::info("ADD: {}", pid);
+        eng::log::info("ADD-F: {}", pid);
         return nullptr;
     }
 
     VmPhase const* phase = phases_[pid];
     if (phase->cmd() == VmPhaseType::Operation)
     {
-        eng::log::info("ADD: {}", pid);
+        eng::log::info("ADD-O: {}", pid);
         ops_phases_.push_back(pid);
         return phase;
     }
 
     if (phase->cmd() != VmPhaseType::GoTo)
     {
-        eng::log::info("ADD: {}", pid);
+        eng::log::info("ADD-A: {}", pid);
         ops_phases_.push_back(pid);
         return nullptr;
     }

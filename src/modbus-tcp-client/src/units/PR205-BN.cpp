@@ -86,6 +86,8 @@ void PR205_BN::read_fc_done(readed_regs_t regs)
 
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
+
+        eng::log::info("{}.FC{} = {}", name(), i + 1, item.value);
     }
 }
 

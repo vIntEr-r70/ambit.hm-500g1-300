@@ -383,9 +383,9 @@ void auto_mode::execute_operation()
     vm_.fill_stuff_task(vm_.op_phase_id(), args);
     node::send_wire_signal(stuff_ctl_, std::move(args));
 
-    std::println();
-    eng::log::info("DO PHASE: {}", vm_.op_phase_id());
-    eng::log::info("{}\n", to_string_axis_position(axis_program_pos_));
+    // std::println();
+    // eng::log::info("DO PHASE: {}", vm_.op_phase_id());
+    // eng::log::info("{}\n", to_string_axis_position(axis_program_pos_));
 }
 
 void auto_mode::process_axis_positions()
@@ -489,13 +489,11 @@ void auto_mode::create_operation(program const& p, std::size_t rid, bool &use_fc
 
     p.for_spin_axis(rid, [pop](char axis, float speed) 
     {
-        // eng::log::trace("create_operation: spin: {} = {}", axis, speed);
         pop->items.push_back(new VmOperation::Spin(axis, speed));
     });
 
     p.for_target_axis(rid, [pop](char axis, float pos) 
     {
-        // eng::log::trace("create_operation: pos: {} = {}", axis, pos);
         pop->items.push_back(new VmOperation::Pos(axis, pos));
     });
 

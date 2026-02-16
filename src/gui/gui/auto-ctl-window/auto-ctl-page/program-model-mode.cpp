@@ -3,12 +3,12 @@
 void program_model_mode::set_phase_id(std::size_t id)
 {
     // Проверяем, не выполняется ли цикл
-    // if (current_row_ > id)
-    // {
-    //     // Запоминаем факт прохода цикла
-    //     loop_repeated_[current_row_] += 1;
-    //     dataChanged(createIndex(current_row_, 1), createIndex(current_row_ + 1, 1));
-    // }
+    if (id < current_row_)
+    {
+        // Запоминаем факт прохода цикла
+        loop_repeated_[current_row_] += 1;
+        dataChanged(createIndex(current_row_, 1), createIndex(current_row_ + 1, 1));
+    }
     // Мы завершили цикл, необходимо сбросить его счетчик
     // else if (id > current_row_ + 1)
     // {

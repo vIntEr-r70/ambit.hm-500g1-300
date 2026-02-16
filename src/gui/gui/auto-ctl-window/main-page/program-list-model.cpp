@@ -53,7 +53,7 @@ namespace
 
     constexpr static program_record_t& alloc_record(context_t &ctx)
     {
-        eng::log::info("{}", __func__);
+        // eng::log::info("{}", __func__);
 
         if (cache.empty())
             cache.emplace(cache.end());
@@ -68,13 +68,13 @@ namespace
 
     constexpr static void free_record(context_t &ctx)
     {
-        eng::log::info("{}", __func__);
+        // eng::log::info("{}", __func__);
         cache.splice(cache.begin(), ctx.file, ctx.file.begin());
     }
 
     constexpr static void free_record(std::list<program_record_t> &list, program_record_t &r)
     {
-        eng::log::info("{}", __func__);
+        // eng::log::info("{}", __func__);
         cache.splice(cache.begin(), list, r.iterator);
     }
 
@@ -123,13 +123,13 @@ program_record_t const* program_list_model::record(std::string const &fname) con
 
 void program_list_model::start_monitoring_directory(context_t &ctx)
 {
-    eng::log::info("{}: {}", __func__, ctx.path.native());
+    // eng::log::info("{}: {}", __func__, ctx.path.native());
 
     uv_fs_event_init(uv_default_loop(), &ctx.event);
     uv_fs_event_start(&ctx.event,
             [](uv_fs_event_t *handler, const char *filename, int events, int status)
             {
-                eng::log::info("{}: events = {}, status = {}", filename, events, status);
+                // eng::log::info("{}: events = {}, status = {}", filename, events, status);
                 context_t *ctx = static_cast<context_t*>(handler->data);
                 ctx->dirty_files.emplace_back(filename);
                 process_dirty_files(*ctx);
@@ -161,25 +161,111 @@ void program_list_model::start_monitoring_directory(context_t &ctx)
 
 void program_list_model::append_file(context_t &ctx)
 {
-    // Проверяем, может токой файл уже есть
+    // Файлов с одинаковым именем в списке может быть два, если у них разная контрольная сумма
+    // Ищем файл, у которого установлен бит текущего источника
     auto it = std::ranges::find_if(records_index_map_, [&](auto const &item) {
         return item->filename == ctx.file.front().filename;
     });
+
     // Если есть, пробуем объединить с имеющимся
     if (it != records_index_map_.end())
     {
-        // Это одинаковые файлы, обновляем предидущий
-        if ((*it)->crc == ctx.file.front().crc)
+        (*it)->syncing = false;
+
+        std::size_t row = std::distance(records_index_map_.begin(), it);
+
+        // Если это обобщенная запись
+        if ((*it)->source.count() == 2)
         {
-            (*it)->source |= ctx.file.front().source;
-            (*it)->syncing = false;
+            // И новые данные такие же как в ней
+            if ((*it)->crc == ctx.file.front().crc)
+            {
+                // Оставляем все без изменений
+                free_record(ctx);
+                dataChanged(createIndex(row, 0), createIndex(row, header_.size() - 1));
 
-            free_record(ctx);
+                return;
+            }
 
-            std::size_t row = std::distance(records_index_map_.begin(), it);
+            // Если отличаются то нам надо разделиться
+            (*it)->source.reset(ctx.bit_set);
             dataChanged(createIndex(row, 0), createIndex(row, header_.size() - 1));
+        }
+        else
+        {
+            // Ищем вторую запись
+            auto it2 = std::find_if(std::next(it), records_index_map_.end(), [&](auto const &item) {
+                return item->filename == ctx.file.front().filename;
+            });
 
-            return;
+            // Если не нашли
+            if (it2 == records_index_map_.end())
+            {
+                // Если новая запись это мы
+                if ((*it)->source.test(ctx.bit_set))
+                {
+                    // Удаляем нас предидущих
+                    free_record(records_, *records_index_map_[row]);
+
+                    beginRemoveRows(QModelIndex(), row, row);
+                        records_index_map_.erase(std::next(records_index_map_.begin(), row));
+                    endRemoveRows();
+                }
+                else
+                {
+                    // Если это не мы, сравниваем контрольные суммы
+                    if ((*it)->crc == ctx.file.front().crc)
+                    {
+                        // Если совпадают, объединяем записи
+                        (*it)->source.set(ctx.bit_set);
+
+                        free_record(ctx);
+                        dataChanged(createIndex(row, 0), createIndex(row, header_.size() - 1));
+
+                        return;
+                    }
+                }
+            }
+            // Если нашли запись с таким-же именем
+            else
+            {
+                if ((*it)->source.test(ctx.bit_set))
+                {
+                    std::size_t row2 = std::distance(records_index_map_.begin(), it2);
+
+                    // Удаляем нас предидущих
+                    free_record(records_, *records_index_map_[row]);
+
+                    beginRemoveRows(QModelIndex(), row, row);
+                        records_index_map_.erase(it);
+                    endRemoveRows();
+
+                    // Учитываем удаленный
+                    row = row2 - 1;
+                }
+                else
+                {
+                    std::size_t row2 = std::distance(records_index_map_.begin(), it2);
+
+                    // Удаляем нас предидущих
+                    free_record(records_, *records_index_map_[row2]);
+
+                    beginRemoveRows(QModelIndex(), row2, row2);
+                        records_index_map_.erase(it2);
+                    endRemoveRows();
+                }
+
+                it = std::next(records_index_map_.begin(), row);
+
+                // Если новый файл совпадает с имеющимся на другом источнике, объединяем
+                if ((*it)->crc == ctx.file.front().crc)
+                {
+                    (*it)->source.set(ctx.bit_set);
+                    free_record(ctx);
+                    dataChanged(createIndex(row, 0), createIndex(row, header_.size() - 1));
+                    return;
+                }
+            }
         }
     }
 
@@ -381,7 +467,7 @@ QVariant program_list_model::data(QModelIndex const& index, int role) const
 
 void program_list_model::process_dirty_files(context_t &ctx)
 {
-    eng::log::info("{}", __func__);
+    // eng::log::info("{}", __func__);
 
     // Мы обработали все файлы
     if (ctx.dirty_files.empty())
@@ -425,7 +511,7 @@ void program_list_model::process_dirty_files(context_t &ctx)
 
 void program_list_model::read_dir_entry(context_t &ctx)
 {
-    eng::log::info("{}", __func__);
+    // eng::log::info("{}", __func__);
 
     uv_fs_readdir(uv_default_loop(), &ctx.read, ctx.dir,
             [](uv_fs_t *req)
@@ -434,7 +520,7 @@ void program_list_model::read_dir_entry(context_t &ctx)
 
                 if (req->result)
                 {
-                    eng::log::info("read done: entries = {}", req->result);
+                    // eng::log::info("read done: entries = {}", req->result);
                     for (std::size_t i = 0; i < req->result; ++i)
                     {
                         if (ctx->dirent_storage[i].type == UV_DIRENT_FILE)
@@ -499,7 +585,7 @@ static constexpr bool analyze_file_data(context_t &ctx)
 
 void program_list_model::read_file_data(context_t &ctx, std::size_t fsize, std::time_t mtime)
 {
-    eng::log::info("{}", __func__);
+    // eng::log::info("{}", __func__);
 
     program_record_t &record = alloc_record(ctx);
 
@@ -560,7 +646,7 @@ void program_list_model::read_file_data(context_t &ctx, std::size_t fsize, std::
 
 void program_list_model::copy_next_file(context_t &ctx)
 {
-    eng::log::info("{}", __func__);
+    // eng::log::info("{}", __func__);
 
     if (ctx.syncing_files.empty())
         return;
