@@ -1,4 +1,5 @@
 #include "auto-mode.hpp"
+#include "common/program-phases.hpp"
 #include "common/program.hpp"
 #include "common/load-axis-list.hpp"
 #include "eng/sibus/sibus.hpp"
@@ -372,6 +373,12 @@ void auto_mode::s_program_execution_loop()
         }
 
         return;
+    }
+
+    if (vm_.op_phase_type() == VmPhaseType::GoTo)
+    {
+        phase_id = vm_.op_phase_id();
+        node::set_port_value(phase_id_out_, { phase_id, true });
     }
 
     isc_.switch_to_state(&auto_mode::s_start_moving);

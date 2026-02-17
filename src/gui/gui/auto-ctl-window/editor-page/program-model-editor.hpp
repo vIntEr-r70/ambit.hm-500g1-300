@@ -13,8 +13,6 @@ public:
 
     void set_current_row(std::size_t);
 
-    std::size_t current_row() const noexcept { return current_row_; }
-
     void change_sprayer(std::size_t, std::size_t, std::size_t);
 
     void change_main(std::size_t, std::size_t, std::size_t, std::size_t, double);

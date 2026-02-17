@@ -183,12 +183,16 @@ void auto_ctl_page::init(program_record_t const *r)
         prog.load(span);
         model_->set_program(std::move(prog));
     }
+
+    model_->reset_loop();
 }
 
 void auto_ctl_page::make_start()
 {
     if (!node::is_ready(ctl_))
         return;
+
+    model_->reset_loop();
 
     lbl_common_time_->setText("00:00:00");
     lbl_pause_time_->setText("");
@@ -260,6 +264,8 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
         eng::log::info("{}: phase-id = {}", name(), id);
         model_->set_phase_id(id);
     }
+
+    program_widget_->scroll_to_selected();
 }
 
 constexpr static std::tuple<int, int, int> hms(double sec)

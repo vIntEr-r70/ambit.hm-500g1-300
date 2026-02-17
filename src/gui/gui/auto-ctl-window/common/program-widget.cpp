@@ -78,6 +78,21 @@ void program_widget::update_view()
     ProgramModelHeader::create_header(model_.prog(), *thead_, ww - 7);
     for (std::size_t i = 0; i < thead_->columnCount(); ++i)
         tbody_->setColumnWidth(i, thead_->columnWidth(i));
+
+    scroll_to_selected();
+}
+
+void program_widget::scroll_to_selected()
+{
+    if (model_.prog().phases.empty())
+        return;
+
+    std::size_t row = model_.current_row();
+    if (row >= model_.prog().phases.size())
+        row -= 1;
+
+    QModelIndex index = model_.index(row, 0);
+    tbody_->scrollTo(index, QAbstractItemView::PositionAtCenter);
 }
 
 void program_widget::resizeEvent(QResizeEvent *)

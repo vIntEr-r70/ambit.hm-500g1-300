@@ -19,6 +19,8 @@ public:
 
     void reset_phase_id();
 
+    void reset_loop();
+
 private:
 
     std::size_t loop_repeat_count(std::size_t, std::size_t) const override final;

@@ -45,6 +45,13 @@ VmPhaseType vm::phase_type() const
     return phases_[phase_id_]->cmd();
 }
 
+VmPhaseType vm::op_phase_type() const
+{
+    if (op_phase_id() >= phases_.size())
+        throw std::runtime_error("phase_type: try to continue with finished programm");
+    return phases_[op_phase_id()]->cmd();
+}
+
 std::size_t vm::op_phase_id() const
 {
     if (ops_phases_.empty())

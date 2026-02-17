@@ -29,6 +29,8 @@ public:
 
     void update_view();
 
+    void scroll_to_selected();
+
 private:
 
     void resizeEvent(QResizeEvent *) override final;

@@ -23,6 +23,8 @@ public:
 
     void set_program(program);
 
+    std::size_t current_row() const noexcept { return current_row_; }
+
 private:
 
     int rowCount(QModelIndex const& = QModelIndex()) const override;
