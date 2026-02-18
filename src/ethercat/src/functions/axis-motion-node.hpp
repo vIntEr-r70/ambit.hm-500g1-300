@@ -17,8 +17,9 @@ class axis_motion_node final
 
     eng::sibus::input_wire_id_t ictl_;
 
-    eng::sibus::output_port_id_t position_out_;
-    eng::sibus::output_port_id_t speed_out_;
+    eng::sibus::output_port_id_t position_;
+    eng::sibus::output_port_id_t speed_;
+    eng::sibus::output_port_id_t status_;
 
     position_motion<axis_motion_node> by_position_;
     velocity_motion<axis_motion_node> by_velocity_;

@@ -5,7 +5,6 @@
 #include <Widgets/NumberCalcField.h>
 #include <InteractWidgets/KeyboardWidget.h>
 #include <Interact.h>
-#include <UnitsCalc.h>
 
 #include <eng/log.hpp>
 

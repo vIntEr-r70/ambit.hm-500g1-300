@@ -530,14 +530,14 @@ void auto_mode::load_axis_list()
 void auto_mode::update_output_times()
 {
     // Общее время выполнения
-    double t0 = stopwatch_.elapsed<std::chrono::milliseconds>() / 1000.0;
+    double t0 = stopwatch_.elapsed_seconds<double>();
 
     // Время на паузе или на бесконечной паузе
     double t1 = NAN;
     if (isc_.is_in_state(&auto_mode::s_pause))
-        t1 = pause_timeout_ - pause_stopwatch_.elapsed<std::chrono::seconds, double>();
+        t1 = pause_timeout_ - pause_stopwatch_.elapsed_seconds<double>();
     else if (isc_.is_in_state(&auto_mode::s_infinity_pause))
-        t1 = pause_stopwatch_.elapsed<std::chrono::seconds, double>();
+        t1 = pause_stopwatch_.elapsed_seconds<double>();
 
     bool inf = isc_.is_in_state(&auto_mode::s_infinity_pause);
 

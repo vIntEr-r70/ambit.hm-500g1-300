@@ -4,6 +4,8 @@
 
 #include <eng/sibus/client.hpp>
 
+#include <numeric>
+
 // Просто собираем цепь на основании значения входного контакта
 // Связь всегда один к одному либо отсутствует
 
@@ -57,7 +59,13 @@ rcu_ctl::rcu_ctl()
         spin_value_changed(std::move(args));
     });
 
-    led_out_ = add_output_port("led");
+    led_ = add_output_port("led");
+
+    tid_ = eng::timer::create([this]
+    {
+        add_next_value(axis_, 0.0);
+    });
+    filter_.resize(10, 0.0);
 }
 
 // Каждый раз как приходит сигнал, определяем, какой осью мы управляем
@@ -70,13 +78,16 @@ void rcu_ctl::update_axis_selection()
     char prev_axis = axis_;
     axis_ = tsp_key ? get_selected_axis(tsp_key) : '\0';
 
-    node::set_port_value(led_out_, { axis_ ? false : true });
+    node::set_port_value(led_, { axis_ ? false : true });
 
     // Тангету отпустили или не обрабатываемый tsp
     if (axis_ == '\0' && prev_axis != '\0')
     {
-        auto const &axis = axis_map_[prev_axis];
-        node::deactivate(axis.ctl);
+        reset_filter(prev_axis);
+
+        // auto const &axis = axis_map_[prev_axis];
+        // node::activate(axis.ctl, { "stop" });
+
         return;
     }
 }
@@ -121,21 +132,70 @@ void rcu_ctl::spin_value_changed(eng::abc::pack args)
     auto diff = new_position - position_.value();
     position_ = new_position;
 
-    if (axis_ == '\0')
-        return;
+    if (axis_ != '\0')
+        update_axis_position(axis_, diff);
+}
 
-    auto &axis = axis_map_[axis_];
+void rcu_ctl::update_axis_position(char axis, double diff)
+{
+    auto &ref = axis_map_[axis_];
 
-    if (!node::is_ready(axis.ctl))
-        return;
-
-    double shift = diff / axis.ratio;
+    // if (!node::is_ready(ref.ctl))
+    //     return;
+    //
+    double shift = diff / ref.ratio;
     std::size_t idx = std::min<std::size_t>
-        (speed_select_.to_ulong(), axis.speed.size() - 1);
-    double speed = axis.speed[idx];
+        (speed_select_.to_ulong(), ref.speed.size() - 1);
+    double speed = ref.speed[idx];
 
-    eng::log::info("{}: speed = {:.3f}, shift = {:.3f},", name(), speed, shift);
+    // eng::log::info("{}: speed = {:.3f}, shift = {:.3f},", name(), speed, shift);
+    //
+    // node::activate(ref.ctl, { "shift", shift, speed });
 
-    node::activate(axis.ctl, { "shift", shift, speed });
+    if (!eng::timer::is_running(tid_))
+        eng::timer::start(tid_, std::chrono::milliseconds(50));
+
+    add_next_value(axis, shift * speed);
+}
+
+void rcu_ctl::add_next_value(char axis, double value)
+{
+    filter_.pop_back();
+    filter_.insert(filter_.begin(), value);
+    calculate_next_value(axis);
+}
+
+void rcu_ctl::reset_filter(char axis)
+{
+    std::ranges::fill(filter_, 0.0);
+    calculate_next_value(axis);
+}
+
+void rcu_ctl::calculate_next_value(char axis)
+{
+    auto sum = std::accumulate(filter_.begin(), filter_.end(), 0.0);
+    double speed = sum * 2.0;
+
+    auto &ref = axis_map_[axis];
+
+    std::size_t idx = std::min<std::size_t>
+        (speed_select_.to_ulong(), ref.speed.size() - 1);
+    double limit = std::min(std::abs(speed), ref.speed[idx]);
+    speed = std::copysign(limit, speed);
+
+    if (last_speed_ != speed)
+    {
+        eng::log::info("{}.{}: speed = {}", name(), axis, speed);
+
+        node::activate(ref.ctl, { "spin", speed });
+        last_speed_ = speed;
+    }
+
+    if (sum == 0.0)
+    {
+        if (eng::timer::is_running(tid_))
+            eng::timer::stop(tid_);
+    }
+
 }
 

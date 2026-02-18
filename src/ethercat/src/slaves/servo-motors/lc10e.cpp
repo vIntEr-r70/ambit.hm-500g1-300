@@ -26,31 +26,13 @@ lc10e::lc10e(slave_target_t target)
         eng::log::info("[{}] >> DI state: {:08X}", target.position, DI_state_.get());
     });
 
-    // probe_status_.on_changed([this, target]
-    // {
-    //     eng::log::info("[{}] >> ProbeStatus: {:04X}", target.position, probe_status_.get());
-    // });
-    //
-    // real_pos_lf0_.on_changed([this, target]
-    // {
-    //     eng::log::info("[{}] >> TP1: {}", target.position, real_pos_lf0_.get());
-    // });
-    // real_pos_lf1_.on_changed([this, target]
-    // {
-    //     eng::log::info("[{}] >> TP2: {}", target.position, real_pos_lf1_.get());
-    // });
-
     ethercat::pdo::add(this, 0x6040, 0x00, control_word_);
     ethercat::pdo::add(this, 0x6060, 0x00, working_mode_);
     ethercat::pdo::add(this, 0x607A, 0x00, target_pos_);
-    // ethercat::pdo::add(this, 0x60B8, 0x00, probe_function_);
 
     ethercat::pdo::add(this, 0x6041, 0x00, status_word_);
     ethercat::pdo::add(this, 0x603f, 0x00, error_code_);
     ethercat::pdo::add(this, 0x6064, 0x00, real_pos_);
-    // ethercat::pdo::add(this, 0x60B9, 0x00, probe_status_);
-    // ethercat::pdo::add(this, 0x60BA, 0x00, real_pos_lf0_);
-    // ethercat::pdo::add(this, 0x60BB, 0x00, real_pos_lf1_);
     ethercat::pdo::add(this, 0x60FD, 0x00, DI_state_);
 }
 
@@ -63,16 +45,13 @@ void lc10e::set_target_pos(std::int32_t value)
     target_pos_.set(value);
 }
 
-void lc10e::set_target_speed(std::int32_t value)
-{
-    // Просто задаем текущую скорость драйверу
-    // target_speed_.set(value);
-}
-
 std::int32_t lc10e::real_pos() const
 {
     return real_pos_.get();
 }
+
+// 5444: 0101010001000100
+// 5443: 0101010001000011
 
 servo_motor_status lc10e::get_status() const
 {
@@ -106,23 +85,6 @@ servo_motor_status lc10e::get_status() const
 void lc10e::set_control_word(std::uint16_t ControlWord)
 {
     control_word_.set(ControlWord);
-}
-
-void lc10e::activate_probe()
-{
-    // std::bitset<16> mask;
-    //
-    // // Probe 1 is enabled
-    // mask.set(0, true);
-    // // Probe 1 continuous mode
-    // // mask.set(1, true);
-    // mask.set(4, true);
-    // mask.set(5, true);
-    //
-    // std::uint16_t bits = mask.to_ulong();
-    // probe_function_.set(bits);
-    //
-    // eng::log::info("le10c::activate_probe: {}", mask.to_string());
 }
 
 void lc10e::set_control_mode(control_mode mode)

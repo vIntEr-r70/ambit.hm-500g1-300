@@ -10,6 +10,7 @@
 #include "src/barrel-ctl.hpp"
 #include "src/barrel-lvl-ctl.hpp"
 #include "src/drainage-ctl.hpp"
+#include "src/error-mask.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -64,6 +65,8 @@ auto main() -> int
     sprayer_ctl spc0("sp0-ctl");
     sprayer_ctl spc1("sp1-ctl");
     sprayer_ctl spc2("sp2-ctl");
+
+    error_mask em0;
 
     return eng::run();
 }

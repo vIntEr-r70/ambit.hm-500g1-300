@@ -9,15 +9,11 @@ class lc10e final
     value_holder_rw<std::int8_t> working_mode_;
     value_holder_rw<std::uint16_t> control_word_;
     value_holder_rw<std::int32_t> target_pos_;
-    // value_holder_rw<std::uint16_t> probe_function_;
 
     value_holder_ro<std::uint16_t> status_word_;
     value_holder_ro<std::uint16_t> error_code_;
     value_holder_ro<std::int32_t> real_pos_;
-    // value_holder_ro<std::uint16_t> probe_status_;
 
-    // value_holder_ro<std::int32_t> real_pos_lf0_;
-    // value_holder_ro<std::int32_t> real_pos_lf1_;
     value_holder_ro<std::uint32_t> DI_state_;
 
 public:
@@ -28,8 +24,6 @@ private:
 
     void set_target_pos(std::int32_t) override final;
 
-    void set_target_speed(std::int32_t) override final;
-
     servo_motor_status get_status() const override final;
 
     void set_control_word(std::uint16_t) override final;
@@ -37,6 +31,4 @@ private:
     void set_control_mode(control_mode) override final;
 
     std::int32_t real_pos() const override final;
-
-    void activate_probe() override final;
 };

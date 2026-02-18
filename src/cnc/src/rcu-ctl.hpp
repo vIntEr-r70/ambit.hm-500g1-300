@@ -1,9 +1,11 @@
 #pragma once
 
 #include <eng/sibus/node.hpp>
+#include <eng/timer.hpp>
 
 #include <bitset>
 #include <optional>
+#include <vector>
 
 class rcu_ctl final
     : public eng::sibus::node
@@ -23,7 +25,11 @@ class rcu_ctl final
     std::bitset<2> speed_select_;
     std::optional<std::int32_t> position_;
 
-    eng::sibus::output_port_id_t led_out_;
+    eng::sibus::output_port_id_t led_;
+
+    std::vector<double> filter_;
+    eng::timer::id_t tid_;
+    double last_speed_{ 0.0 };
 
 public:
 
@@ -40,5 +46,13 @@ private:
 private:
 
     void spin_value_changed(eng::abc::pack);
+
+    void update_axis_position(char, double);
+
+    void add_next_value(char, double);
+
+    void reset_filter(char);
+
+    void calculate_next_value(char);
 };
 

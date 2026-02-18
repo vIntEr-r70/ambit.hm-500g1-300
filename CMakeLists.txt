@@ -14,7 +14,7 @@ endif()
 include_directories(PRIVATE src/common)
 
 add_subdirectory(src/libs/libaem)
-add_subdirectory(src/libs/libwe)
+# add_subdirectory(src/libs/libwe)
 add_subdirectory(src/libs/libeng)
 add_subdirectory(src/libs/ambit-gui-core)
 add_subdirectory(src/gui)

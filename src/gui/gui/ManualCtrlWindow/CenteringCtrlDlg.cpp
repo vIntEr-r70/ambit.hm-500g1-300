@@ -1,10 +1,6 @@
 #include "CenteringCtrlDlg.h"
 #include <Widgets/RoundButton.h>
 
-#include <global.h>
-
-#include <aem/log.h>
-
 #include <QVBoxLayout>
 #include <QLabel>
 
@@ -58,75 +54,75 @@ CenteringCtrlDlg::CenteringCtrlDlg(QWidget *parent) noexcept
 
 void CenteringCtrlDlg::on_start() noexcept
 {
-    nlohmann::json::array_t args;
-    if (!type_) // Tooth
-    {
-        args.push_back("centering");
-        args.push_back("tooth");
-        args.push_back({ tooth_shift_, tooth_type_ });
-    }
-    else // Shaft
-    {
-        args.push_back("centering");
-        args.push_back("shaft");
-        args.push_back({});
-    }
-
-    global::rpc().call("set", std::move(args))
-        .done([this](nlohmann::json const&)
-        {
-            aem::log::info("CenteringCtrlDlg::on_start: OK");
-            start_timer();
-        })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("CenteringCtrlDlg::on_start: {}", emsg);
-        });
+    // nlohmann::json::array_t args;
+    // if (!type_) // Tooth
+    // {
+    //     args.push_back("centering");
+    //     args.push_back("tooth");
+    //     args.push_back({ tooth_shift_, tooth_type_ });
+    // }
+    // else // Shaft
+    // {
+    //     args.push_back("centering");
+    //     args.push_back("shaft");
+    //     args.push_back({});
+    // }
+    //
+    // global::rpc().call("set", std::move(args))
+    //     .done([this](nlohmann::json const&)
+    //     {
+    //         aem::log::info("CenteringCtrlDlg::on_start: OK");
+    //         start_timer();
+    //     })
+    //     .error([this](std::string_view emsg)
+    //     {
+    //         aem::log::error("CenteringCtrlDlg::on_start: {}", emsg);
+    //     });
 }
 
 void CenteringCtrlDlg::on_terminate() noexcept
 {
-    global::rpc().call("set", { "centering", "terminate", {} })
-        .done([this](nlohmann::json const&)
-        {
-            if (timer_id_ != -1)
-                killTimer(timer_id_);
-            timer_id_ = -1;
-
-            InteractWidget::hide(); 
-        })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("CenteringCtrlDlg::on_terminate: {}", emsg);
-        });
+    // global::rpc().call("set", { "centering", "terminate", {} })
+    //     .done([this](nlohmann::json const&)
+    //     {
+    //         if (timer_id_ != -1)
+    //             killTimer(timer_id_);
+    //         timer_id_ = -1;
+    //
+    //         InteractWidget::hide(); 
+    //     })
+    //     .error([this](std::string_view emsg)
+    //     {
+    //         aem::log::error("CenteringCtrlDlg::on_terminate: {}", emsg);
+    //     });
 }
 
 void CenteringCtrlDlg::set_centering_step(int step) noexcept
 {
-    aem::log::warn("CenteringCtrlDlg::set_calibrate_step: {}", step);
-
-    // Центровка успешно завершена, закрываем окно
-    if (step == 0 && !lbl_steps_.empty())
-    {
-        if (timer_id_ != -1)
-            killTimer(timer_id_);
-        timer_id_ = -1;
-
-        InteractWidget::hide();
-
-        return;
-    }
-
-    std::size_t ustep = std::labs(step);
-
-    if (step_ < lbl_steps_.size())
-        lbl_steps_[step_]->setStyleSheet("color: white; font: 14pt;");
-
-    step_ = ustep - 1;
-    step_blink_ = false;
-    step_error_ = step < 0;
-
-    on_step_timer();
+    // aem::log::warn("CenteringCtrlDlg::set_calibrate_step: {}", step);
+    //
+    // // Центровка успешно завершена, закрываем окно
+    // if (step == 0 && !lbl_steps_.empty())
+    // {
+    //     if (timer_id_ != -1)
+    //         killTimer(timer_id_);
+    //     timer_id_ = -1;
+    //
+    //     InteractWidget::hide();
+    //
+    //     return;
+    // }
+    //
+    // std::size_t ustep = std::labs(step);
+    //
+    // if (step_ < lbl_steps_.size())
+    //     lbl_steps_[step_]->setStyleSheet("color: white; font: 14pt;");
+    //
+    // step_ = ustep - 1;
+    // step_blink_ = false;
+    // step_error_ = step < 0;
+    //
+    // on_step_timer();
 }
 
 void init_from_list(auto &&src, auto &&dst, QStringList const& ttls)

@@ -96,7 +96,7 @@ struct program
 
         void save(eng::buffer::id_t b) const
         {
-            eng::buffer::append<std::uint8_t>(b, absolute); 
+            eng::buffer::append<std::uint8_t>(b, absolute);
 
             std::ranges::for_each(fc, [b](auto const &fc) { fc.save(b); });
             std::ranges::for_each(sprayer, [b](bool sp) { eng::buffer::append<std::uint8_t>(b, sp); });

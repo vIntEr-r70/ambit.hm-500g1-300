@@ -36,7 +36,9 @@ PR205_A1::PR205_A1(std::string_view host, std::uint16_t port)
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
-        node::add_input_port_unsafe(std::format("A{}", i + 1), [this, i](eng::abc::pack args) {
+        node::add_input_port_unsafe(std::format("A{}", i + 1), [this, i](eng::abc::pack args)
+        {
+            eng::log::info("A{} = {}", i, args.size());
             open_close_valve(i, args ? eng::abc::get<bool>(args) : false);
         });
         valves_[i].port_id = node::add_output_port(std::format("A{}", i + 1));
@@ -146,6 +148,8 @@ void PR205_A1::read_state_done(readed_regs_t regs)
 
 void PR205_A1::open_close_valve(std::size_t idx, bool value)
 {
+    eng::log::info("{}: {}: idx = {}, value = {}", name(), __func__, idx, value);
+
     bs_0х4005_.set(idx, value);
     modbus_unit::write_single(0x4005, bs_0х4005_.to_ulong());
 }

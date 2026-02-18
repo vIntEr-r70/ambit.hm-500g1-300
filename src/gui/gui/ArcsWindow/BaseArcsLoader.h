@@ -3,9 +3,6 @@
 #include <deque>
 #include <string>
 
-#include <aem/net/rpc_tcp_client.h>
-#include <aem/types.h>
-
 class BaseArcsLoader
 {
 public:
@@ -52,9 +49,9 @@ private:
 
     virtual bool nfIsPageLoaded(std::size_t) = 0;
 
-    virtual void nfAppendNewArcData(std::size_t, nlohmann::json const &) = 0;
-
-    virtual void nfAppendNewListData(std::size_t, nlohmann::json const &) = 0;
+    // virtual void nfAppendNewArcData(std::size_t, nlohmann::json const &) = 0;
+    //
+    // virtual void nfAppendNewListData(std::size_t, nlohmann::json const &) = 0;
 
     virtual void nfArcWasRemoved(std::size_t) = 0;
 
@@ -67,7 +64,7 @@ private:
     std::size_t arcsCount_{ 0 };
     std::size_t lastArcId_{ 0 };
 
-    aem::net::rpc_tcp_client arcsSrc_;
+    // aem::net::rpc_tcp_client arcsSrc_;
 
     std::size_t stmtId_{ 0 };
     std::deque<std::size_t> pagesQueue_;

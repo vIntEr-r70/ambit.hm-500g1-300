@@ -24,4 +24,8 @@ private:
 private:
 
     void update_real_state(bool, bool);
+
+private:
+
+    void register_on_bus_done() override;
 };

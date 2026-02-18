@@ -33,10 +33,10 @@ PR205_BN::PR205_BN(std::size_t id, std::string_view host, std::uint16_t port)
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
-        node::add_input_port(std::format("A{}", i + 1), [this, i](eng::abc::pack args) {
+        node::add_input_port(std::format("VA{}", i + 1), [this, i](eng::abc::pack args) {
             open_close_valve(i, eng::abc::get<bool>(args));
         });
-        valves_[i].port_id = node::add_output_port(std::format("A{}", i + 1));
+        valves_[i].port_id = node::add_output_port(std::format("VA{}", i + 1));
     }
 }
 
@@ -125,7 +125,7 @@ void PR205_BN::read_state_done(readed_regs_t regs)
         node::set_port_value(item.port_id, { item.value });
     }
 
-    bitset >>= pumps_.size();
+    bitset >>= 3;
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
@@ -151,7 +151,7 @@ void PR205_BN::start_stop_pump(std::size_t idx, bool value)
 
 void PR205_BN::open_close_valve(std::size_t idx, bool value)
 {
-    bs_0х4001_.set(idx + 2, value);
+    bs_0х4001_.set(idx + 3, value);
     modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
 

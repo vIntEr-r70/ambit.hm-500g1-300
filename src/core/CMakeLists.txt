@@ -24,6 +24,8 @@ add_executable(${PROJECT_NAME}
     src/barrel-lvl-ctl.cpp
 
     src/sprayer-ctl.cpp
+
+    src/error-mask.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

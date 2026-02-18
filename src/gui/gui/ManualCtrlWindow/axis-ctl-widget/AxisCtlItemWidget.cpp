@@ -61,7 +61,7 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
         vvr_pos_->setValueFontSize(ValueViewReal::H4);
         vvr_pos_->setValueAlignment(Qt::AlignRight);
         vvr_pos_->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-        vvr_pos_->set_precision(2);
+        vvr_pos_->set_precision(rotation_ ? 4 : 2);
         vvr_pos_->setTitle("Позиция");
         hL->addWidget(vvr_pos_);
 
@@ -72,7 +72,7 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
         vvr_speed_->setValueFontSize(ValueViewReal::H4);
         vvr_speed_->setValueAlignment(Qt::AlignRight);
         vvr_speed_->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-        vvr_speed_->set_precision(2);
+        vvr_speed_->set_precision(rotation_ ? 4 : 2);
         vvr_speed_->setTitle("Скорость");
         hL->addWidget(vvr_speed_);
     }

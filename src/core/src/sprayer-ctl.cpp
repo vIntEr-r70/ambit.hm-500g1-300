@@ -18,19 +18,19 @@ sprayer_ctl::sprayer_ctl(std::string_view name)
 
     node::add_input_port_unsafe("state", [this](eng::abc::pack args)
     {
-        bool link = args.size() != 0;
-        bool powered = link ? eng::abc::get<bool>(args) : false;
-        update_real_state(link, powered);
+        // bool link = args.size() != 0;
+        // bool powered = link ? eng::abc::get<bool>(args) : false;
+        // update_real_state(link, powered);
     });
 }
 
 void sprayer_ctl::activate()
 {
-    if (!linked_)
-    {
-        node::reject(ictl_, "Отсутствует связь с драйвером");
-        return;
-    }
+    // if (!linked_)
+    // {
+    //     node::reject(ictl_, "Отсутствует связь с драйвером");
+    //     return;
+    // }
 
     powered_ = true;
     node::set_port_value(on_off_, { true });
@@ -41,34 +41,40 @@ void sprayer_ctl::deactivate()
     powered_ = false;
     node::set_port_value(on_off_, { false });
 
-    if (!linked_)
-        node::terminate(ictl_, "Отсутствует связь с драйвером");
+    // if (!linked_)
+    //     node::terminate(ictl_, "Отсутствует связь с драйвером");
 }
 
 void sprayer_ctl::update_real_state(bool link, bool powered)
 {
-    if (linked_)
-    {
-        if (!link)
-        {
-            linked_ = false;
-            node::terminate(ictl_, "Отсутствует связь с драйвером");
-
-            if (powered_)
-            {
-                powered_ = false;
-                node::set_port_value(on_off_, { false });
-            }
-
-            return;
-        }
-    }
-    else if (link)
-    {
-        linked_ = true;
-        node::ready(ictl_);
-    }
-
-    if (powered != powered_ && !powered_)
-        node::set_port_value(on_off_, { false });
+    // if (linked_)
+    // {
+    //     if (!link)
+    //     {
+    //         linked_ = false;
+    //         node::terminate(ictl_, "Отсутствует связь с драйвером");
+    //
+    //         if (powered_)
+    //         {
+    //             powered_ = false;
+    //             node::set_port_value(on_off_, { false });
+    //         }
+    //
+    //         return;
+    //     }
+    // }
+    // else if (link)
+    // {
+    //     linked_ = true;
+    //     node::ready(ictl_);
+    // }
+    //
+    // if (powered != powered_ && !powered_)
+    //     node::set_port_value(on_off_, { false });
 }
+
+void sprayer_ctl::register_on_bus_done()
+{
+    node::ready(ictl_);
+}
+

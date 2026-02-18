@@ -1,9 +1,5 @@
 #include "BkiLockMessage.h"
 
-#include "global.h"
-
-#include <aem/log.h>
-
 BkiLockMessage::BkiLockMessage(QWidget *parent)
     : MessageBox(parent, MessageBox::HeadError)
 {
@@ -21,13 +17,13 @@ void BkiLockMessage::show()
 
 void BkiLockMessage::on_button_click()
 {
-    global::rpc().call("set", { "bki", "reset", {} })
-        .done([this](nlohmann::json const&)
-        {
-            aem::log::info("BkiLockMessage: OK");
-        })
-        .error([this](std::string_view emsg)
-        {
-            aem::log::error("BkiLockMessage: {}", emsg);
-        });
+    // global::rpc().call("set", { "bki", "reset", {} })
+    //     .done([this](nlohmann::json const&)
+    //     {
+    //         aem::log::info("BkiLockMessage: OK");
+    //     })
+    //     .error([this](std::string_view emsg)
+    //     {
+    //         aem::log::error("BkiLockMessage: {}", emsg);
+    //     });
 }

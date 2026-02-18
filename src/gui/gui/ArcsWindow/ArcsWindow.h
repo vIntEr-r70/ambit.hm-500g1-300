@@ -52,9 +52,9 @@ private:
     
     bool nfIsPageLoaded(std::size_t) override final;
 
-    void nfAppendNewArcData(std::size_t, nlohmann::json const &) override final;
-
-    void nfAppendNewListData(std::size_t, nlohmann::json const &) override final;
+    // void nfAppendNewArcData(std::size_t, nlohmann::json const &) override final;
+    //
+    // void nfAppendNewListData(std::size_t, nlohmann::json const &) override final;
 
     void nfArcWasRemoved(std::size_t) override final;
 

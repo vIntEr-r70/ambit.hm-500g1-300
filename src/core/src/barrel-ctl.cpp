@@ -22,6 +22,7 @@ barrel_ctl::barrel_ctl(std::string_view key)
         else
         {
             current_temperature_ = eng::abc::get<double>(args);
+            eng::log::info("{}: DT = {}", name(), *current_temperature_);
             if (in_range_) (this->*in_range_)();
         }
     });
@@ -33,7 +34,10 @@ barrel_ctl::barrel_ctl(std::string_view key)
             if (current_temperature_)
             {
                 node::set_port_value(active_, { true });
+
                 in_range_ = &barrel_ctl::in_temperature_range;
+                (this->*in_range_)();
+
                 return;
             }
         }
@@ -53,20 +57,25 @@ barrel_ctl::barrel_ctl(std::string_view key)
         cfg_.dt_min = cfg.get<double>("dt-min", 20.0);
         cfg_.dt_max = cfg.get<double>("dt-max", 80.0);
 
+        eng::log::info("{}: min-dt = {}", name(), cfg_.dt_min);
+        eng::log::info("{}: max-dt = {}", name(), cfg_.dt_max);
+
         if (in_range_) (this->*in_range_)();
     });
 
     pump_ = node::add_output_port("pump");
-    heater_ = node::add_output_port("heater");
-    cooler_ = node::add_output_port("cooler");
+    heat_ = node::add_output_port("heat");
+    cool_ = node::add_output_port("cool");
     active_ = node::add_output_port("active");
 }
 
 void barrel_ctl::deactivate()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     node::set_port_value(pump_, { false });
-    node::set_port_value(heater_, { false });
-    node::set_port_value(cooler_, { false });
+    node::set_port_value(heat_, { false });
+    node::set_port_value(cool_, { false });
     node::set_port_value(active_, { false });
 
     in_range_ = nullptr;
@@ -75,12 +84,14 @@ void barrel_ctl::deactivate()
 // Мы в диапазоне заданной температуры
 void barrel_ctl::in_temperature_range()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (need_turn_on_heater())
     {
         eng::log::info("{}: Включаем нагреватель", name());
 
         node::set_port_value(pump_, { true });
-        node::set_port_value(heater_, { true });
+        node::set_port_value(heat_, { true });
 
         in_range_ = &barrel_ctl::in_heater_range;
     }
@@ -89,7 +100,7 @@ void barrel_ctl::in_temperature_range()
         eng::log::info("{}: Включаем охладитель", name());
 
         node::set_port_value(pump_, { true });
-        node::set_port_value(heater_, { true });
+        node::set_port_value(cool_, { true });
 
         in_range_ = &barrel_ctl::in_cooler_range;
     }
@@ -97,27 +108,30 @@ void barrel_ctl::in_temperature_range()
 
 void barrel_ctl::in_heater_range()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (need_stay_in_heater_range())
         return;
 
     eng::log::info("{}: Выключаем нагреватель", name());
 
     node::set_port_value(pump_, { cfg_.pump_full_time });
-    node::set_port_value(heater_, { false });
+    node::set_port_value(heat_, { false });
 
     in_range_ = &barrel_ctl::in_temperature_range;
 }
 
 void barrel_ctl::in_cooler_range()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (need_stay_in_cooler_range())
         return;
 
     eng::log::info("{}: Выключаем охладитель", name());
 
     node::set_port_value(pump_, { cfg_.pump_full_time });
-    node::set_port_value(cooler_, { false });
+    node::set_port_value(cool_, { false });
 
     in_range_ = &barrel_ctl::in_temperature_range;
 }
-

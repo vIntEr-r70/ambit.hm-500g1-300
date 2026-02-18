@@ -19,8 +19,9 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
     ictl_ = node::add_input_wire();
 
     // Выходной порт с состоянием
-    position_out_ = node::add_output_port("position");
-    speed_out_ = node::add_output_port("speed");
+    position_ = node::add_output_port("position");
+    speed_ = node::add_output_port("speed");
+    status_ = node::add_output_port("status");
 
     std::string key = std::format("axis/{}", axis);
     eng::sibus::client::config_listener(key, [this](std::string_view json)
@@ -60,10 +61,7 @@ void axis_motion_node::deactivate()
     // Если ресурс так и не получен либо не выполняет движений
     // нет необходимости его финализировать, просто освобождаем
     if (servo_motor_.control() == nullptr)
-    {
-        node::set_ready(ictl_);
         return;
-    }
 
     eng::log::info("axis_motion_node[{}]::node_offline: WAIT FOR DONE", axis_);
 
@@ -73,6 +71,8 @@ void axis_motion_node::deactivate()
     by_position_.update_speed_limit(0.0);
     by_velocity_.update_speed_limit(0.0);
     by_time_.reset();
+
+    node::terminate(ictl_, "Завершаем движение");
 }
 
 double axis_motion_node::local_position() const noexcept
@@ -82,8 +82,9 @@ double axis_motion_node::local_position() const noexcept
 
 void axis_motion_node::update_output_info()
 {
-    node::set_port_value(position_out_, { local_position() });
-    node::set_port_value(speed_out_, { servo_motor_.speed() });
+    node::set_port_value(position_, { local_position() });
+    node::set_port_value(speed_, { servo_motor_.speed() });
+    node::set_port_value(status_, { servo_motor_.status() });
 }
 
 bool axis_motion_node::motion_done()
@@ -102,8 +103,6 @@ void axis_motion_node::motion_status()
 
 void axis_motion_node::start_command_execution(eng::abc::pack args)
 {
-    eng::log::info("{}: start_command_execution: args-size: {}", name(), args.size());
-
     static std::unordered_map<std::string_view, commands_handler> const map {
         { "move-to",        &axis_motion_node::cmd_move_to          },
         { "shift",          &axis_motion_node::cmd_shift            },
@@ -117,7 +116,7 @@ void axis_motion_node::start_command_execution(eng::abc::pack args)
     auto it = map.find(cmd);
     if (it == map.end())
     {
-        node::terminate(ictl_, std::format("Незнакомая комманда: {}", cmd));
+        node::reject(ictl_, std::format("Незнакомая комманда: {}", cmd));
         return;
     }
 
@@ -126,7 +125,7 @@ void axis_motion_node::start_command_execution(eng::abc::pack args)
     if ((this->*(it->second))(args))
         return;
 
-    node::terminate(ictl_, "Недопустимый режим движения");
+    node::reject(ictl_, "Недопустимый режим движения");
 }
 
 bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)

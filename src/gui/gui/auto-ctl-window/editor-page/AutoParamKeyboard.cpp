@@ -9,12 +9,6 @@
 #include <QDoubleValidator>
 #include <QStackedWidget>
 
-#include <UnitsCalc.h>
-
-#include <aem/log.h>
-#include <qboxlayout.h>
-#include <qvalidator.h>
-
 AutoParamKeyboard::AutoParamKeyboard(QWidget* parent)
     : InteractWidget(parent)
 {
@@ -335,7 +329,7 @@ QWidget* AutoParamKeyboard::create_main_page()
             connect(main_page_.btn, &RoundButton::clicked, [this]
             {
                 double pos = main_page_.position ? *main_page_.position : 0.0;
-                main_page_.le->setText(QString::number(pos, 'f', 2));
+                main_page_.le->setText(QString::number(pos, 'f', 4));
             });
             main_page_.btn->setIcon(":/cnc.position");
             main_page_.btn->setBgColor(QColor("#29AC39"));

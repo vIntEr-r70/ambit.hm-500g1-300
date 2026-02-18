@@ -73,7 +73,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${Qt5Widgets_LIBRARIES}
     ${Qt5PrintSupport_LIBRARIES}
     aem::aem
-    we::we
     gui-core::gui-core
     -lfmt
     stdc++exp

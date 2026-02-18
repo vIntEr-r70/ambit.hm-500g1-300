@@ -3,6 +3,30 @@
 
 #include <QColor>
 
+#include <eng/log.hpp>
+
+static QString const& remove_final_zeros(QString &value)
+{
+    int pos = value.indexOf('.');
+    if (pos < 0) return value;
+
+    while (value.length())
+    {
+        QChar const symbol = value.back();
+        if (symbol == '0' || symbol == '.')
+        {
+            value.chop(1);
+
+            if (symbol != '.')
+                continue;
+        }
+
+        break;
+    }
+
+    return value;
+}
+
 void program_model::set_program(program value)
 {
     layoutAboutToBeChanged();
@@ -123,7 +147,8 @@ QVariant program_model::data(QModelIndex const& index, int role) const
         }
         else
         {
-            return data_main_op_text(rid, col);
+            QString value = data_main_op_text(rid, col);
+            return remove_final_zeros(value);
         }
     }
 }
@@ -173,8 +198,9 @@ QString program_model::data_main_op_text(std::size_t rid, std::size_t col) const
         return QString(op.sprayer[id] ? "ВКЛ" : "ВЫКЛ");
     case ProgramModelHeader::Spin:
         return QString::number(op.spin[id] / 6, 'f', 2);
-    case ProgramModelHeader::TargetPos:
-        return QString(op.absolute ? "" : "Δ ") + QString::number(op.target.pos[id], 'f', 2);
+    case ProgramModelHeader::TargetPos: {
+        bool spin = program_.is_target_spin_axis(id);
+        return QString(op.absolute ? "" : "Δ ") + QString::number(op.target.pos[id], 'f', spin ? 4 : 2); }
     case ProgramModelHeader::TargetSpeed:
         if (id == 0) return QString::number(op.target.speed, 'f', 2);
         return QString::number(op.target.speed / 6, 'f', 2);

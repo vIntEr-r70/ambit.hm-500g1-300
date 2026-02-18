@@ -20,8 +20,8 @@ class barrel_ctl final
     std::optional<double> current_temperature_;
 
     eng::sibus::output_port_id_t pump_;
-    eng::sibus::output_port_id_t heater_;
-    eng::sibus::output_port_id_t cooler_;
+    eng::sibus::output_port_id_t heat_;
+    eng::sibus::output_port_id_t cool_;
     eng::sibus::output_port_id_t active_;
 
     void (barrel_ctl::*in_range_)();
@@ -53,7 +53,7 @@ private:
     }
 
     double middle_temp_value() const noexcept {
-        return *current_temperature_ + ((cfg_.dt_max - cfg_.dt_min) * 0.5);
+        return (cfg_.dt_min + cfg_.dt_max) * 0.5;
     }
 
     bool need_stay_in_heater_range() const noexcept {

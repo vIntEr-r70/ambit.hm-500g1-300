@@ -88,8 +88,6 @@ void servo_motor::turning_on()
 
     mode_ = &servo_motor::running;
     motion_ = &servo_motor::control_mode_csp;
-
-    activate_probe();
 }
 
 void servo_motor::turning_off()
@@ -227,13 +225,66 @@ void servo_motor::control_mode_csp(double dt)
     }
 }
 
-double servo_motor::position() const noexcept
-{
-    return position_;
-}
-
 double servo_motor::speed() const noexcept
 {
     return ctl_ ? ctl_->speed() : 0.0;
 }
 
+std::uint8_t servo_motor::status() const noexcept
+{
+    // if (концевик минимум)
+    //     ;
+    // if (концевик максимум)
+    //     ;
+    // if (флаг БКИ)
+    //     ;
+    // if (авария)
+    //     ;
+
+    return 0;
+}
+
+
+//
+//
+//
+//
+// [16:59:54.260][INFO] axis-motion-X: cmd_spin: speed = -25
+// [16:59:54.280][INFO] [0] >> StatusWord: 0001001000110111
+// [17:00:00.646][INFO] [0] >> StatusWord: 0001101010110111
+// [17:00:00.646][INFO] [0] >> ErrorCode: 5444
+// [17:00:00.646][INFO] [0] >> DI state: 01910001
+// [17:00:00.779][INFO] [0] >> StatusWord: 0001111010110111
+// [17:00:01.114][INFO] axis_motion_node[X]::node_offline
+// [17:00:01.114][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
+// [17:00:01.115][INFO] axis_motion_node[X]::motion_done
+// [17:00:01.116][INFO] servo_motor::control_mode_csp: NO ACTIVE
+// [17:00:05.651][INFO] axis-motion-X: cmd_spin: speed = -25
+// [17:00:05.965][INFO] axis_motion_node[X]::node_offline
+// [17:00:05.965][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
+// [17:00:05.967][INFO] axis_motion_node[X]::motion_done
+// [17:00:05.967][INFO] servo_motor::control_mode_csp: NO ACTIVE
+//
+//
+//
+//
+//
+//
+// [17:00:40.115][INFO] axis-motion-X: cmd_spin: speed = 25
+// [17:00:40.981][INFO] [0] >> StatusWord: 0001101010110111
+// [17:00:41.045][INFO] [0] >> StatusWord: 0001101000110111
+// [17:00:41.045][INFO] [0] >> ErrorCode: 0000
+// [17:00:41.046][INFO] [0] >> DI state: 01B10000
+// [17:00:41.050][INFO] [0] >> StatusWord: 0001001000110111
+// [17:00:41.274][INFO] axis_motion_node[X]::node_offline
+// [17:00:41.274][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
+// [17:00:41.277][INFO] axis_motion_node[X]::motion_done
+// [17:00:41.277][INFO] servo_motor::control_mode_csp: NO ACTIVE
+// [17:00:41.444][INFO] [0] >> StatusWord: 0001011000110111
+// [17:00:43.806][INFO] axis-motion-X: cmd_spin: speed = 25
+// [17:00:43.824][INFO] [0] >> StatusWord: 0001001000110111
+// [17:00:44.332][INFO] axis_motion_node[X]::node_offline
+// [17:00:44.332][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
+// [17:00:44.334][INFO] axis_motion_node[X]::motion_done
+// [17:00:44.334][INFO] servo_motor::control_mode_csp: NO ACTIVE
+// [17:00:44.515][INFO] [0] >> StatusWord: 0001011000110111

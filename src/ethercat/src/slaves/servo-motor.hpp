@@ -51,9 +51,11 @@ public:
 
     double acc_limit() const noexcept { return acc_limit_; }
 
-    double position() const noexcept;
+    double position() const noexcept { return position_; }
 
     double speed() const noexcept;
+
+    std::uint8_t status() const noexcept;
 
 private:
 
@@ -79,8 +81,6 @@ private:
 
     virtual void set_target_pos(std::int32_t) = 0;
 
-    virtual void set_target_speed(std::int32_t) = 0;
-
     virtual servo_motor_status get_status() const = 0;
 
     virtual void set_control_word(std::uint16_t) = 0;
@@ -88,7 +88,5 @@ private:
     virtual void set_control_mode(control_mode) = 0;
 
     virtual std::int32_t real_pos() const = 0;
-
-    virtual void activate_probe() = 0;
 };
 

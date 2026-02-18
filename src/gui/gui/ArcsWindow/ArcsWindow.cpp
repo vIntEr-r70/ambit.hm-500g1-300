@@ -168,103 +168,103 @@ bool ArcsWindow::nfIsPageLoaded(std::size_t pageId)
     return arcsListW_->model_.isPageLoaded(pageId);
 }
 
-void ArcsWindow::nfAppendNewArcData(std::size_t aId, nlohmann::json const &resp)
-{
-    // //! Если мы копируем архивы то
-    // if (!forCopy_.empty())
-    // {
-    //     auto& back = forCopy_.back();
-    //
-    //     //! Если получили не свои данные, игнорируем их
-    //     if (back.aId != aId)
-    //         return;
-    //
-    //     // TODO
-    //     std::size_t const inDataSize = 0;//resp.rawSize();
-    //
-    //     //! Если пришло 0 байт значит загрузка закончена, переходим к следующему
-    //     if (inDataSize == 0)
-    //     {
-    //         forCopy_.pop_back();
-    //         // TODO
-    //         // pbProgress_.setValue(pbProgress_.maximum() - forCopy_.size());
-    //
-    //         if (forCopy_.empty())
-    //         {
-    //             // TODO
-    //             // onToArcsList();
-    //             // SysDlg::inst().messageBoxDlg_->info("Копирование архивов закончено!");
-    //             return;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         //! Если это первый блок данных архива,
-    //         //! открываем файл очищая его, иначе дописываем в конец
-    //
-    //         auto openmode = back.offset ? (std::ios::binary | std::ios::app) :
-    //                             (std::ios::binary | std::ios::trunc);
-    //         back.offset += inDataSize;
-    //
-    //         std::string fileName(cpDest_);
-    //         fileName += "/" + back.name + "(" + back.prog + ")";
-    //
-    //         //! Сохраняем данные в файл
-    //         std::ofstream file(fileName, openmode);
-    //         // file.write(reinterpret_cast<char const*>(resp.rawData()), inDataSize);
-    //     }
-    //
-    //     //! Ссылка на последний элемент может измениться
-    //     auto const& nback = forCopy_.back();
-    //     BaseArcsLoader::loadArcData(nback.aId, nback.offset);
-    //
-    //     return;
-    // }
-    //
-    // //! Игнорируем данные, пришедшие для другого архива
-    // //! такое может произойти если мы уже инициализированы для
-    // //! нового архива а загрузка предидущего еще не завершена
-    // if (inLoadArc_->arcId() != aId)
-    //     return;
-    //
-    // //! Если данная порция данных привела к инициализации
-    // bool inited = inLoadArc_->append(resp.rawData(), resp.rawSize());
-    //
-    // if (inited && (inLoadArc_ == &arcData_))
-    // {
-    //     arcDataView_ = new ArcDataView(arcData_, arcBaseData_);
-    //     scrollArea_->setWidget(arcDataView_);
-    //     switchToArcView();
-    // }
-    //
-    // if (inLoadArc_->shouldContinue())
-    // {
-    //     BaseArcsLoader::loadArcData(inLoadArc_->arcId(), inLoadArc_->loadOffset());
-    // }
-    // else
-    // {
-    //     //! Загрузка закончена!
-    //     //! Если архив так и не инициализирован сообщаем о ошибке загрузки архива
-    //     if (!inLoadArc_->arcInfo.inited())
-    //     {
-    //         if (inLoadArc_ == &arcBaseData_)
-    //             SysDlg::inst().messageBoxDlg_->error("Не удалось загрузить базовый архив!");
-    //         else
-    //             SysDlg::inst().messageBoxDlg_->error("Не удалось загрузить архив!");
-    //
-    //         inLoadArc_->reset(0);
-    //     }
-    //     //! Если мы грузили архив, переходим к загрузке базового архива
-    //     else if (inLoadArc_ == &arcData_ && arcBaseData_.needLoad())
-    //     {
-    //         inLoadArc_ = &arcBaseData_;
-    //         BaseArcsLoader::loadArcData(inLoadArc_->arcId(), inLoadArc_->loadOffset());
-    //     }
-    // }
-    //
-    // if (arcDataView_ != nullptr)
-    //     arcDataView_->newDataAppended();
-}
+// void ArcsWindow::nfAppendNewArcData(std::size_t aId, nlohmann::json const &resp)
+// {
+//     // //! Если мы копируем архивы то
+//     // if (!forCopy_.empty())
+//     // {
+//     //     auto& back = forCopy_.back();
+//     //
+//     //     //! Если получили не свои данные, игнорируем их
+//     //     if (back.aId != aId)
+//     //         return;
+//     //
+//     //     // TODO
+//     //     std::size_t const inDataSize = 0;//resp.rawSize();
+//     //
+//     //     //! Если пришло 0 байт значит загрузка закончена, переходим к следующему
+//     //     if (inDataSize == 0)
+//     //     {
+//     //         forCopy_.pop_back();
+//     //         // TODO
+//     //         // pbProgress_.setValue(pbProgress_.maximum() - forCopy_.size());
+//     //
+//     //         if (forCopy_.empty())
+//     //         {
+//     //             // TODO
+//     //             // onToArcsList();
+//     //             // SysDlg::inst().messageBoxDlg_->info("Копирование архивов закончено!");
+//     //             return;
+//     //         }
+//     //     }
+//     //     else
+//     //     {
+//     //         //! Если это первый блок данных архива,
+//     //         //! открываем файл очищая его, иначе дописываем в конец
+//     //
+//     //         auto openmode = back.offset ? (std::ios::binary | std::ios::app) :
+//     //                             (std::ios::binary | std::ios::trunc);
+//     //         back.offset += inDataSize;
+//     //
+//     //         std::string fileName(cpDest_);
+//     //         fileName += "/" + back.name + "(" + back.prog + ")";
+//     //
+//     //         //! Сохраняем данные в файл
+//     //         std::ofstream file(fileName, openmode);
+//     //         // file.write(reinterpret_cast<char const*>(resp.rawData()), inDataSize);
+//     //     }
+//     //
+//     //     //! Ссылка на последний элемент может измениться
+//     //     auto const& nback = forCopy_.back();
+//     //     BaseArcsLoader::loadArcData(nback.aId, nback.offset);
+//     //
+//     //     return;
+//     // }
+//     //
+//     // //! Игнорируем данные, пришедшие для другого архива
+//     // //! такое может произойти если мы уже инициализированы для
+//     // //! нового архива а загрузка предидущего еще не завершена
+//     // if (inLoadArc_->arcId() != aId)
+//     //     return;
+//     //
+//     // //! Если данная порция данных привела к инициализации
+//     // bool inited = inLoadArc_->append(resp.rawData(), resp.rawSize());
+//     //
+//     // if (inited && (inLoadArc_ == &arcData_))
+//     // {
+//     //     arcDataView_ = new ArcDataView(arcData_, arcBaseData_);
+//     //     scrollArea_->setWidget(arcDataView_);
+//     //     switchToArcView();
+//     // }
+//     //
+//     // if (inLoadArc_->shouldContinue())
+//     // {
+//     //     BaseArcsLoader::loadArcData(inLoadArc_->arcId(), inLoadArc_->loadOffset());
+//     // }
+//     // else
+//     // {
+//     //     //! Загрузка закончена!
+//     //     //! Если архив так и не инициализирован сообщаем о ошибке загрузки архива
+//     //     if (!inLoadArc_->arcInfo.inited())
+//     //     {
+//     //         if (inLoadArc_ == &arcBaseData_)
+//     //             SysDlg::inst().messageBoxDlg_->error("Не удалось загрузить базовый архив!");
+//     //         else
+//     //             SysDlg::inst().messageBoxDlg_->error("Не удалось загрузить архив!");
+//     //
+//     //         inLoadArc_->reset(0);
+//     //     }
+//     //     //! Если мы грузили архив, переходим к загрузке базового архива
+//     //     else if (inLoadArc_ == &arcData_ && arcBaseData_.needLoad())
+//     //     {
+//     //         inLoadArc_ = &arcBaseData_;
+//     //         BaseArcsLoader::loadArcData(inLoadArc_->arcId(), inLoadArc_->loadOffset());
+//     //     }
+//     // }
+//     //
+//     // if (arcDataView_ != nullptr)
+//     //     arcDataView_->newDataAppended();
+// }
 
 void ArcsWindow::nfArcWasRemoved(std::size_t)
 {
@@ -287,7 +287,7 @@ void ArcsWindow::nfArcWasRemoved(std::size_t)
     // }
 }
 
-void ArcsWindow::nfAppendNewListData(std::size_t pageId, nlohmann::json const &args) 
-{
-    arcsListW_->model_.append(pageId, args);
-}
+// void ArcsWindow::nfAppendNewListData(std::size_t pageId, nlohmann::json const &args) 
+// {
+//     arcsListW_->model_.append(pageId, args);
+// }
