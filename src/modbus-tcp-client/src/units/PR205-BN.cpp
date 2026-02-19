@@ -38,6 +38,14 @@ PR205_BN::PR205_BN(std::size_t id, std::string_view host, std::uint16_t port)
         });
         valves_[i].port_id = node::add_output_port(std::format("VA{}", i + 1));
     }
+
+    for (std::size_t i = 0; i < heater_.size(); ++i)
+    {
+        node::add_input_port(std::format("WH{}", i + 1), [this, i](eng::abc::pack args) {
+            on_off_heater(i, eng::abc::get<bool>(args));
+        });
+        heater_[i].port_id = node::add_output_port(std::format("WH{}", i + 1));
+    }
 }
 
 void PR205_BN::read_task_done(std::size_t idx, readed_regs_t regs)
@@ -86,8 +94,6 @@ void PR205_BN::read_fc_done(readed_regs_t regs)
 
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
-
-        eng::log::info("{}.FC{} = {}", name(), i + 1, item.value);
     }
 }
 
@@ -125,7 +131,22 @@ void PR205_BN::read_state_done(readed_regs_t regs)
         node::set_port_value(item.port_id, { item.value });
     }
 
-    bitset >>= 3;
+    bitset >>= pumps_.size();
+
+    for (std::size_t i = 0; i < heater_.size(); ++i)
+    {
+        auto &item = heater_[i];
+
+        if (item.value == bitset[i] && item.initialized)
+            continue;
+
+        item.value = bitset[i];
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
+    }
+
+    bitset >>= heater_.size();
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
@@ -141,11 +162,15 @@ void PR205_BN::read_state_done(readed_regs_t regs)
     }
 }
 
-/////////////////////////////////////////////////////////////////////////
-
 void PR205_BN::start_stop_pump(std::size_t idx, bool value)
 {
     bs_0х4001_.set(idx + 0, value);
+    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+}
+
+void PR205_BN::on_off_heater(std::size_t idx, bool value)
+{
+    bs_0х4001_.set(idx + 2, value);
     modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
 
@@ -154,4 +179,5 @@ void PR205_BN::open_close_valve(std::size_t idx, bool value)
     bs_0х4001_.set(idx + 3, value);
     modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
+
 

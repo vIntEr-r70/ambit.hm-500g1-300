@@ -22,7 +22,7 @@ barrel_ctl::barrel_ctl(std::string_view key)
         else
         {
             current_temperature_ = eng::abc::get<double>(args);
-            eng::log::info("{}: DT = {}", name(), *current_temperature_);
+            // eng::log::info("{}: DT = {}", name(), *current_temperature_);
             if (in_range_) (this->*in_range_)();
         }
     });
@@ -57,8 +57,8 @@ barrel_ctl::barrel_ctl(std::string_view key)
         cfg_.dt_min = cfg.get<double>("dt-min", 20.0);
         cfg_.dt_max = cfg.get<double>("dt-max", 80.0);
 
-        eng::log::info("{}: min-dt = {}", name(), cfg_.dt_min);
-        eng::log::info("{}: max-dt = {}", name(), cfg_.dt_max);
+        // eng::log::info("{}: min-dt = {}", name(), cfg_.dt_min);
+        // eng::log::info("{}: max-dt = {}", name(), cfg_.dt_max);
 
         if (in_range_) (this->*in_range_)();
     });

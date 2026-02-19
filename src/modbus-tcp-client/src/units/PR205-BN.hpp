@@ -30,6 +30,7 @@ class PR205_BN final
 
     std::array<sens_t<bool>, 2> pumps_;
     std::array<sens_t<bool>, 2> valves_;
+    std::array<sens_t<bool>, 1> heater_;
 
     std::bitset<8> bs_0х4001_{ 0 };
 
@@ -56,5 +57,7 @@ private:
     void start_stop_pump(std::size_t, bool);
 
     void open_close_valve(std::size_t, bool);
+
+    void on_off_heater(std::size_t, bool);
 };
 

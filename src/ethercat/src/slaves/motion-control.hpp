@@ -19,6 +19,8 @@ public:
 
     virtual bool is_active() const noexcept = 0;
 
+    virtual void do_hard_stop() const noexcept = 0;
+
 public:
 
     double speed() const noexcept { return v0_; }

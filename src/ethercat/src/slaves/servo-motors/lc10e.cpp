@@ -1,6 +1,7 @@
 #include "lc10e.hpp"
 #include "ethercat.hpp"
 
+#include <algorithm>
 #include <eng/timer.hpp>
 #include <eng/abc/lambda-traits.hpp>
 #include <eng/log.hpp>
@@ -36,9 +37,6 @@ lc10e::lc10e(slave_target_t target)
     ethercat::pdo::add(this, 0x60FD, 0x00, DI_state_);
 }
 
-// 01B10000: 0000000110110001 0000000000000000
-// 01310000: 0000000100110001 0000000000000000
-
 void lc10e::set_target_pos(std::int32_t value)
 {
     // Просто задаем текущую позицию драйверу
@@ -50,18 +48,29 @@ std::int32_t lc10e::real_pos() const
     return real_pos_.get();
 }
 
-// 5444: 0101010001000100
-// 5443: 0101010001000011
+static constexpr std::uint16_t check_error(std::uint16_t error_code)
+{
+    // Значения, которые не являются критическими ошибками
+    // их необходимо игнорировать
+    static constexpr std::uint16_t skeeping[] {
+        0x5443, // Forward overtravel warning
+        0x5444, // Reverse overtravel warning
+    };
+
+    if (error_code != 0x0000)
+    {
+        if (std::ranges::contains(skeeping, error_code))
+            error_code = 0x0000;
+    }
+
+    return error_code;
+}
 
 servo_motor_status lc10e::get_status() const
 {
     std::bitset<16> bits(status_word_.get());
 
-    std::uint16_t error_code = error_code_.get();
-    bool error_set =
-        error_code != 0x0000 &&
-        error_code != 0x5444 &&
-        error_code != 0x5443;
+    bool error_set = check_error(error_code_.get()) != 0x0000;
 
     // Servo no fault
     if (!bits.test(0) && error_set)
@@ -104,4 +113,20 @@ void lc10e::set_control_mode(control_mode mode)
 
     working_mode_.set(it->second);
 }
+
+std::uint32_t lc10e::DI() const
+{
+    return DI_state_.get();
+}
+
+std::uint16_t lc10e::get_raw_status() const
+{
+    return status_word_.get();
+}
+
+
+//                  43210
+// 01300000: 00000001001100000000000000000000
+// 01B10000: 00000001101100010000000000000000
+// 02B10000: 00000010101100010000000000000000
 

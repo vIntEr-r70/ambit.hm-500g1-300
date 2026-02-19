@@ -1,9 +1,6 @@
 [submodule "src/libs/libaem"]
 	path = src/libs/libaem
 	url = git@gitlab.com:alexander.kvashnin/libaem.git
-[submodule "src/libs/libwe"]
-	path = src/libs/libwe
-	url = git@gitlab.com:alexander.kvashnin/libwe.git
 [submodule "src/libs/ambit-gui-core"]
 	path = src/libs/ambit-gui-core
 	url = git@gitlab.com:alexander.kvashnin/ambit-gui-core.git

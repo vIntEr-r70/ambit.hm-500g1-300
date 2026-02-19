@@ -1,5 +1,5 @@
 #include "AxisCtlItemWidget.h"
-#include "eng/sibus/sibus.hpp"
+#include "common/axis-status.hpp"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -10,6 +10,8 @@
 #include <Widgets/ValueViewReal.h>
 
 #include <eng/log.hpp>
+
+#include <bitset>
 
 AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_view name, bool rotation)
     : QWidget(parent)
@@ -82,8 +84,9 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     ctl_ = node::add_output_wire();
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_status_handler(ctl_, [this] {
-        update_axis_state();
+    node::set_wire_status_handler(ctl_, [this]
+    {
+        update_axis_view();
     });
 
     node::add_input_port("position",
@@ -98,19 +101,25 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
         [this](eng::abc::pack const &args)
         {
             double speed = eng::abc::get<double>(args);
+            if (rotation_) speed /= 6;
             emit axis_real_speed(speed);
         });
 
     node::add_input_port("set-speed",
         [this](eng::abc::pack const &args)
         {
-            eng::log::info("set-speed: {}", axis_);
-            double speed = eng::abc::get<double>(args, 0);
-            vvr_speed_->set_value(speed);
+            double speed = eng::abc::get<double>(args);
+            vvr_speed_->set_value(rotation_ ? (speed / 6) : speed);
             emit axis_set_speed(speed);
         });
 
-    update_axis_state();
+    node::add_input_port("status",
+        [this](eng::abc::pack const &args)
+        {
+            update_status(eng::abc::get<std::uint8_t>(args));
+        });
+
+    update_axis_view();
 }
 
 void AxisCtlItemWidget::execute(eng::abc::pack args)
@@ -119,21 +128,42 @@ void AxisCtlItemWidget::execute(eng::abc::pack args)
         node::activate(ctl_, std::move(args));
 }
 
-void AxisCtlItemWidget::update_axis_state()
+void AxisCtlItemWidget::update_axis_view()
 {
     bool active = node::is_ready(ctl_);
 
     static std::array<QColor, 2> const colors[] = {
-        { Qt::gray, Qt::white }, { Qt::green, Qt::black }, { Qt::blue, Qt::white }
+        { Qt::gray, Qt::white }, { Qt::green, Qt::black }, { Qt::blue, Qt::white }, { Qt::red, Qt::white }
     };
 
     std::size_t color_scheme_id{ 0 };
+
     if (active)
         color_scheme_id = 1;
+
+    if (fault_)
+        color_scheme_id = 3;
 
     auto const& clr = colors[color_scheme_id];
     lblHeader_->setStyleSheet(QString("border-bottom-left-radius: 0; border-bottom-right-radius: 0;"
                 "background-color: %1; color: %2;").arg(clr[0].name()).arg(clr[1].name()));
+}
+
+void AxisCtlItemWidget::update_status(std::uint8_t status)
+{
+    std::bitset<8> bits(status);
+
+    bool ros = bits.test(ambit::axis_status::ros);
+    lblLS_[0]->setStyleSheet(QString("border: 3px solid %1").arg(ros ? "#0000ff" : "#ffffff"));
+
+    bool fos = bits.test(ambit::axis_status::fos);
+    lblLS_[1]->setStyleSheet(QString("border: 3px solid %1").arg(fos ? "#0000ff" : "#ffffff"));
+
+    if (fault_ != bits.test(ambit::axis_status::fault))
+    {
+        fault_ = bits.test(ambit::axis_status::fault);
+        update_axis_view();
+    }
 }
 
 void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
@@ -143,8 +173,6 @@ void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
 
 // void AxisCtlItemWidget::ls_min_max(std::size_t id, bool v) noexcept
 // {
-//     ls_[id] = v;
-//     lblLS_[id]->setStyleSheet(QString("border: 3px solid %1").arg(v ? "#0000ff" : "#ffffff"));
 //
 //     updateGui();
 // }

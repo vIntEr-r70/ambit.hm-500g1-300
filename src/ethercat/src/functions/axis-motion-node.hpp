@@ -33,9 +33,7 @@ public:
 
 public:
 
-    bool motion_done();
-
-    void motion_status();
+    void motion_done();
 
 private:
 

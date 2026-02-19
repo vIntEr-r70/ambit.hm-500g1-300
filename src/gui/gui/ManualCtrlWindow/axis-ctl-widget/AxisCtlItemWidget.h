@@ -32,26 +32,17 @@ public:
 
     void execute(eng::abc::pack);
 
-public:
-
-
     QString const &name() const noexcept { return name_; }
 
 private:
 
-    void update_axis_state();
+    void update_axis_view();
 
-public:
-
-    // void nf_ls_min(bool v) noexcept { ls_min_max(0, v); }
-    //
-    // void nf_ls_max(bool v) noexcept { ls_min_max(1, v); }
+    void update_status(std::uint8_t);
 
 private:
 
     void mousePressEvent(QMouseEvent*) override final;
-
-    // void ls_min_max(std::size_t, bool) noexcept;
 
 private:
 
@@ -68,14 +59,6 @@ private:
 
     bool rotation_;
 
-    // float pos_{0.0f};
-    // float speed_{0.0f};
-
-    // aem::uint8 sysMode_;
-    // aem::uint8 ctlMode_;
-    // bool ls_[2] = {false, false};
-
-    // char ctrlModeAxis_ = 0;
-    // aem::uint32 error_ = 0;
+    bool fault_{ false };
 };
 

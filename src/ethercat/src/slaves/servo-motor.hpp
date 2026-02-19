@@ -88,5 +88,9 @@ private:
     virtual void set_control_mode(control_mode) = 0;
 
     virtual std::int32_t real_pos() const = 0;
+
+    virtual std::uint32_t DI() const = 0;
+
+    virtual std::uint16_t get_raw_status() const = 0;
 };
 

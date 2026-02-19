@@ -92,3 +92,12 @@ void sd700::set_control_mode(control_mode mode)
     working_mode_.set(it->second);
 }
 
+std::uint32_t sd700::DI() const
+{
+    return 0;
+}
+
+std::uint16_t sd700::get_raw_status() const
+{
+    return 0;
+}

@@ -18,8 +18,7 @@ add_executable(${PROJECT_NAME}
     main.cpp
 
     gui/MainFrame.cpp
-    gui/BkiLockMessage.cpp
-    gui/EmgStopMessage.cpp
+    gui/LockMessageBox.cpp
 
     gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlWidget.cpp
     gui/ManualCtrlWindow/axis-ctl-widget/AxisCtlItemWidget.cpp

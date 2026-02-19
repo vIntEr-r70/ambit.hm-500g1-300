@@ -1,9 +1,11 @@
 #include "servo-motor.hpp"
 #include "motion-control.hpp"
+#include "common/axis-status.hpp"
 
 #include <eng/log.hpp>
 
 #include <cmath>
+#include <bitset>
 
 servo_motor::servo_motor(slave_info_t target)
     : ethercat_slave(target)
@@ -208,10 +210,39 @@ void servo_motor::control_mode_csp(double dt)
         return;
     }
 
+    // Получаем текущее состояние входов драйвера
+    std::bitset<32> status{ DI() };
+
+    if (!status.test(23)) // DI3 - БКИ
+    {
+        eng::log::info("[{}]: {}: Обнаружено срабатывание БКИ", info().target.position, __func__);
+        eng::log::info("[{}]: {}", info().target.position, status.to_string());
+
+        eng::log::info("IN BKI: [{}] >> target-pos: {}", info().target.position, position_);
+
+        ctl_->do_hard_stop();
+        ctl_ = nullptr;
+
+        return;
+    }
+
+    if (!status.test(24)) // DI4 - Аварийный стоп
+    {
+        eng::log::info("[{}]: {}: Активирован аварийный стоп", info().target.position, __func__);
+        eng::log::info("[{}]: {}", info().target.position, status.to_string());
+
+        ctl_->do_hard_stop();
+        ctl_ = nullptr;
+
+        return;
+    }
+
     if (!std::isnan(ratio_) && !std::isnan(position_))
     {
+        // TODO: решить, как себя вести на концевиках
+        double next_position = ctl_->next_position(position_, dt);
+        position_ = next_position;
 
-        position_ = ctl_->next_position(position_, dt);
 #ifdef BUILDROOT
         set_target_pos(std::lround(position_ * ratio_));
 #endif
@@ -232,59 +263,21 @@ double servo_motor::speed() const noexcept
 
 std::uint8_t servo_motor::status() const noexcept
 {
-    // if (концевик минимум)
-    //     ;
-    // if (концевик максимум)
-    //     ;
-    // if (флаг БКИ)
-    //     ;
-    // if (авария)
-    //     ;
+    // Текущее состояние входов драйвера
+    std::bitset<32> di{ DI() };
 
-    return 0;
+    // Текущий статус
+    std::bitset<16> status(get_raw_status());
+
+    // Результирующая маска
+    std::bitset<8> result{ 0 };
+
+    // Концевики
+    result.set(ambit::axis_status::ros, di.test(0));
+    result.set(ambit::axis_status::fos, di.test(1));
+
+    // Авария
+    result.set(ambit::axis_status::fault, status.test(3));
+
+    return static_cast<std::uint8_t>(result.to_ulong());
 }
-
-
-//
-//
-//
-//
-// [16:59:54.260][INFO] axis-motion-X: cmd_spin: speed = -25
-// [16:59:54.280][INFO] [0] >> StatusWord: 0001001000110111
-// [17:00:00.646][INFO] [0] >> StatusWord: 0001101010110111
-// [17:00:00.646][INFO] [0] >> ErrorCode: 5444
-// [17:00:00.646][INFO] [0] >> DI state: 01910001
-// [17:00:00.779][INFO] [0] >> StatusWord: 0001111010110111
-// [17:00:01.114][INFO] axis_motion_node[X]::node_offline
-// [17:00:01.114][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
-// [17:00:01.115][INFO] axis_motion_node[X]::motion_done
-// [17:00:01.116][INFO] servo_motor::control_mode_csp: NO ACTIVE
-// [17:00:05.651][INFO] axis-motion-X: cmd_spin: speed = -25
-// [17:00:05.965][INFO] axis_motion_node[X]::node_offline
-// [17:00:05.965][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
-// [17:00:05.967][INFO] axis_motion_node[X]::motion_done
-// [17:00:05.967][INFO] servo_motor::control_mode_csp: NO ACTIVE
-//
-//
-//
-//
-//
-//
-// [17:00:40.115][INFO] axis-motion-X: cmd_spin: speed = 25
-// [17:00:40.981][INFO] [0] >> StatusWord: 0001101010110111
-// [17:00:41.045][INFO] [0] >> StatusWord: 0001101000110111
-// [17:00:41.045][INFO] [0] >> ErrorCode: 0000
-// [17:00:41.046][INFO] [0] >> DI state: 01B10000
-// [17:00:41.050][INFO] [0] >> StatusWord: 0001001000110111
-// [17:00:41.274][INFO] axis_motion_node[X]::node_offline
-// [17:00:41.274][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
-// [17:00:41.277][INFO] axis_motion_node[X]::motion_done
-// [17:00:41.277][INFO] servo_motor::control_mode_csp: NO ACTIVE
-// [17:00:41.444][INFO] [0] >> StatusWord: 0001011000110111
-// [17:00:43.806][INFO] axis-motion-X: cmd_spin: speed = 25
-// [17:00:43.824][INFO] [0] >> StatusWord: 0001001000110111
-// [17:00:44.332][INFO] axis_motion_node[X]::node_offline
-// [17:00:44.332][INFO] axis_motion_node[X]::node_offline: WAIT FOR DONE
-// [17:00:44.334][INFO] axis_motion_node[X]::motion_done
-// [17:00:44.334][INFO] servo_motor::control_mode_csp: NO ACTIVE
-// [17:00:44.515][INFO] [0] >> StatusWord: 0001011000110111

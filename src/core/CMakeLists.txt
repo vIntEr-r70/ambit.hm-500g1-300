@@ -26,6 +26,11 @@ add_executable(${PROJECT_NAME}
     src/sprayer-ctl.cpp
 
     src/error-mask.cpp
+
+    src/bki-ctl.cpp
+    src/emg-ctl.cpp
+
+    src/diverter-valve-ctl.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

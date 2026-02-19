@@ -31,4 +31,8 @@ private:
     void set_control_mode(control_mode) override final;
 
     std::int32_t real_pos() const override final;
+
+    std::uint32_t DI() const override final;
+
+    std::uint16_t get_raw_status() const override final;
 };

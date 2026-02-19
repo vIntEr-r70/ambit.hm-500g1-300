@@ -1,5 +1,9 @@
 #include "BkiCfgWidget.h"
 
+#include <eng/sibus/client.hpp>
+#include <eng/json.hpp>
+#include <eng/json/builder.hpp>
+
 #include <Widgets/ValueSetBool.h>
 
 #include <QVBoxLayout>
@@ -36,10 +40,9 @@ BkiCfgWidget::BkiCfgWidget(QWidget *parent)
             vL->addWidget(lbl);
 
             vsb_ = new ValueSetBool(this);
-            vsb_->setValueView("ВЫКЛ", "ВКЛ");
+            vsb_->setValueView("ВКЛ", "ВЫКЛ");
             vsb_->setTitle("БКИ");
-            vsb_->setMaximumWidth(80);
-            vsb_->setMinimumWidth(80);
+            vsb_->setFixedWidth(80);
             connect(vsb_, &ValueSetBool::onValueChanged, [this] { on_bki_status(); });
             vL->addWidget(vsb_);
 
@@ -52,13 +55,30 @@ BkiCfgWidget::BkiCfgWidget(QWidget *parent)
         hL->addStretch();
     }
 
-    // global::subscribe("sys.bki-allow", [this](nlohmann::json::array_t const&, nlohmann::json const& value)
-    // {
-    //     vsb_->setJsonValue(value);
-    // });
+    load_config();
 }
 
 void BkiCfgWidget::on_bki_status()
 {
-    // rpc_.call("set", { "bki", "allow", vsb_->value() });
+    save_config();
 }
+
+void BkiCfgWidget::load_config()
+{
+    eng::sibus::client::config_listener("bki", [this](std::string_view json)
+    {
+        // Сохраняем дефолтную конфигурацию
+        if (json.empty())
+            return;
+        eng::json::value cfg(json);
+        vsb_->setJsonValue(cfg.get<bool>());
+    });
+}
+
+void BkiCfgWidget::save_config()
+{
+    eng::json::builder_t jb;
+    eng::json::add_value<bool>(jb, vsb_->value());
+    eng::sibus::client::configure("bki", jb.view());
+}
+

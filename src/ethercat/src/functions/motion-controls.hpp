@@ -130,7 +130,15 @@ private:
 
     bool is_active() const noexcept override final
     {
-        return phases_.empty() ? ctl_.motion_done() : true;
+        if (!phases_.empty())
+            return true;
+        ctl_.motion_done();
+        return false;
+    }
+
+    void do_hard_stop() const noexcept override final
+    {
+        ctl_.motion_done();
     }
 
     // Возвращаем
@@ -250,7 +258,15 @@ private:
 
     bool is_active() const noexcept override final
     {
-        return (v0_ == 0.0) ? ctl_.motion_done() : true;
+        if (v0_ != 0.0)
+            return true;
+        ctl_.motion_done();
+        return false;
+    }
+
+    void do_hard_stop() const noexcept override final
+    {
+        ctl_.motion_done();
     }
 
     double next_position(double position, double dt) noexcept override final
@@ -375,7 +391,15 @@ private:
 
     bool is_active() const noexcept override final
     {
-        return (iid_ >= intervals_.size()) ? ctl_.motion_done() : true;
+        if (iid_ < intervals_.size())
+            return true;
+        ctl_.motion_done();
+        return false;
+    }
+
+    void do_hard_stop() const noexcept override final
+    {
+        ctl_.motion_done();
     }
 
     double next_position(double position, double) noexcept override final

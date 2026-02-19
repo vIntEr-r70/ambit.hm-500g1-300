@@ -56,14 +56,14 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
 // Провод от нас отключен
 void axis_motion_node::deactivate()
 {
-    eng::log::info("axis_motion_node[{}]::node_offline", axis_);
+    eng::log::info("{}: {}", name(), __func__);
 
     // Если ресурс так и не получен либо не выполняет движений
     // нет необходимости его финализировать, просто освобождаем
     if (servo_motor_.control() == nullptr)
         return;
 
-    eng::log::info("axis_motion_node[{}]::node_offline: WAIT FOR DONE", axis_);
+    eng::log::info("\t- WAIT FOR DONE");
 
     // Необходимо сначала привести драйвер в исходное состояние
     // Остановить выполнение движения если оно происходит
@@ -87,18 +87,12 @@ void axis_motion_node::update_output_info()
     node::set_port_value(status_, { servo_motor_.status() });
 }
 
-bool axis_motion_node::motion_done()
+void axis_motion_node::motion_done()
 {
     update_output_info();
 
-    eng::log::info("axis_motion_node[{}]::motion_done", axis_);
+    eng::log::info("{}: {}", name(), __func__);
     node::set_ready(ictl_);
-
-    return false;
-}
-
-void axis_motion_node::motion_status()
-{
 }
 
 void axis_motion_node::start_command_execution(eng::abc::pack args)

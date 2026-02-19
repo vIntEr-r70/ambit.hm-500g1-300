@@ -11,6 +11,9 @@
 #include "src/barrel-lvl-ctl.hpp"
 #include "src/drainage-ctl.hpp"
 #include "src/error-mask.hpp"
+#include "src/bki-ctl.hpp"
+#include "src/emg-ctl.hpp"
+#include "src/diverter-valve-ctl.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -67,6 +70,12 @@ auto main() -> int
     sprayer_ctl spc2("sp2-ctl");
 
     error_mask em0;
+
+    bki_ctl bki;
+    emg_ctl emg;
+
+    diverter_valve_ctl dvc0{ "valve-ctl-drainage", 1 };
+    diverter_valve_ctl dvc1{ "valve-ctl-sprayers", 2 };
 
     return eng::run();
 }

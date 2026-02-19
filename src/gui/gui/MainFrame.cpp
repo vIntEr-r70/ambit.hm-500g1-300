@@ -10,8 +10,7 @@
 #include <NavigationPanel.h>
 #include <MnemonicWindow/MnemonicWindow.h>
 
-#include "BkiLockMessage.h"
-#include "EmgStopMessage.h"
+#include "LockMessageBox.hpp"
 #include "Interact.h"
 
 #include <QVBoxLayout>
@@ -28,6 +27,8 @@ MainFrame::MainFrame()
 {
     // Создаем верхний слой на данном окне
     Interact::create(this);
+
+    lock_msg_box_ = new LockMessageBox(this);
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -46,23 +47,10 @@ MainFrame::MainFrame()
     connect(w, SIGNAL(login(int)), this, SLOT(on_login(int)));
     NavigationPanel_->add(w, "auth", false);
 
-    on_connected();
-
-#ifdef BUILDROOT
-    NavigationPanel_->switch_to("manual");
-#else
-    NavigationPanel_->switch_to("auto");
-#endif
-
-    emg_stop_msg_ = new EmgStopMessage(this);
-    bki_lock_msg_ = new BkiLockMessage(this);
-
-    node::add_input_port_v2("mode", [this](eng::abc::pack args)
+    node::add_input_port_unsafe("mode", [this](eng::abc::pack args)
     {
         nf_sys_mode(args ? eng::abc::get_sv(args) : "");
     });
-
-    nf_sys_mode("");
 }
 
 MainFrame::~MainFrame()
@@ -70,7 +58,7 @@ MainFrame::~MainFrame()
     Interact::destroy();
 }
 
-void MainFrame::on_connected() noexcept
+void MainFrame::register_on_bus_done()
 {
     ManualCtrlWindow* mcw = new ManualCtrlWindow(this);
     NavigationPanel_->add(mcw, "manual",   true);
@@ -125,11 +113,22 @@ void MainFrame::on_connected() noexcept
     //         mcw->apply_axis_cfg();
     //         auto_ctrl_window_->apply_axis_cfg();
     //     });
-}
 
+#ifdef BUILDROOT
+    NavigationPanel_->switch_to("manual");
+    lock_msg_box_->allow(true);
+#else
+    NavigationPanel_->switch_to("auto");
+    lock_msg_box_->allow(true);
+#endif
+
+    nf_sys_mode("");
+}
 
 void MainFrame::on_login(int guid) noexcept
 {
+    lock_msg_box_->allow(true);
+
     // global::rpc().call("set", { "sys", "login", { true } })
     //     .done([this, guid](nlohmann::json const&)
     //     {
@@ -148,8 +147,7 @@ void MainFrame::on_login(int guid) noexcept
 
 void MainFrame::on_logout() noexcept
 {
-    // allow_bki_lock_msg_ = false;
-    // global::rpc().call("set", { "sys", "login", { false } });
+    lock_msg_box_->allow(false);
 }
 
 void MainFrame::nf_sys_mode(std::string_view mode) noexcept
@@ -168,44 +166,44 @@ void MainFrame::nf_sys_mode(std::string_view mode) noexcept
     }
 }
 
-void MainFrame::nf_sys_bki_lock(bool lock) noexcept
-{
-    bki_lock_flag_ = lock;
+// void MainFrame::nf_sys_bki_lock(bool lock) noexcept
+// {
+//     bki_lock_flag_ = lock;
+//
+//     if (lock && !allow_bki_lock_msg_)
+//         return;
+//
+//     if (lock)
+//         bki_lock_msg_->show();
+//     else
+//         bki_lock_msg_->hide();
+// }
+//
+// void MainFrame::nf_sys_emg_stop(bool lock) noexcept
+// {
+//     emg_stop_flag_ = lock;
+//
+//     if (lock)
+//         emg_stop_msg_->show();
+//     else
+//         emg_stop_msg_->hide();
+// }
 
-    if (lock && !allow_bki_lock_msg_)
-        return;
-
-    if (lock)
-        bki_lock_msg_->show();
-    else
-        bki_lock_msg_->hide();
-}
-
-void MainFrame::nf_sys_emg_stop(bool lock) noexcept
-{
-    emg_stop_flag_ = lock;
-
-    if (lock)
-        emg_stop_msg_->show();
-    else
-        emg_stop_msg_->hide();
-}
-
-void MainFrame::nf_sys_locker(std::uint8_t status) noexcept
-{
-    // switch(static_cast<we::locker::item_status>(status))
-    // {
-    // case we::locker::item_status::normal:
-    //     NavigationPanel_->set_notify_state("mimic", 0);
-    //     break;
-    // case we::locker::item_status::warning:
-    //     NavigationPanel_->set_notify_state("mimic", 'w');
-    //     break;
-    // case we::locker::item_status::critical:
-    //     NavigationPanel_->set_notify_state("mimic", 'e');
-    //     break;
-    // }
-}
+// void MainFrame::nf_sys_locker(std::uint8_t status) noexcept
+// {
+//     // switch(static_cast<we::locker::item_status>(status))
+//     // {
+//     // case we::locker::item_status::normal:
+//     //     NavigationPanel_->set_notify_state("mimic", 0);
+//     //     break;
+//     // case we::locker::item_status::warning:
+//     //     NavigationPanel_->set_notify_state("mimic", 'w');
+//     //     break;
+//     // case we::locker::item_status::critical:
+//     //     NavigationPanel_->set_notify_state("mimic", 'e');
+//     //     break;
+//     // }
+// }
 
 void MainFrame::keyPressEvent(QKeyEvent *e) noexcept
 {
