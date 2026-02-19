@@ -82,5 +82,7 @@ private:
     virtual void write_task_done(std::size_t) { }
 
     virtual void connection_was_lost() = 0;
+
+    virtual void now_unit_online() { }
 };
 

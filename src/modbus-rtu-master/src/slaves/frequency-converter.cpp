@@ -32,6 +32,23 @@ frequency_converter::frequency_converter(std::size_t unit_id)
         I_max_ = eng::abc::get<double>(args, 1);
         iup_[kU] = eng::abc::get<double>(args, 2);
         P_max_ = I_max_ * iup_[kU];
+
+        iup_[kI] = std::min(I_max_, iup_[kI]);
+        iup_[kP] = std::min(P_max_, iup_[kP]);
+
+        write_sets();
+    });
+
+    node::add_input_port("I", [this](eng::abc::pack args)
+    {
+        iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
+        write_sets();
+    });
+
+    node::add_input_port("P", [this](eng::abc::pack args)
+    {
+        iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
+        write_sets();
     });
 
     // Опрос текущего состояния устройства
@@ -54,7 +71,7 @@ frequency_converter::frequency_converter(std::size_t unit_id)
 void frequency_converter::register_on_bus_done()
 {
     if (is_online())
-        node::set_ready(ictl_);
+        node::ready(ictl_);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,43 +81,14 @@ void frequency_converter::activate(eng::abc::pack args)
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!is_online() || !status_.has_value())
+    if (args.size() == 2)
     {
-        node::terminate(ictl_, "Отсутствует связь с устройством");
-        return;
+        // Новые уставки
+        iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
+        iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
+
+        write_sets();
     }
-
-    // Команда на сброс аварии
-    if (!args.size())
-    {
-        // Если мы не в аварии
-        if (status_.value() != estatus::damaged)
-        {
-            node::set_ready(ictl_);
-            return;
-        }
-
-        // Отправляем команду на сброс ошибки
-        eng::log::info("{}: CMD: reset errors", name());
-        modbus_unit::write_single(0xA410, 0x0002);
-
-        return;
-    }
-
-    // Уставки
-    iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
-    iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
-
-    // Записываем уставки
-    std::array<std::uint16_t, 3> iup{
-        static_cast<std::uint16_t>(std::lround(iup_[kI] * 10.0)),
-        static_cast<std::uint16_t>(std::lround(iup_[kU])),
-        static_cast<std::uint16_t>(std::lround(iup_[kP] * 0.01))
-    };
-    eng::log::info("{}: CMD: write sets", name());
-    modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
-
-    eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
 
     // Если еще не запущены, передаем команду на запуск
     if (status_.value() != estatus::powered)
@@ -115,26 +103,26 @@ void frequency_converter::deactivate()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (!is_online() || !status_.has_value() || *status_ != estatus::powered)
+    switch (status_.value())
     {
-        node::set_ready(ictl_);
-        return;
+    case estatus::idle:
+        break;
+
+    case estatus::powered:
+        eng::log::info("{}: CMD: write stop", name());
+        modbus_unit::write_single(0xA410, 0x0000);
+        break;
+
+    case estatus::damaged:
+        eng::log::info("{}: CMD: reset errors", name());
+        modbus_unit::write_single(0xA410, 0x0002);
+        break;
     }
-
-    // Отправляем команду на остановку
-    // Узел переходит в состояние блокировки
-    eng::log::info("{}: CMD: write stop", name());
-    modbus_unit::write_single(0xA410, 0x0000);
-
-    node::set_ready(ictl_);
 }
 
 void frequency_converter::now_unit_online()
 {
     eng::log::info("{}: {}", name(), __func__);
-
-    // if (node::is_registered_on_bus())
-    node::set_ready(ictl_);
 
     // Отправляем команду на сброс ошибок
     eng::log::info("{}: CMD: reset errors", name());
@@ -147,8 +135,9 @@ void frequency_converter::connection_was_lost()
 {
     eng::log::info("{}: {}", name(), __func__);
 
-    if (node::is_active(ictl_))
-        node::terminate(ictl_, "Связь с устройством потеряна");
+    node::terminate(ictl_, "Связь с устройством потеряна");
+
+    status_.reset();
 
     // Мы не знаем какое состояние теперь у ПЧ
     std::ranges::fill(damages_, 0);
@@ -163,8 +152,6 @@ void frequency_converter::connection_was_lost()
     node::set_port_value(p_out_[pout::P], { });
 
     node::set_port_value(p_out_[pout::online], { false });
-
-    status_.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,8 +209,13 @@ void frequency_converter::read_status_done(readed_regs_t regs)
     }
     else
     {
-        eng::log::info("{}: status = ???", name());
+        eng::log::info("{}: status = ? ({})", name(), regs[0]);
+        return;
     }
+
+    // Если это первый статус с момента восстановления связи
+    if (!status_.has_value() && node::is_registered_on_bus())
+        node::ready(ictl_);
 
     // Запоминаем новое значение статуса
     status_ = status;
@@ -252,4 +244,23 @@ void frequency_converter::read_P_done(readed_regs_t regs)
     double P = regs[0] * 100.0;
     node::set_port_value(p_out_[pout::P], { P });
 }
+
+void frequency_converter::write_sets()
+{
+    // Игнорируем изменение уставок если устройство не в сети
+    if (!is_online()) return;
+
+    // Записываем уставки
+    std::array<std::uint16_t, 3> iup{
+        static_cast<std::uint16_t>(std::lround(iup_[kI] * 10.0)),
+        static_cast<std::uint16_t>(std::lround(iup_[kU])),
+        static_cast<std::uint16_t>(std::lround(iup_[kP] * 0.01))
+    };
+
+    eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
+
+    eng::log::info("{}: CMD: write sets", name());
+    modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
+}
+
 

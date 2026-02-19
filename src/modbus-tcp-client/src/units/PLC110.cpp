@@ -31,9 +31,7 @@ PLC110::PLC110(std::string_view host, std::uint16_t port)
     {
         node::add_input_port(std::format("b{}", i + 5), [this, i](eng::abc::pack args)
         {
-            bool state = eng::abc::get<bool>(args);
-            if (state == outputs_.test(i)) return;
-            outputs_.set(i, state);
+            outputs_.set(i, eng::abc::get<bool>(args));
             write_outputs();
         });
     }
@@ -45,9 +43,7 @@ PLC110::PLC110(std::string_view host, std::uint16_t port)
         {
             node::add_input_port(std::format("m{}b{}", imk + 1, i + 1), [this, imk, i](eng::abc::pack args)
             {
-                bool state = eng::abc::get<bool>(args);
-                if (state == mk_outputs_[imk].test(i)) return;
-                mk_outputs_[imk].set(i, state);
+                mk_outputs_[imk].set(i, eng::abc::get<bool>(args));
                 write_mk_outputs(imk);
             });
         }
@@ -63,6 +59,14 @@ void PLC110::connection_was_lost()
 {
 }
 
+void PLC110::now_unit_online()
+{
+    update_outputs();
+
+    for (std::size_t i = 0; mk_outputs_.size(); ++i)
+        update_mk_outputs(i);
+}
+
 void PLC110::read_spin_done(readed_regs_t regs)
 {
     std::int32_t value;
@@ -75,8 +79,6 @@ void PLC110::read_spin_done(readed_regs_t regs)
     spin_.initialized = true;
 
     node::set_port_value(spin_.port_id, { spin_.value });
-
-    // eng::log::info("{}: spin = {}", name(), spin_.value);
 }
 
 void PLC110::read_bits_done(readed_regs_t regs)
@@ -140,7 +142,11 @@ void PLC110::write_outputs()
 {
     if (!modbus_unit::is_online())
         return;
+    update_outputs();
+}
 
+void PLC110::update_outputs()
+{
     std::uint16_t values[2];
     values[0] = outputs_.to_ulong() & 0xFFFF;
     values[1] = (outputs_.to_ulong() >> 16) & 0x000F;
@@ -154,7 +160,11 @@ void PLC110::write_mk_outputs(std::size_t imk)
 {
     if (!modbus_unit::is_online())
         return;
+    update_mk_outputs(imk);
+}
 
+void PLC110::update_mk_outputs(std::size_t imk)
+{
     static std::uint16_t address[] { 0x0015, 0x0018 };
 
     std::uint16_t value = mk_outputs_[imk].to_ulong() & 0x00FF;
@@ -162,4 +172,3 @@ void PLC110::write_mk_outputs(std::size_t imk)
 
     eng::log::info("PLC110::MK[{}]::OUTPUTS: {}", imk, mk_outputs_[imk].to_string());
 }
-

@@ -2,6 +2,8 @@
 
 #include <eng/sibus/node.hpp>
 
+#include <optional>
+
 class bki_ctl final
     : public eng::sibus::node
 {
@@ -12,7 +14,7 @@ class bki_ctl final
     eng::sibus::output_port_id_t bki_;
 
     bool cfg_bki_allow_{ true };
-    bool wait_for_bki_activate_back_;
+    std::optional<bool> wait_for_bki_activate_back_;
 
 public:
 

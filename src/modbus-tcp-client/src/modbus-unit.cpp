@@ -61,6 +61,7 @@ void modbus_unit::connected()
     if (online_ && *online_)
         return;
     online_ = true;
+    now_unit_online();
 }
 
 void modbus_unit::disconnected()

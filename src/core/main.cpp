@@ -4,7 +4,6 @@
 #include "src/auto-mode/auto-mode.hpp"
 #include "src/speed-node.hpp"
 #include "src/panel-button-ctl.hpp"
-#include "src/panel-switch-2-ctl.hpp"
 #include "src/current-conductors.hpp"
 #include "src/working-mode-selector.hpp"
 #include "src/barrel-ctl.hpp"
@@ -40,9 +39,6 @@ auto main() -> int
 
     panel_button_ctl h1("btn-H1-ctl");
     panel_button_ctl h2("btn-H3-ctl");
-
-    panel_switch_2_ctl ps0{ "coolant-selector" };
-    panel_switch_2_ctl ps1{ "drain-selector" };
 
     current_conductors cc0;
 

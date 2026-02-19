@@ -90,5 +90,9 @@ private:
     void read_UUI_done(readed_regs_t);
 
     void read_P_done(readed_regs_t);
+
+private:
+
+    void write_sets();
 };
 

@@ -47,6 +47,8 @@ private:
 
     void connection_was_lost() override final;
 
+    void now_unit_online() override final;
+
 private:
 
     void read_spin_done(readed_regs_t);
@@ -64,4 +66,8 @@ private:
     void write_outputs();
 
     void write_mk_outputs(std::size_t);
+
+    void update_outputs();
+
+    void update_mk_outputs(std::size_t);
 };

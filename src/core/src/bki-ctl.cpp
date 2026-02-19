@@ -2,6 +2,7 @@
 
 #include <eng/sibus/client.hpp>
 #include <eng/json.hpp>
+#include <eng/log.hpp>
 
 bki_ctl::bki_ctl()
     : eng::sibus::node("bki-ctl")
@@ -16,14 +17,19 @@ bki_ctl::bki_ctl()
             break;
 
         case 1: // Снимаем защиту
+            eng::log::info("{}: Снять защиту", name());
             node::set_port_value(not_allow_, { true });
             node::set_port_value(reset_, { true });
+            node::set_port_value(bki_, { 2 });
             wait_for_bki_activate_back_ = true;
             break;
 
         case 2: // Выставляем защиту
+            eng::log::info("{}: Активировать защиту", name());
             node::set_port_value(not_allow_, { false });
-            wait_for_bki_activate_back_ = false;
+            node::set_port_value(reset_, { false });
+            wait_for_bki_activate_back_.reset();
+            node::set_port_value(bki_, { 0 });
             break;
         }
 
@@ -36,11 +42,14 @@ bki_ctl::bki_ctl()
     node::add_input_port("bki", [this](eng::abc::pack args)
     {
         bool active = !eng::abc::get<bool>(args);
+        eng::log::info("{}: active = {}", name(), active);
 
-        if (!active)
-            node::set_port_value(reset_, { false });
+        if (wait_for_bki_activate_back_)
+            return;
 
-        std::uint8_t key = active ? 1 : (wait_for_bki_activate_back_ ? 2 : 0);
+        eng::log::info("{}: PASS", name(), active);
+
+        std::uint8_t key = active ? 1 : 0;
         node::set_port_value(bki_, { key });
     });
 
@@ -55,7 +64,11 @@ bki_ctl::bki_ctl()
         eng::json::value cfg(json);
 
         cfg_bki_allow_ = cfg.get<bool>();
-        node::set_port_value(not_allow_, { !cfg_bki_allow_});
+
+        node::set_port_value(not_allow_, { !cfg_bki_allow_ });
+        node::set_port_value(reset_, { !cfg_bki_allow_ });
+
+        eng::log::info("{}: cfg_bki_allow = {}", name(), cfg_bki_allow_);
     });
 }
 
