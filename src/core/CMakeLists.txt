@@ -30,6 +30,8 @@ add_executable(${PROJECT_NAME}
     src/emg-ctl.cpp
 
     src/diverter-valve-ctl.cpp
+
+    src/multi-mode-panel-btns.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

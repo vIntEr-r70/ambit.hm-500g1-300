@@ -59,6 +59,13 @@ class frequency_converter final
     double I_max_{ 0.0 };
     double P_max_{ 0.0 };
 
+    struct priority_sets_t
+    {
+        double I{ 0.0 };
+        double P{ 0.0 };
+    };
+    std::optional<priority_sets_t> priority_sets_;
+
 public:
 
     frequency_converter(std::size_t);
@@ -94,5 +101,7 @@ private:
 private:
 
     void write_sets();
+
+    void write_priority_sets();
 };
 

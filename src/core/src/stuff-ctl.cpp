@@ -22,12 +22,12 @@ stuff_ctl::stuff_ctl()
         deactivate();
     });
 
-    node::set_wire_request_handler(ictl_, [this](eng::abc::pack args)
-    {
-        eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
-        do_command(std::move(args));
-        isc_.touch_current_state();
-    });
+    // node::set_wire_request_handler(ictl_, [this](eng::abc::pack args)
+    // {
+    //     eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
+    //     do_command(std::move(args));
+    //     isc_.touch_current_state();
+    // });
 
     fc_.ctl = node::add_output_wire("fc");
     node::set_wire_status_handler(fc_.ctl, [this] {
@@ -62,7 +62,10 @@ void stuff_ctl::activate(eng::abc::pack args)
     // Если мы уже активированы, повторная активация не допускается
     if (!isc_.is_in_state(nullptr))
     {
-        node::reject(ictl_, "Система уже активирована");
+        eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
+        do_command(std::move(args));
+        isc_.touch_current_state();
+        // node::reject(ictl_, "Система уже активирована");
         return;
     }
 
@@ -165,7 +168,8 @@ void stuff_ctl::do_command(eng::abc::pack args)
     auto it = map.find(cmd);
     if (it == map.end())
     {
-        node::wire_response(ictl_, false, { std::format("Незнакомая комманда: {}", cmd) });
+        node::reject(ictl_, std::format("Незнакомая комманда: {}", cmd));
+        // node::wire_response(ictl_, false, { std::format("Незнакомая комманда: {}", cmd) });
         return;
     }
 
@@ -194,7 +198,7 @@ void stuff_ctl::cmd_operation(eng::abc::pack args)
         axis_[axis].value = eng::abc::get<double>(args, iarg++);
     }
 
-    node::wire_response(ictl_, true, { });
+    // node::wire_response(ictl_, true, { });
 }
 
 void stuff_ctl::apply_fc_state()

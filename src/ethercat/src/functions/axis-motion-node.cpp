@@ -92,7 +92,7 @@ void axis_motion_node::motion_done()
     update_output_info();
 
     eng::log::info("{}: {}", name(), __func__);
-    node::set_ready(ictl_);
+    node::ready(ictl_);
 }
 
 void axis_motion_node::start_command_execution(eng::abc::pack args)
@@ -189,10 +189,7 @@ bool axis_motion_node::cmd_stop(eng::abc::pack const &)
     motion_control *mc = servo_motor_.control();
 
     if (mc == nullptr)
-    {
-        node::wire_response(ictl_, true, { });
         return true;
-    }
 
     eng::log::info("{}: {}", name(), __func__);
 
@@ -217,7 +214,7 @@ bool axis_motion_node::cmd_zerro(eng::abc::pack const &)
 
     update_output_info();
 
-    node::set_ready(ictl_);
+    node::ready(ictl_);
 
     return true;
 }
@@ -254,6 +251,6 @@ bool axis_motion_node::cmd_timed_shift(eng::abc::pack const &args)
 
 void axis_motion_node::register_on_bus_done()
 {
-    node::set_ready(ictl_);
+    node::ready(ictl_);
 }
 

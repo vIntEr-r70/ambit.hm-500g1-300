@@ -115,12 +115,12 @@ void tooth_center_search::move_x_point_1_done()
 // Мы в начальной позиции, необходимо сбросить БКИ
 void tooth_center_search::move_x_point_0_done()
 {
-    if (x_.status == "idle" && x_.bki)
-    {
-        node::send_wire_signal(owire_bki_, { });
-        step_ = &tooth_center_search::bki_x_point_1_reset;
-        return;
-    }
+    // if (x_.status == "idle" && x_.bki)
+    // {
+    //     node::send_wire_signal(owire_bki_, { });
+    //     step_ = &tooth_center_search::bki_x_point_1_reset;
+    //     return;
+    // }
 }
 
 // БКИ сброшен и готов к новому срабатыванию
@@ -186,12 +186,12 @@ void tooth_center_search::move_y_deep_done()
 void tooth_center_search::move_y_target_done()
 {
     // Сбрасываем БКИ
-    if (y_.status == "idle" && y_.bki)
-    {
-        node::send_wire_signal(owire_bki_, { });
-        step_ = &tooth_center_search::bki_y_target_reset;
-        return;
-    }
+    // if (y_.status == "idle" && y_.bki)
+    // {
+    //     node::send_wire_signal(owire_bki_, { });
+    //     step_ = &tooth_center_search::bki_y_target_reset;
+    //     return;
+    // }
 }
 
 void tooth_center_search::bki_y_target_reset()

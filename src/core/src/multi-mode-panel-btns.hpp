@@ -27,13 +27,6 @@ class multi_mode_panel_btns final
 
     handlers_t *handlers_{ nullptr };
 
-    struct fc_sets_t
-    {
-        double i;
-        double p;
-    };
-    std::optional<fc_sets_t> fc_sets_;
-
 public:
 
     multi_mode_panel_btns();

@@ -388,7 +388,7 @@ void auto_mode::execute_operation()
 {
     eng::abc::pack args;
     vm_.fill_stuff_task(vm_.op_phase_id(), args);
-    node::send_wire_signal(stuff_ctl_, std::move(args));
+    node::activate(stuff_ctl_, std::move(args));
 
     // std::println();
     // eng::log::info("DO PHASE: {}", vm_.op_phase_id());
@@ -419,7 +419,7 @@ void auto_mode::process_axis_positions()
 void auto_mode::upload_program(eng::abc::pack args)
 {
     program_b64_ = args ? eng::abc::get_sv(args) : "";
-    node::wire_response(ictl_, true, { });
+    // node::wire_response(ictl_, true, { });
     eng::log::info("{}: upload_program: {}", name(), program_b64_);
 }
 

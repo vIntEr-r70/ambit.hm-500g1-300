@@ -13,6 +13,7 @@
 #include "src/bki-ctl.hpp"
 #include "src/emg-ctl.hpp"
 #include "src/diverter-valve-ctl.hpp"
+#include "src/multi-mode-panel-btns.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -72,6 +73,8 @@ auto main() -> int
 
     diverter_valve_ctl dvc0{ "valve-ctl-drainage", 1 };
     diverter_valve_ctl dvc1{ "valve-ctl-sprayers", 2 };
+
+    multi_mode_panel_btns mmpb;
 
     return eng::run();
 }

@@ -84,9 +84,15 @@ void frequency_converter::activate(eng::abc::pack args)
     if (args.size() == 2)
     {
         // Новые уставки
-        iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
-        iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
-
+        priority_sets_ = {
+                .I = std::min(I_max_, eng::abc::get<double>(args, 0)),
+                .P = std::min(P_max_, eng::abc::get<double>(args, 1))
+            };
+        write_priority_sets();
+    }
+    else
+    {
+        priority_sets_.reset();
         write_sets();
     }
 
@@ -245,10 +251,27 @@ void frequency_converter::read_P_done(readed_regs_t regs)
     node::set_port_value(p_out_[pout::P], { P });
 }
 
+void frequency_converter::write_priority_sets()
+{
+    auto const &sets = priority_sets_.value();
+
+    // Записываем уставки
+    std::array<std::uint16_t, 3> iup{
+        static_cast<std::uint16_t>(std::lround(sets.I * 10.0)),
+        static_cast<std::uint16_t>(std::lround(iup_[kU])),
+        static_cast<std::uint16_t>(std::lround(sets.P * 0.01))
+    };
+
+    eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
+
+    eng::log::info("{}: CMD: write sets", name());
+    modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
+}
+
 void frequency_converter::write_sets()
 {
     // Игнорируем изменение уставок если устройство не в сети
-    if (!is_online()) return;
+    if (!is_online() || priority_sets_.has_value()) return;
 
     // Записываем уставки
     std::array<std::uint16_t, 3> iup{
