@@ -424,7 +424,7 @@ private:
         }
 
         // Текущий выполняемый интервал
-        auto const &interval = intervals_[iid_];
+        auto &interval = intervals_[iid_];
 
         double t0 = t0_;
         double s0 = s0_;
@@ -454,6 +454,14 @@ private:
             // Этап движения с постоянной скоростью
             case 1: {
                 double ds = v * dt;
+                // Если выполнение было прервано, делаем
+                // длительность этапа текущим моментом времени
+                if (terminate_)
+                {
+                    interval.idt[i] = dt;
+                    interval.ids[i] = ds;
+                }
+                // Рассчитываем новую координату
                 return s0 + std::copysign(ds, interval.dS); }
             }
         }

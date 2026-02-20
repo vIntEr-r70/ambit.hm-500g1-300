@@ -206,8 +206,6 @@ void frequency_converter::read_status_done(readed_regs_t regs)
 
         eng::log::info("{}: status = damaged", name());
 
-        node::ready(ictl_);
-
         // Запоминаем новые значения масок ошибок
         std::ranges::copy(src, damages_.begin());
 

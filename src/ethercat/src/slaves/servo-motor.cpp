@@ -220,6 +220,7 @@ void servo_motor::control_mode_csp(double dt)
         return;
     }
 
+#ifdef BUILDROOT
     // Получаем текущее состояние входов драйвера
     std::bitset<32> status{ DI() };
 
@@ -246,11 +247,13 @@ void servo_motor::control_mode_csp(double dt)
 
         return;
     }
+#endif
 
     if (!std::isnan(ratio_) && !std::isnan(position_))
     {
         double next_position = ctl_->next_position(position_, dt);
 
+#ifdef BUILDROOT
         bool overtravel =
             (next_position > position_ && status.test(1)) ||
             (next_position < position_ && status.test(0));
@@ -265,6 +268,7 @@ void servo_motor::control_mode_csp(double dt)
 
             return;
         }
+#endif
 
         position_ = next_position;
 

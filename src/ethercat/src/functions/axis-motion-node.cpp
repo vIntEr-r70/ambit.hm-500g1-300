@@ -193,11 +193,9 @@ bool axis_motion_node::cmd_stop(eng::abc::pack const &)
 
     eng::log::info("{}: {}", name(), __func__);
 
-    if (mc != &by_position_ && mc != &by_velocity_)
-        return false;
-
     by_position_.update_speed_limit(0.0);
     by_velocity_.update_speed_limit(0.0);
+    by_time_.reset();
 
     return true;
 }
@@ -224,6 +222,8 @@ bool axis_motion_node::cmd_timed_shift(eng::abc::pack const &args)
 {
     motion_control *mc = servo_motor_.control();
     if (mc != nullptr) return false;
+
+    eng::log::info("{}: {}", name(), __func__);
 
     double t0 = eng::abc::get<double>(args, 0);
     by_time_.init(t0);

@@ -270,7 +270,7 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
 
 constexpr static std::tuple<int, int, int> hms(double sec)
 {
-    int seconds = static_cast<int>(sec);
+    int seconds = static_cast<int>(std::lround(sec));
     int h = seconds / 3600;
     int m = (seconds % 3600) / 60;
     int s = seconds % 60;

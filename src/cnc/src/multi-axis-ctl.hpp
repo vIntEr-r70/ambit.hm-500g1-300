@@ -114,8 +114,6 @@ private:
 
     void calculate_moving(axis_group_item_t, std::size_t);
 
-    // void sync_timings(std::size_t);
-
     double phase_time_begin(std::size_t) const noexcept;
 
     std::size_t calculate_move_step(std::size_t);
@@ -127,8 +125,6 @@ private:
 private:
 
     void register_on_bus_done() override final;
-
-    void response_handler(char, bool);
 
     void wire_status_was_changed(char);
 

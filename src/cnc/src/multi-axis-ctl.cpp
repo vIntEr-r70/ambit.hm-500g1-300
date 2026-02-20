@@ -11,7 +11,6 @@
 #include <optional>
 #include <sstream>
 #include <numeric>
-#include <filesystem>
 #include <chrono>
 #include <stdexcept>
 
@@ -122,7 +121,7 @@ void multi_axis_ctl::activate(eng::abc::pack args)
 
     if (it != help_set_.end())
     {
-        node::terminate(ictl_, "Присутствуют оси, не готовые к движению");
+        node::reject(ictl_, "Присутствуют оси, не готовые к движению");
         return;
     }
 
@@ -139,12 +138,16 @@ void multi_axis_ctl::activate(eng::abc::pack args)
 void multi_axis_ctl::deactivate()
 {
     if (in_proc_.empty())
-    {
-        node::set_ready(ictl_);
         return;
-    }
 
-    tasks_.clear();
+    std::ranges::for_each(in_proc_, [this](auto &pair)
+    {
+        char axis = pair.first;
+        pair.second = axis_phases_[axis].phases.size();
+        node::activate(info_[axis].ctl, { "stop" });
+    });
+
+    node::terminate(ictl_, "Прерываем выполнение");
 }
 
 // Рассчитываем для каждой оси время выполнения движения
@@ -171,7 +174,7 @@ void multi_axis_ctl::execute_phase(char axis)
             // отправляем ответ нашему контроллеру
             eng::log::info("{}: ALL AXIS DONE", name());
 
-            node::set_ready(ictl_);
+            node::ready(ictl_);
         }
 
         return;
@@ -582,7 +585,7 @@ constexpr static std::optional<double> calculate_vmax(double S, double T, double
 
     double discriminant = (b * b * 0.25) - c;
 
-    if (discriminant < 0.0 && discriminant > -0.00000000001)
+    if (discriminant < 0.0 && discriminant > -0.0000001)
         discriminant = 0.0;
 
     // Если времени недостаточно чтобы преодолеть
@@ -756,21 +759,7 @@ std::size_t multi_axis_ctl::calculate_group_axis_move_step(std::size_t istep, mo
 // Запускаем цикл выполнения движения по нескольким осям
 void multi_axis_ctl::register_on_bus_done()
 {
-    node::set_ready(ictl_);
-}
-
-// Ось завершила выполнение движения либо вернула ошибку
-void multi_axis_ctl::response_handler(char axis, bool success)
-{
-    // Если хоть одна из осей вернула ошибку,
-    // прекращаем движение остальных осей
-    // Возвращаем результат выполнения задания
-    if (!success) return;
-
-    eng::log::info("{}: {}: {}", name(), axis,
-        "1: Отправляем на выполнение следующий этап если таковой имеется");
-
-    execute_phase(axis);
+    node::ready(ictl_);
 }
 
 void multi_axis_ctl::wire_status_was_changed(char axis)
@@ -779,59 +768,24 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
     if (!in_proc_.contains(axis))
         return;
 
-    if (node::is_transiting(info_[axis].ctl))
+    // Ось начала выполнять движение
+    if (node::is_active(info_[axis].ctl))
         return;
 
-    if (!tasks_.empty())
+    // Ось успешно завершила выполнять движение
+    if (node::is_ready(info_[axis].ctl))
     {
-        // Ось начала выполнять движение
-        if (node::is_active(info_[axis].ctl))
-            return;
-
-        // Ось успешно завершила выполнять движение
-        if (node::is_ready(info_[axis].ctl))
-        {
-            eng::log::info("{}: {}: {}", name(), axis,
-                "2: Отправляем на выполнение следующий этап если таковой имеется");
-
-            execute_phase(axis);
-            return;
-        }
-
-        // Что-то произошло и необходимо деактивировать все активированныe оси
-        // В качестве маркера того что мы ожидаем завершения задания
-
-        tasks_.clear();
-
-        std::ranges::for_each(in_proc_, [this, axis](auto const &pair)
-        {
-            // Пропускаем проблемную ось
-            if (axis != pair.first)
-            {
-                if (node::is_active(info_[axis].ctl))
-                {
-                    node::deactivate(info_[axis].ctl);
-                    return;
-                }
-            }
-
-            // Удаляем оси, которые нам ждать нет необходимости
-            in_proc_.erase(axis);
-        });
-    }
-    else
-    {
-        if (node::is_active(info_[axis].ctl))
-        {
-            node::deactivate(info_[axis].ctl);
-            return;
-        }
-
-        in_proc_.erase(axis);
+        eng::log::info("{}: {}: Отправляем на выполнение следующий этап", name(), axis);
+        execute_phase(axis);
+        return;
     }
 
-    if (in_proc_.empty())
-        node::set_ready(ictl_);
+    eng::log::error("{}: {}: Движение было прервано", name(), axis);
+
+    // Удаляем проблемную ось, она и так прекратила работу
+    in_proc_.erase(axis);
+
+    deactivate();
 }
 
 // Np, [ speed, Na, [ axis, distance ], ... ], ... 

@@ -47,7 +47,8 @@ auto_mode::auto_mode()
     node::set_wire_status_handler(stuff_ctl_, [this]
     {
         eng::log::info("{}[stuff-ctl]: -> {}", name(), eng::sibus::to_string(node::status(stuff_ctl_)));
-        (this->*sstate_)(1, node::status(stuff_ctl_));
+        if (isc_.is_in_state(nullptr))
+            (this->*sstate_)(1, node::status(stuff_ctl_));
     });
 
     node::add_input_port_unsafe("program", [this](eng::abc::pack args)
