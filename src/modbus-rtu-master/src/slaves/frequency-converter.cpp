@@ -1,4 +1,5 @@
 #include "frequency-converter.hpp"
+#include "modbus-unit.hpp"
 
 #include <eng/timer.hpp>
 #include <eng/log.hpp>
@@ -41,16 +42,19 @@ frequency_converter::frequency_converter(std::size_t unit_id)
 
     node::add_input_port("I", [this](eng::abc::pack args)
     {
-        iup_[kI] = std::min(I_max_, eng::abc::get<double>(args, 0));
+        iup_[kI] = std::min(I_max_, eng::abc::get<double>(args));
         write_sets();
     });
 
     node::add_input_port("P", [this](eng::abc::pack args)
     {
-        iup_[kP] = std::min(P_max_, eng::abc::get<double>(args, 1));
+        iup_[kP] = std::min(P_max_, eng::abc::get<double>(args));
         write_sets();
     });
+}
 
+void frequency_converter::register_on_bus_done()
+{
     // Опрос текущего состояния устройства
     std::size_t idx = modbus_unit::add_read_task(0xA411, 5, 300);
     read_task_handlers_[idx] = &frequency_converter::read_status_done;
@@ -66,12 +70,8 @@ frequency_converter::frequency_converter(std::size_t unit_id)
     // Опрос мощности
     idx = modbus_unit::add_read_task(0xA437, 1, 1000);
     read_task_handlers_[idx] = &frequency_converter::read_P_done;
-}
 
-void frequency_converter::register_on_bus_done()
-{
-    if (is_online())
-        node::ready(ictl_);
+    modbus_unit::start_working();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +142,6 @@ void frequency_converter::connection_was_lost()
     eng::log::info("{}: {}", name(), __func__);
 
     node::terminate(ictl_, "Связь с устройством потеряна");
-
     status_.reset();
 
     // Мы не знаем какое состояние теперь у ПЧ
@@ -207,6 +206,8 @@ void frequency_converter::read_status_done(readed_regs_t regs)
 
         eng::log::info("{}: status = damaged", name());
 
+        node::ready(ictl_);
+
         // Запоминаем новые значения масок ошибок
         std::ranges::copy(src, damages_.begin());
 
@@ -220,7 +221,7 @@ void frequency_converter::read_status_done(readed_regs_t regs)
     }
 
     // Если это первый статус с момента восстановления связи
-    if (!status_.has_value() && node::is_registered_on_bus())
+    if (!status_.has_value() || (status_.value() != estatus::powered && node::is_active(ictl_)))
         node::ready(ictl_);
 
     // Запоминаем новое значение статуса

@@ -59,6 +59,8 @@ public:
 
 protected:
 
+    void start_working();
+
     bool is_online() const noexcept { return online_ ? *online_ : false; }
 
     std::size_t add_read_task(std::uint16_t, std::size_t, std::uint32_t);

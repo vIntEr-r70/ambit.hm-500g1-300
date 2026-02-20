@@ -399,25 +399,36 @@ namespace modbus_rtu_master
         port::port.set_stop_bit(eng::rtu::serial_port::stop_bit::one);
         port::port.set_parity(eng::rtu::serial_port::parity::no);
 
-        // Запускаем цикл работы для каждого устройства
-        std::ranges::for_each(master::clients, [](auto &client)
-        {
-            client.unit->for_each_read_holding(
-                [&client](std::size_t ikey, std::uint16_t address, std::size_t number_of, std::uint32_t msecs)
-                {
-                    client.regs_map.insert(ikey, address, number_of, msecs);
-                });
-
-            if (!client.regs_map.initialize())
-                return;
-
-            master::holding_registers_request(&client);
-        });
+        // // Запускаем цикл работы для каждого устройства
+        // std::ranges::for_each(master::clients, [](auto &client)
+        // {
+        //     client.unit->for_each_read_holding(
+        //         [&client](std::size_t ikey, std::uint16_t address, std::size_t number_of, std::uint32_t msecs)
+        //         {
+        //             client.regs_map.insert(ikey, address, number_of, msecs);
+        //         });
+        //
+        //     if (!client.regs_map.initialize())
+        //         return;
+        //
+        // });
     }
 
     void add_new_unit(modbus_unit *unit)
     {
         master::clients.emplace(master::clients.end(), unit);
+
+        auto &client = master::clients.back();
+        client.unit->for_each_read_holding(
+            [&client](std::size_t ikey, std::uint16_t address, std::size_t number_of, std::uint32_t msecs)
+            {
+                client.regs_map.insert(ikey, address, number_of, msecs);
+            });
+
+        if (!client.regs_map.initialize())
+            return;
+
+        master::holding_registers_request(&client);
     }
 
     void restart(modbus_unit *unit)

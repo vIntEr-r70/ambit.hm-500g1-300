@@ -8,13 +8,16 @@
 modbus_unit::modbus_unit(std::uint8_t id)
     : id_(id)
 {
-    modbus_rtu_master::add_new_unit(this);
-
     // Таймер, работающий с целю восстановления связи с устройством
     offline_timer_id_ = eng::timer::create([this]
     {
         modbus_rtu_master::restart(this);
     });
+}
+
+void modbus_unit::start_working()
+{
+    modbus_rtu_master::add_new_unit(this);
 }
 
 std::size_t modbus_unit::add_read_task(std::uint16_t address, std::size_t number_of, std::uint32_t msecs)

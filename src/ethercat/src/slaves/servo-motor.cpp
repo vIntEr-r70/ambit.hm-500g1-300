@@ -90,6 +90,8 @@ void servo_motor::turning_on()
 
     mode_ = &servo_motor::running;
     motion_ = &servo_motor::control_mode_csp;
+
+    // Вот только тут необходимо выставить флаг готовности выполнения команд
 }
 
 void servo_motor::turning_off()
@@ -180,6 +182,14 @@ void servo_motor::running()
         }
     }
 
+    // А вот тут необходимо его убрать
+
+    if (ctl_)
+    {
+        ctl_->do_hard_stop();
+        ctl_ = nullptr;
+    }
+
     mode_ = &servo_motor::turning_off;
     motion_ = nullptr;
 
@@ -239,8 +249,23 @@ void servo_motor::control_mode_csp(double dt)
 
     if (!std::isnan(ratio_) && !std::isnan(position_))
     {
-        // TODO: решить, как себя вести на концевиках
         double next_position = ctl_->next_position(position_, dt);
+
+        bool overtravel =
+            (next_position > position_ && status.test(1)) ||
+            (next_position < position_ && status.test(0));
+
+        // Если мы на концевике, не выполняем движения
+        if (overtravel)
+        {
+            eng::log::info("[{}]: {}: На концевике", info().target.position, __func__);
+
+            ctl_->do_hard_stop();
+            ctl_ = nullptr;
+
+            return;
+        }
+
         position_ = next_position;
 
 #ifdef BUILDROOT

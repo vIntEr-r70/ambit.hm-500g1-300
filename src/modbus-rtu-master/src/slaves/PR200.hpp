@@ -31,6 +31,10 @@ public:
 
 private:
 
+    void register_on_bus_done() override final;
+
+private:
+
     void read_task_done(std::size_t, readed_regs_t) override final;
 
     void connection_was_lost() override final;

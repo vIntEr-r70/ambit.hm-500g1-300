@@ -63,7 +63,7 @@ void PLC110::now_unit_online()
 {
     update_outputs();
 
-    for (std::size_t i = 0; mk_outputs_.size(); ++i)
+    for (std::size_t i = 0; i < mk_outputs_.size(); ++i)
         update_mk_outputs(i);
 }
 

@@ -16,12 +16,12 @@ class multi_mode_panel_btns final
     };
 
     handlers_t fc_{
-        &multi_mode_panel_btns::fc_turn_off_action,
+        &multi_mode_panel_btns::fc_turn_on_action,
         &multi_mode_panel_btns::fc_turn_off_action
     };
 
     handlers_t auto_{
-        &multi_mode_panel_btns::auto_turn_off_action,
+        &multi_mode_panel_btns::auto_turn_on_action,
         &multi_mode_panel_btns::auto_turn_off_action
     };
 
