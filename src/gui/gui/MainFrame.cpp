@@ -47,9 +47,16 @@ MainFrame::MainFrame()
     connect(w, SIGNAL(login(int)), this, SLOT(on_login(int)));
     NavigationPanel_->add(w, "auth", false);
 
-    node::add_input_port_unsafe("mode", [this](eng::abc::pack args)
+    node::add_input_port_unsafe("auto", [this](eng::abc::pack args)
     {
-        nf_sys_mode(args ? eng::abc::get_sv(args) : "");
+        auto_mode_ = args ? eng::abc::get_sv(args) : "";
+        update_mode();
+    });
+
+    node::add_input_port_unsafe("rcu", [this](eng::abc::pack args)
+    {
+        rcu_mode_ = args ? eng::abc::get_sv(args) : "";
+        update_mode();
     });
 }
 
@@ -122,7 +129,7 @@ void MainFrame::register_on_bus_done()
     lock_msg_box_->allow(true);
 #endif
 
-    nf_sys_mode("");
+    update_mode();
 }
 
 void MainFrame::on_login(int guid) noexcept
@@ -150,44 +157,25 @@ void MainFrame::on_logout() noexcept
     lock_msg_box_->allow(false);
 }
 
-void MainFrame::nf_sys_mode(std::string_view mode) noexcept
+void MainFrame::update_mode()
 {
     NavigationPanel_->set_top_label("- - -", Qt::white);
     NavigationPanel_->set_bottom_label("- - -", Qt::white);
 
-    if (mode == "manual" || mode == "rcu")
-    {
-        NavigationPanel_->set_top_label("Ручной", QColor(0xFFB800));
-        NavigationPanel_->set_bottom_label((mode == "rcu") ? "Пульт" : "Панель", QColor(0xFFB800));
-    }
-    else if (mode == "auto")
+    if (auto_mode_ == "auto")
     {
         NavigationPanel_->set_top_label("Авто", QColor(0xFFB800));
     }
-}
+    else if (auto_mode_ == "manual")
+    {
+        NavigationPanel_->set_top_label("Ручной", QColor(0xFFB800));
 
-// void MainFrame::nf_sys_bki_lock(bool lock) noexcept
-// {
-//     bki_lock_flag_ = lock;
-//
-//     if (lock && !allow_bki_lock_msg_)
-//         return;
-//
-//     if (lock)
-//         bki_lock_msg_->show();
-//     else
-//         bki_lock_msg_->hide();
-// }
-//
-// void MainFrame::nf_sys_emg_stop(bool lock) noexcept
-// {
-//     emg_stop_flag_ = lock;
-//
-//     if (lock)
-//         emg_stop_msg_->show();
-//     else
-//         emg_stop_msg_->hide();
-// }
+        if (rcu_mode_ == "rcu")
+            NavigationPanel_->set_bottom_label("Пульт", QColor(0xFFB800));
+        else if (rcu_mode_ == "panel")
+            NavigationPanel_->set_bottom_label("Панель", QColor(0xFFB800));
+    }
+}
 
 // void MainFrame::nf_sys_locker(std::uint8_t status) noexcept
 // {

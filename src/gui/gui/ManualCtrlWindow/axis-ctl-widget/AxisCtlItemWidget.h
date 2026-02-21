@@ -49,6 +49,8 @@ private:
     eng::sibus::output_wire_id_t ctl_;
 
     char axis_;
+    char rcu_axis_;
+
     QString name_;
 
     QLabel* lblHeader_;

@@ -25,13 +25,11 @@ rcu_ctl::rcu_ctl()
     ambit::load_axis_list([this](char axis, std::string_view, bool)
     {
         axis_map_[axis].ctl = node::add_output_wire(std::string(1, axis));
-        node::set_wire_status_handler(axis_map_[axis].ctl, [this, axis]
-        {
-        });
 
-        axis_map_[axis].linked_tsp_key = '\0';
-        axis_map_[axis].speed = { 0.0, 0.0, 0.0 };
-        axis_map_[axis].ratio = 0.0;
+        node::add_input_port_unsafe(std::format("{}-speed", axis), [this, axis](eng::abc::pack args)
+        {
+            axis_map_[axis].speed = args ? eng::abc::get<double>(args) : 0.0;
+        });
 
         std::string key = std::format("axis/{}", axis);
         eng::sibus::client::config_listener(key, [this, axis](std::string_view json)
@@ -42,24 +40,16 @@ rcu_ctl::rcu_ctl()
             axis_config::load(desc, json);
 
             axis_map_[axis].linked_tsp_key = desc.rcu.link_axis;
-            axis_map_[axis].speed = desc.rcu.speed;
             axis_map_[axis].ratio = desc.rcu.ratio;
         });
     });
 
-    add_input_port("ss0", [this](eng::abc::pack value) {
-        speed_select_.set(0, eng::abc::get<bool>(value));
-    });
-
-    add_input_port("ss1", [this](eng::abc::pack value) {
-        speed_select_.set(1, eng::abc::get<bool>(value));
-    });
-
-    add_input_port_unsafe("spin", [this](eng::abc::pack args) {
+    add_input_port_unsafe("spin", [this](eng::abc::pack args)
+    {
         spin_value_changed(std::move(args));
     });
 
-    led_ = add_output_port("led");
+    out_.axis = node::add_output_port("axis");
 
     tid_ = eng::timer::create([this]
     {
@@ -78,16 +68,12 @@ void rcu_ctl::update_axis_selection()
     char prev_axis = axis_;
     axis_ = tsp_key ? get_selected_axis(tsp_key) : '\0';
 
-    node::set_port_value(led_, { axis_ ? false : true });
+    node::set_port_value(out_.axis, { axis_ });
 
     // Тангету отпустили или не обрабатываемый tsp
     if (axis_ == '\0' && prev_axis != '\0')
     {
         reset_filter(prev_axis);
-
-        // auto const &axis = axis_map_[prev_axis];
-        // node::activate(axis.ctl, { "stop" });
-
         return;
     }
 }
@@ -139,23 +125,12 @@ void rcu_ctl::spin_value_changed(eng::abc::pack args)
 void rcu_ctl::update_axis_position(char axis, double diff)
 {
     auto &ref = axis_map_[axis_];
-
-    // if (!node::is_ready(ref.ctl))
-    //     return;
-    //
     double shift = diff / ref.ratio;
-    std::size_t idx = std::min<std::size_t>
-        (speed_select_.to_ulong(), ref.speed.size() - 1);
-    double speed = ref.speed[idx];
-
-    // eng::log::info("{}: speed = {:.3f}, shift = {:.3f},", name(), speed, shift);
-    //
-    // node::activate(ref.ctl, { "shift", shift, speed });
 
     if (!eng::timer::is_running(tid_))
         eng::timer::start(tid_, std::chrono::milliseconds(50));
 
-    add_next_value(axis, shift * speed);
+    add_next_value(axis, shift * ref.speed);
 }
 
 void rcu_ctl::add_next_value(char axis, double value)
@@ -178,9 +153,7 @@ void rcu_ctl::calculate_next_value(char axis)
 
     auto &ref = axis_map_[axis];
 
-    std::size_t idx = std::min<std::size_t>
-        (speed_select_.to_ulong(), ref.speed.size() - 1);
-    double limit = std::min(std::abs(speed), ref.speed[idx]);
+    double limit = std::min(std::abs(speed), ref.speed);
     speed = std::copysign(limit, speed);
 
     if (last_speed_ != speed)

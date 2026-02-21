@@ -3,7 +3,6 @@
 #include <eng/sibus/node.hpp>
 #include <eng/timer.hpp>
 
-#include <bitset>
 #include <optional>
 #include <vector>
 
@@ -15,17 +14,20 @@ class rcu_ctl final
     struct axis_t
     {
         eng::sibus::output_wire_id_t ctl;
-        char linked_tsp_key;
-        std::array<double, 3> speed;
-        double ratio;
+        char linked_tsp_key{ '\0' };
+        double speed{ 0.0 };
+        double ratio{ 0.0 };
     };
     std::unordered_map<char, axis_t> axis_map_;
 
     std::unordered_map<char, bool> tsp_select_map_;
-    std::bitset<2> speed_select_;
     std::optional<std::int32_t> position_;
 
-    eng::sibus::output_port_id_t led_;
+    struct
+    {
+        eng::sibus::output_port_id_t axis;
+
+    } out_;
 
     std::vector<double> filter_;
     eng::timer::id_t tid_;

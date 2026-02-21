@@ -90,7 +90,7 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     });
 
     node::add_input_port("position",
-        [this](eng::abc::pack const &args)
+        [this](eng::abc::pack args)
         {
             double position = eng::abc::get<double>(args);
             vvr_pos_->set_value(position);
@@ -98,25 +98,34 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
         });
 
     node::add_input_port("real-speed",
-        [this](eng::abc::pack const &args)
+        [this](eng::abc::pack args)
         {
             double speed = eng::abc::get<double>(args);
             if (rotation_) speed /= 6;
             emit axis_real_speed(speed);
         });
 
-    node::add_input_port("set-speed",
-        [this](eng::abc::pack const &args)
+    node::add_input_port_unsafe("set-speed",
+        [this](eng::abc::pack args)
         {
-            double speed = eng::abc::get<double>(args);
-            vvr_speed_->set_value(rotation_ ? (speed / 6) : speed);
+            double speed = args ? eng::abc::get<double>(args) : NAN;
+            vvr_speed_->setEnabled(!std::isnan(speed));
+            if (!std::isnan(speed))
+                vvr_speed_->set_value(rotation_ ? (speed / 6) : speed);
             emit axis_set_speed(speed);
         });
 
     node::add_input_port("status",
-        [this](eng::abc::pack const &args)
+        [this](eng::abc::pack args)
         {
             update_status(eng::abc::get<std::uint8_t>(args));
+        });
+
+    node::add_input_port("rcu-axis",
+        [this](eng::abc::pack args)
+        {
+            rcu_axis_ = eng::abc::get<char>(args);
+            update_axis_view();
         });
 
     update_axis_view();
@@ -140,9 +149,10 @@ void AxisCtlItemWidget::update_axis_view()
 
     if (active)
         color_scheme_id = 1;
-
-    if (fault_)
+    else if (fault_)
         color_scheme_id = 3;
+    else if (rcu_axis_ == axis_)
+        color_scheme_id = 2;
 
     auto const& clr = colors[color_scheme_id];
     lblHeader_->setStyleSheet(QString("border-bottom-left-radius: 0; border-bottom-right-radius: 0;"
@@ -171,11 +181,6 @@ void AxisCtlItemWidget::mousePressEvent(QMouseEvent*)
     if (node::is_ready(ctl_)) emit on_move_to_click();
 }
 
-// void AxisCtlItemWidget::ls_min_max(std::size_t id, bool v) noexcept
-// {
-//
-//     updateGui();
-// }
 
 // void AxisCtlItemWidget::set_sys_ctrl_mode_axis(char v) noexcept
 // {

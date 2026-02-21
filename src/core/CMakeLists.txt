@@ -16,7 +16,8 @@ add_executable(${PROJECT_NAME}
 
     src/current-conductors.cpp
 
-    src/working-mode-selector.cpp
+    src/manual-auto-switch.cpp
+    src/panel-rcu-switch.cpp
 
     src/drainage-ctl.cpp
     src/barrel-ctl.cpp

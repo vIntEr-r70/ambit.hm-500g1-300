@@ -27,7 +27,7 @@ private slots:
 
 private:
 
-    void nf_sys_mode(std::string_view) noexcept;
+    void update_mode();
 
     void on_logout() noexcept;
 
@@ -44,5 +44,8 @@ private:
     auto_ctl_window *auto_ctl_window_;
 
     LockMessageBox *lock_msg_box_;
+
+    std::string rcu_mode_;
+    std::string auto_mode_;
 };
 

@@ -5,7 +5,6 @@
 #include "src/speed-node.hpp"
 #include "src/panel-button-ctl.hpp"
 #include "src/current-conductors.hpp"
-#include "src/working-mode-selector.hpp"
 #include "src/barrel-ctl.hpp"
 #include "src/barrel-lvl-ctl.hpp"
 #include "src/drainage-ctl.hpp"
@@ -14,6 +13,8 @@
 #include "src/emg-ctl.hpp"
 #include "src/diverter-valve-ctl.hpp"
 #include "src/multi-mode-panel-btns.hpp"
+#include "src/manual-auto-switch.hpp"
+#include "src/panel-rcu-switch.hpp"
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
@@ -43,7 +44,8 @@ auto main() -> int
 
     current_conductors cc0;
 
-    working_mode_selector wms0;
+    manual_auto_switch mas;
+    panel_rcu_switch prs;
 
     intervals intervals(conf_path);
 
@@ -52,7 +54,7 @@ auto main() -> int
     speed_node speed_z{ 'Z' };
     speed_node speed_v{ 'V' };
 
-    drainage_ctl dc0;
+    drainage_ctl dc;
 
     barrel_ctl bc0{ "fc" };
     barrel_ctl bc1{ "water" };
@@ -66,7 +68,7 @@ auto main() -> int
     sprayer_ctl spc1("sp1-ctl");
     sprayer_ctl spc2("sp2-ctl");
 
-    error_mask em0;
+    error_mask em;
 
     bki_ctl bki;
     emg_ctl emg;

@@ -147,8 +147,8 @@ void frequency_converter::connection_was_lost()
     // Мы не знаем какое состояние теперь у ПЧ
     std::ranges::fill(damages_, 0);
 
-    node::set_port_value(p_out_[pout::powered], { });
-    node::set_port_value(p_out_[pout::damaged], { });
+    node::set_port_value(p_out_[pout::powered], { false });
+    node::set_port_value(p_out_[pout::damaged], { false });
 
     node::set_port_value(p_out_[pout::F], { });
     node::set_port_value(p_out_[pout::U_in], { });
