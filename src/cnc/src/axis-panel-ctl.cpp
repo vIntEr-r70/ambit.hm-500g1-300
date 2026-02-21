@@ -27,6 +27,5 @@ axis_panel_ctl::axis_panel_ctl(char axis)
 
 void axis_panel_ctl::spin_command(double speed)
 {
-    if (!node::is_blocked(ctl_))
-        node::activate(ctl_, { "spin", speed });
+    node::activate(ctl_, { "spin", speed });
 }
