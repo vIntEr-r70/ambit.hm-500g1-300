@@ -8,7 +8,7 @@
 #include <eng/sibus/client.hpp>
 
 axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
-    : eng::sibus::node(std::format("axis-motion-{}", axis)) 
+    : eng::sibus::node(std::format("axis-motion-{}", axis))
     , axis_(axis)
     , servo_motor_(servo_motor)
     , by_position_(*this)
@@ -47,10 +47,19 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
         deactivate();
     });
 
-    auto tid = eng::timer::create([this] {
+    auto tid = eng::timer::create([this]
+    {
         update_output_info();
     });
     eng::timer::start(tid, std::chrono::milliseconds(300));
+
+    servo_motor_.driver_was_running = [this](bool ready)
+    {
+        if (ready)
+            node::ready(ictl_);
+        else
+            node::terminate(ictl_, "Драйвер в состоянии ошибки");
+    };
 }
 
 // Провод от нас отключен
@@ -75,23 +84,23 @@ void axis_motion_node::deactivate()
     node::terminate(ictl_, "Завершаем движение");
 }
 
-double axis_motion_node::local_position() const noexcept
-{
-    return servo_motor_.position() - origin_offset_;
-}
-
 void axis_motion_node::update_output_info()
 {
-    node::set_port_value(position_, { local_position() });
+    double local_position = servo_motor_.position() - origin_offset_;
+    node::set_port_value(position_, { local_position });
+
     node::set_port_value(speed_, { servo_motor_.speed() });
     node::set_port_value(status_, { servo_motor_.status() });
 }
 
-void axis_motion_node::motion_done()
+void axis_motion_node::motion_done(bool is_ok)
 {
+    eng::log::info("{}: {}", name(), __func__);
     update_output_info();
 
-    eng::log::info("{}: {}", name(), __func__);
+    if (is_ok == false)
+        node::terminate(ictl_, "Выполнение было прервано");
+
     node::ready(ictl_);
 }
 
@@ -119,7 +128,7 @@ void axis_motion_node::start_command_execution(eng::abc::pack args)
     if ((this->*(it->second))(args))
         return;
 
-    node::reject(ictl_, "Недопустимый режим движения");
+    node::reject(ictl_, "Недопустимая команда");
 }
 
 bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)
@@ -130,10 +139,6 @@ bool axis_motion_node::cmd_move_to(eng::abc::pack const &args)
     motion_control *mc = servo_motor_.control();
     if (mc != nullptr && mc != &by_position_)
         return false;
-
-#ifndef BUILDROOT
-    speed = 10.0;
-#endif
 
     by_position_.update_speed_limit(speed);
     by_position_.update_absolute_target(pos + origin_offset_);
@@ -204,7 +209,7 @@ bool axis_motion_node::cmd_zerro(eng::abc::pack const &)
 {
     // Ось находится в движении
     if (servo_motor_.control())
-        return true;
+        return false;
 
     origin_offset_ = servo_motor_.position();
 
@@ -251,6 +256,5 @@ bool axis_motion_node::cmd_timed_shift(eng::abc::pack const &args)
 
 void axis_motion_node::register_on_bus_done()
 {
-    node::ready(ictl_);
 }
 

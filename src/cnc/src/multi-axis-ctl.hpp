@@ -98,7 +98,7 @@ private:
 
     void activate(eng::abc::pack);
 
-    void deactivate();
+    void deactivate(bool);
 
 private:
 

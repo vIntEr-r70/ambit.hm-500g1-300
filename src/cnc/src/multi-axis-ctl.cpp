@@ -57,11 +57,13 @@ multi_axis_ctl::multi_axis_ctl()
 {
     ictl_ = node::add_input_wire();
 
-    node::set_activate_handler(ictl_, [this](eng::abc::pack args) {
+    node::set_activate_handler(ictl_, [this](eng::abc::pack args)
+    {
         activate(std::move(args));
     });
-    node::set_deactivate_handler(ictl_, [this] {
-        deactivate();
+    node::set_deactivate_handler(ictl_, [this]
+    {
+        deactivate(false);
     });
 
     ambit::load_axis_list([this](char axis, std::string_view, bool)
@@ -91,7 +93,8 @@ multi_axis_ctl::multi_axis_ctl()
         auto ctl = node::add_output_wire(std::string(1, axis));
         info.second.ctl = ctl;
 
-        node::set_wire_status_handler(ctl, [this,axis] {
+        node::set_wire_status_handler(ctl, [this,axis]
+        {
             wire_status_was_changed(axis);
         });
 
@@ -135,9 +138,9 @@ void multi_axis_ctl::activate(eng::abc::pack args)
     });
 }
 
-void multi_axis_ctl::deactivate()
+void multi_axis_ctl::deactivate(bool local_call)
 {
-    if (in_proc_.empty())
+    if (in_proc_.empty() && !local_call)
         return;
 
     std::ranges::for_each(in_proc_, [this](auto &pair)
@@ -148,6 +151,9 @@ void multi_axis_ctl::deactivate()
     });
 
     node::terminate(ictl_, "Прерываем выполнение");
+
+    if (in_proc_.empty() && local_call)
+        node::ready(ictl_);
 }
 
 // Рассчитываем для каждой оси время выполнения движения
@@ -785,7 +791,7 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
     // Удаляем проблемную ось, она и так прекратила работу
     in_proc_.erase(axis);
 
-    deactivate();
+    deactivate(true);
 }
 
 // Np, [ speed, Na, [ axis, distance ], ... ], ... 

@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <optional>
+#include <functional>
 
 enum class servo_motor_status
 {
@@ -34,6 +35,10 @@ class servo_motor
     double ratio_{ 1.0 };
 
     double position_{ NAN };
+
+public:
+
+    std::function<void(bool)> driver_was_running;
 
 protected:
 

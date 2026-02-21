@@ -91,7 +91,8 @@ void servo_motor::turning_on()
     mode_ = &servo_motor::running;
     motion_ = &servo_motor::control_mode_csp;
 
-    // Вот только тут необходимо выставить флаг готовности выполнения команд
+    // Сообщаем на верх что мы готовы к работе
+    driver_was_running(true);
 }
 
 void servo_motor::turning_off()
@@ -182,8 +183,6 @@ void servo_motor::running()
         }
     }
 
-    // А вот тут необходимо его убрать
-
     if (ctl_)
     {
         ctl_->do_hard_stop();
@@ -194,6 +193,9 @@ void servo_motor::running()
     motion_ = nullptr;
 
     eng::log::error("-> servo_motor[{}]::turning_off by fault", info().target.position);
+
+    // Сообщаем на верх что мы сломались
+    driver_was_running(false);
 #endif
 }
 
@@ -247,13 +249,16 @@ void servo_motor::control_mode_csp(double dt)
 
         return;
     }
+#else
+    std::bitset<32> status;
+    status.set();
 #endif
 
     if (!std::isnan(ratio_) && !std::isnan(position_))
     {
         double next_position = ctl_->next_position(position_, dt);
 
-#ifdef BUILDROOT
+// #ifdef BUILDROOT
         bool overtravel =
             (next_position > position_ && status.test(1)) ||
             (next_position < position_ && status.test(0));
@@ -268,7 +273,7 @@ void servo_motor::control_mode_csp(double dt)
 
             return;
         }
-#endif
+// #endif
 
         position_ = next_position;
 

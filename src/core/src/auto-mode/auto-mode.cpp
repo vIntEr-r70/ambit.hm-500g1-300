@@ -116,8 +116,8 @@ void auto_mode::ss_system_in_proc(std::size_t idx, eng::sibus::istatus status)
     sstate_ = &auto_mode::ss_wait_system_ready;
     isc_.switch_to_state(nullptr);
 
-    node::deactivate(axis_ctl_);
-    node::deactivate(stuff_ctl_);
+    // node::deactivate(axis_ctl_);
+    // node::deactivate(stuff_ctl_);
 
     node::terminate(ictl_, "Целостность состояния cистемы нарушена");
 }
@@ -138,8 +138,8 @@ void auto_mode::ss_wait_moving_start(std::size_t idx, eng::sibus::istatus status
     sstate_ = &auto_mode::ss_wait_system_ready;
     isc_.switch_to_state(nullptr);
 
-    node::deactivate(axis_ctl_);
-    node::deactivate(stuff_ctl_);
+    // node::deactivate(axis_ctl_);
+    // node::deactivate(stuff_ctl_);
 
     node::terminate(ictl_, "Целостность состояния cистемы нарушена");
 }
@@ -161,8 +161,8 @@ void auto_mode::ss_wait_moving_done(std::size_t idx, eng::sibus::istatus status)
     sstate_ = &auto_mode::ss_wait_system_ready;
     isc_.switch_to_state(nullptr);
 
-    node::deactivate(axis_ctl_);
-    node::deactivate(stuff_ctl_);
+    // node::deactivate(axis_ctl_);
+    // node::deactivate(stuff_ctl_);
 
     node::terminate(ictl_, "Целостность состояния cистемы нарушена");
 }
@@ -232,8 +232,8 @@ void auto_mode::deactivate()
         return;
     }
 
-    node::deactivate(axis_ctl_);
-    node::deactivate(stuff_ctl_);
+    // node::deactivate(axis_ctl_);
+    // node::deactivate(stuff_ctl_);
 
     sstate_ = &auto_mode::ss_wait_system_ready;
 

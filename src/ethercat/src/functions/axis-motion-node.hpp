@@ -33,7 +33,7 @@ public:
 
 public:
 
-    void motion_done();
+    void motion_done(bool);
 
 private:
 
@@ -50,8 +50,6 @@ private:
     bool cmd_timed_shift(eng::abc::pack const &);
 
 private:
-
-    double local_position() const noexcept;
 
     void update_output_info();
 

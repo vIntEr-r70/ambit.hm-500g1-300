@@ -132,13 +132,13 @@ private:
     {
         if (!phases_.empty())
             return true;
-        ctl_.motion_done();
+        ctl_.motion_done(true);
         return false;
     }
 
     void do_hard_stop() const noexcept override final
     {
-        ctl_.motion_done();
+        ctl_.motion_done(false);
     }
 
     // Возвращаем
@@ -260,13 +260,13 @@ private:
     {
         if (v0_ != 0.0)
             return true;
-        ctl_.motion_done();
+        ctl_.motion_done(true);
         return false;
     }
 
     void do_hard_stop() const noexcept override final
     {
-        ctl_.motion_done();
+        ctl_.motion_done(false);
     }
 
     double next_position(double position, double dt) noexcept override final
@@ -393,13 +393,13 @@ private:
     {
         if (iid_ < intervals_.size())
             return true;
-        ctl_.motion_done();
+        ctl_.motion_done(true);
         return false;
     }
 
     void do_hard_stop() const noexcept override final
     {
-        ctl_.motion_done();
+        ctl_.motion_done(false);
     }
 
     double next_position(double position, double) noexcept override final
