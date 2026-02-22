@@ -60,7 +60,7 @@ private:
 
     void go_to_main();
 
-    void update_widget_view();
+    void update_widget_view(std::string_view);
 
     void update_phase_id(eng::abc::pack);
 

@@ -185,7 +185,7 @@ void servo_motor::running()
 
     if (ctl_)
     {
-        ctl_->do_hard_stop();
+        ctl_->do_hard_stop("Драйвер в аварии");
         ctl_ = nullptr;
     }
 
@@ -233,7 +233,7 @@ void servo_motor::control_mode_csp(double dt)
 
         eng::log::info("IN BKI: [{}] >> target-pos: {}", info().target.position, position_);
 
-        ctl_->do_hard_stop();
+        ctl_->do_hard_stop("Срабатывание БКИ");
         ctl_ = nullptr;
 
         return;
@@ -244,7 +244,7 @@ void servo_motor::control_mode_csp(double dt)
         eng::log::info("[{}]: {}: Активирован аварийный стоп", info().target.position, __func__);
         eng::log::info("[{}]: {}", info().target.position, status.to_string());
 
-        ctl_->do_hard_stop();
+        ctl_->do_hard_stop("Аварийный стоп");
         ctl_ = nullptr;
 
         return;
@@ -268,7 +268,7 @@ void servo_motor::control_mode_csp(double dt)
         {
             eng::log::info("[{}]: {}: На концевике", info().target.position, __func__);
 
-            ctl_->do_hard_stop();
+            ctl_->do_hard_stop("Срабатывание концевика");
             ctl_ = nullptr;
 
             return;

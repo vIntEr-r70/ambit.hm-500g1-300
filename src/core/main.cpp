@@ -7,7 +7,7 @@
 #include "src/current-conductors.hpp"
 #include "src/barrel-ctl.hpp"
 #include "src/barrel-lvl-ctl.hpp"
-#include "src/drainage-ctl.hpp"
+// #include "src/drainage-ctl.hpp"
 #include "src/error-mask.hpp"
 #include "src/bki-ctl.hpp"
 #include "src/emg-ctl.hpp"
@@ -54,7 +54,7 @@ auto main() -> int
     speed_node speed_z{ 'Z' };
     speed_node speed_v{ 'V' };
 
-    drainage_ctl dc;
+    // drainage_ctl dc;
 
     barrel_ctl bc0{ "fc" };
     barrel_ctl bc1{ "water" };

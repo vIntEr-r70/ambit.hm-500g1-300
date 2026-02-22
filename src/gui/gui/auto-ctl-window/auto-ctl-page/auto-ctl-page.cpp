@@ -142,13 +142,14 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
     });
 
     ctl_ = node::add_output_wire();
-    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus, std::string_view) {
-        update_widget_view();
+    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus, std::string_view emsg)
+    {
+        update_widget_view(emsg);
     });
 
     program_ = node::add_output_port("program");
 
-    update_widget_view();
+    update_widget_view("Инициализация системы");
 }
 
 void auto_ctl_page::go_to_editor()
@@ -219,7 +220,7 @@ void auto_ctl_page::make_stop()
     node::deactivate(ctl_);
 }
 
-void auto_ctl_page::update_widget_view()
+void auto_ctl_page::update_widget_view(std::string_view emsg)
 {
     btn_stop_->hide();
     btn_start_->hide();
@@ -228,10 +229,7 @@ void auto_ctl_page::update_widget_view()
     if (node::is_blocked(ctl_))
     {
         problem_list_widget_->clear();
-        node::for_each_block_reasons(ctl_, [this](std::string_view emsg)
-        {
-            problem_list_widget_->append(emsg);
-        });
+        problem_list_widget_->append(emsg);
         stack_->setCurrentWidget(problem_list_widget_);
     }
     else

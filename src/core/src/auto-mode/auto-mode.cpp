@@ -31,40 +31,56 @@ auto_mode::auto_mode()
     , isc_(this)
 {
     ictl_ = node::add_input_wire();
-    node::set_activate_handler(ictl_, [this](eng::abc::pack) { activate(); });
-    node::set_deactivate_handler(ictl_, [this] { deactivate(); });
+    node::set_activate_handler(ictl_, [this](eng::abc::pack)
+    {
+        activate();
+    });
+
+    node::set_deactivate_handler(ictl_, [this]
+    {
+        if (isc_.is_in_state(nullptr))
+            return;
+        eng::log::error("{}: Выполняем прерывание работы", name());
+        stop_execution();
+    });
 
     // Управление движением
     axis_ctl_ = node::add_output_wire("axis");
     node::set_wire_status_handler(axis_ctl_, [this](eng::sibus::istatus status, std::string_view emsg)
     {
-        eng::log::info("{}[axis-ctl]: -> {}", name(), eng::sibus::to_string(status));
+        eng::log::info("{}[axis-ctl]: -> {}({})", name(), eng::sibus::to_string(status), emsg);
+
+        system_ready_monitor();
 
         if (!axis_ctl_listener_)
             return;
 
         decltype(axis_ctl_listener_) handler;
         std::swap(handler, axis_ctl_listener_);
-        handler(emsg);
 
-        // (this->*sstate_)(0, node::status(axis_ctl_));
+        handler(emsg);
     });
 
     // Управление движением
     stuff_ctl_ = node::add_output_wire("stuff");
-    node::set_wire_status_handler(stuff_ctl_, [this](eng::sibus::istatus, std::string_view)
+    node::set_wire_status_handler(stuff_ctl_, [this](eng::sibus::istatus status, std::string_view emsg)
     {
-        eng::log::info("{}[stuff-ctl]: -> {}", name(), eng::sibus::to_string(node::status(stuff_ctl_)));
-        if (isc_.is_in_state(nullptr))
-            (this->*sstate_)(1, node::status(stuff_ctl_));
+        eng::log::info("{}[stuff-ctl]: -> {}({})", name(), eng::sibus::to_string(status), emsg);
+
+        system_ready_monitor();
+
+        if (!stuff_ctl_listener_)
+            return;
+
+        decltype(stuff_ctl_listener_) handler;
+        std::swap(handler, stuff_ctl_listener_);
+
+        handler(emsg);
     });
 
     node::add_input_port_unsafe("program", [this](eng::abc::pack args)
     {
         upload_program(std::move(args));
-
-        if (sstate_ == &auto_mode::ss_system_ready || sstate_ == &auto_mode::ss_wait_system_ready)
-            (this->*sstate_)(1, node::status(stuff_ctl_));
     });
 
     phase_id_out_ = node::add_output_port("phase-id");
@@ -85,94 +101,28 @@ auto_mode::auto_mode()
         update_output_times();
     });
 
-    sstate_ = &auto_mode::ss_wait_system_ready;
-
     // Связываем свои входные и выходные провода
     // node::link_wires(ictl_, axis_ctl_);
     // node::link_wires(ictl_, stuff_ctl_);
 }
 
-void auto_mode::ss_wait_system_ready(std::size_t idx, eng::sibus::istatus status)
+void auto_mode::system_ready_monitor()
 {
-    output_.set(idx, status == eng::sibus::istatus::ready);
-    if (!output_.all() || program_b64_.empty()) return;
-    sstate_ = &auto_mode::ss_system_ready;
-    isc_.switch_to_state(nullptr);
-    node::ready(ictl_);
-}
-
-void auto_mode::ss_system_ready(std::size_t idx, eng::sibus::istatus status)
-{
-    output_.set(idx, status == eng::sibus::istatus::ready);
-    if (output_.all() && !program_b64_.empty()) return;
-    sstate_ = &auto_mode::ss_wait_system_ready;
-    node::terminate(ictl_, "Система не готова");
-}
-
-void auto_mode::ss_system_in_proc(std::size_t idx, eng::sibus::istatus status)
-{
-    constexpr static eng::sibus::istatus istatus[] {
-        eng::sibus::istatus::ready, eng::sibus::istatus::active
-    };
-
-    output_.set(idx, status == istatus[idx]);
-    if (output_.all())
-    {
-        isc_.switch_to_state(&auto_mode::s_initialize);
+    if (!isc_.is_in_state(nullptr))
         return;
-    }
-    sstate_ = &auto_mode::ss_wait_system_ready;
-    isc_.switch_to_state(nullptr);
 
-    // node::deactivate(axis_ctl_);
-    // node::deactivate(stuff_ctl_);
+    bool ready = !program_b64_.empty() &&
+        node::is_ready(axis_ctl_) &&
+        node::is_ready(stuff_ctl_);
 
-    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
-}
-
-void auto_mode::ss_wait_moving_start(std::size_t idx, eng::sibus::istatus status)
-{
-    constexpr static eng::sibus::istatus istatus[] {
-        eng::sibus::istatus::active, eng::sibus::istatus::active
-    };
-
-    output_.set(idx, status == istatus[idx]);
-    if (output_.all())
-    {
-        sstate_ = &auto_mode::ss_wait_moving_done;
+    if (system_ready_ == ready)
         return;
-    }
+    system_ready_ = ready;
 
-    sstate_ = &auto_mode::ss_wait_system_ready;
-    isc_.switch_to_state(nullptr);
-
-    // node::deactivate(axis_ctl_);
-    // node::deactivate(stuff_ctl_);
-
-    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
-}
-
-void auto_mode::ss_wait_moving_done(std::size_t idx, eng::sibus::istatus status)
-{
-    constexpr static eng::sibus::istatus istatus[] {
-        eng::sibus::istatus::ready, eng::sibus::istatus::active
-    };
-
-    output_.set(idx, status == istatus[idx]);
-    if (output_.all())
-    {
-        sstate_ = &auto_mode::ss_wait_moving_done;
-        isc_.switch_to_state(&auto_mode::s_moving_done);
-        return;
-    }
-
-    sstate_ = &auto_mode::ss_wait_system_ready;
-    isc_.switch_to_state(nullptr);
-
-    // node::deactivate(axis_ctl_);
-    // node::deactivate(stuff_ctl_);
-
-    node::terminate(ictl_, "Целостность состояния cистемы нарушена");
+    if (!system_ready_)
+        node::terminate(ictl_, "Система не готова к работе");
+    else
+        node::ready(ictl_);
 }
 
 void auto_mode::activate()
@@ -189,14 +139,6 @@ void auto_mode::activate()
     if (!isc_.is_in_state(nullptr))
     {
         node::reject(ictl_, "Программа уже выполняется");
-        return;
-    }
-
-    // Программа не задана
-    if (program_b64_.empty())
-    {
-        eng::log::error("{}: Необходимо задать программу", name());
-        node::reject(ictl_, "Необходимо задать программу");
         return;
     }
 
@@ -222,38 +164,56 @@ void auto_mode::activate()
     // Запускаем в работу узел управляения устройствами
     node::activate(stuff_ctl_, std::move(args));
 
-    sstate_ = &auto_mode::ss_system_in_proc;
+    isc_.switch_to_state(&auto_mode::s_wait_stuff_activated);
+
+    stuff_ctl_listener_ = [this](std::string_view emsg)
+    {
+        if (node::is_active(stuff_ctl_))
+        {
+            isc_.switch_to_state(&auto_mode::s_initialize);
+
+            stuff_ctl_listener_ = [this](std::string_view emsg)
+            {
+                if (!emsg.empty())
+                {
+                    eng::log::error("{}: {}", name(), emsg);
+                    node::ready(ictl_, emsg);
+                    stop_execution();
+                }
+            };
+
+            return;
+        }
+        eng::log::error("{}: Не удалось инициализировать периферию", name());
+        node::ready(ictl_, "Не удалось инициализировать периферию");
+        stop_execution();
+    };
 }
 
-void auto_mode::deactivate()
+void auto_mode::stop_execution()
 {
     eng::log::info("{}: {}", name(), __func__);
 
     eng::timer::stop(pause_timer_);
     eng::timer::stop(proc_timer_);
 
+    stuff_ctl_listener_ = nullptr;
+    axis_ctl_listener_ = nullptr;
+
     update_output_times();
 
-    if (node::is_ready(axis_ctl_) && node::is_ready(stuff_ctl_))
-    {
-        isc_.switch_to_state(nullptr);
-        return;
-    }
+    node::deactivate(axis_ctl_);
+    node::deactivate(stuff_ctl_);
 
-    // node::deactivate(axis_ctl_);
-    // node::deactivate(stuff_ctl_);
+    node::terminate(ictl_, "Выполнение завершено");
+    system_ready_ = false;
 
-    sstate_ = &auto_mode::ss_wait_system_ready;
-
-    node::terminate(ictl_, "Выполнение программы остановлено");
+    isc_.switch_to_state(nullptr);
 }
 
-void auto_mode::terminate_execution(std::string_view)
+void auto_mode::s_wait_stuff_activated()
 {
-}
-
-void auto_mode::execution_done()
-{
+    eng::log::info("{}: {}", name(), __func__);
 }
 
 void auto_mode::s_initialize()
@@ -339,15 +299,19 @@ void auto_mode::s_start_moving()
     {
         if (!node::is_active(axis_ctl_))
         {
-            terminate_execution(emsg);
+            eng::log::error("{}: {}", name(), emsg);
+            node::ready(ictl_, emsg);
+            stop_execution();
             return;
         }
 
         axis_ctl_listener_ = [this](std::string_view emsg)
         {
-            if (!node::is_ready(axis_ctl_))
+            if (!node::is_ready(axis_ctl_) || !emsg.empty())
             {
-                terminate_execution(emsg);
+                eng::log::error("{}: {}", name(), emsg);
+                node::ready(ictl_, emsg);
+                stop_execution();
                 return;
             }
 
@@ -384,7 +348,7 @@ void auto_mode::s_program_execution_loop()
 
             node::set_port_value(phase_id_out_, { });
 
-            execution_done();
+            stop_execution();
 
             return;
         }
@@ -402,7 +366,9 @@ void auto_mode::s_program_execution_loop()
             break;
 
         default:
-            terminate_execution("Программа на необрабатываемом этапе");
+            eng::log::error("{}: Программа на необрабатываемом этапе", name());
+            node::ready(ictl_, "Программа на необрабатываемом этапе");
+            stop_execution();
             break;
         }
 
@@ -423,10 +389,6 @@ void auto_mode::execute_operation()
     eng::abc::pack args;
     vm_.fill_stuff_task(vm_.op_phase_id(), args);
     node::activate(stuff_ctl_, std::move(args));
-
-    // std::println();
-    // eng::log::info("DO PHASE: {}", vm_.op_phase_id());
-    // eng::log::info("{}\n", to_string_axis_position(axis_program_pos_));
 }
 
 void auto_mode::process_axis_positions()
@@ -452,9 +414,9 @@ void auto_mode::process_axis_positions()
 
 void auto_mode::upload_program(eng::abc::pack args)
 {
-    program_b64_ = args ? eng::abc::get_sv(args) : "";
-    // node::wire_response(ictl_, true, { });
     eng::log::info("{}: upload_program: {}", name(), program_b64_);
+    program_b64_ = args ? eng::abc::get_sv(args) : "";
+    system_ready_monitor();
 }
 
 bool auto_mode::prepare_program(bool &use_fc, std::array<bool, 3> &use_sp, std::vector<char> &use_spin_axis)

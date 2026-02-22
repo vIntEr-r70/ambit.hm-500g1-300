@@ -80,6 +80,7 @@ class multi_axis_ctl final
 
     struct axis_info_t
     {
+        std::string name;
         double acc;
         eng::sibus::output_wire_id_t ctl;
     };
@@ -98,7 +99,7 @@ private:
 
     void activate(eng::abc::pack);
 
-    void deactivate(bool);
+    void terminate_execution();
 
 private:
 
@@ -126,7 +127,7 @@ private:
 
     void register_on_bus_done() override final;
 
-    void wire_status_was_changed(char);
+    void wire_status_was_changed(char, std::string_view);
 
     void create_moving_tasks(eng::abc::pack);
 

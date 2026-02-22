@@ -33,7 +33,7 @@ public:
 
 public:
 
-    void motion_done(bool);
+    void motion_done(std::string_view);
 
 private:
 
@@ -60,8 +60,6 @@ private:
 private:
 
     void prepare_work_mode();
-
-    void deactivate();
 
 private:
 

@@ -63,11 +63,14 @@ multi_axis_ctl::multi_axis_ctl()
     });
     node::set_deactivate_handler(ictl_, [this]
     {
-        deactivate(false);
+        if (in_proc_.empty())
+            return;
+        terminate_execution();
     });
 
-    ambit::load_axis_list([this](char axis, std::string_view, bool)
+    ambit::load_axis_list([this](char axis, std::string_view axis_name, bool)
     {
+        info_[axis].name = axis_name;
         info_[axis].acc = 0.0;
 
         std::string key = std::format("axis/{}", axis);
@@ -93,9 +96,9 @@ multi_axis_ctl::multi_axis_ctl()
         auto ctl = node::add_output_wire(std::string(1, axis));
         info.second.ctl = ctl;
 
-        node::set_wire_status_handler(ctl, [this,axis](eng::sibus::istatus, std::string_view)
+        node::set_wire_status_handler(ctl, [this,axis](eng::sibus::istatus, std::string_view emsg)
         {
-            wire_status_was_changed(axis);
+            wire_status_was_changed(axis, emsg);
         });
 
         node::link_wires(ictl_, ctl);
@@ -138,11 +141,8 @@ void multi_axis_ctl::activate(eng::abc::pack args)
     });
 }
 
-void multi_axis_ctl::deactivate(bool local_call)
+void multi_axis_ctl::terminate_execution()
 {
-    if (in_proc_.empty() && !local_call)
-        return;
-
     std::ranges::for_each(in_proc_, [this](auto &pair)
     {
         char axis = pair.first;
@@ -151,9 +151,6 @@ void multi_axis_ctl::deactivate(bool local_call)
     });
 
     node::terminate(ictl_, "Прерываем выполнение");
-
-    if (in_proc_.empty() && local_call)
-        node::ready(ictl_);
 }
 
 // Рассчитываем для каждой оси время выполнения движения
@@ -768,7 +765,7 @@ void multi_axis_ctl::register_on_bus_done()
     node::ready(ictl_);
 }
 
-void multi_axis_ctl::wire_status_was_changed(char axis)
+void multi_axis_ctl::wire_status_was_changed(char axis, std::string_view emsg)
 {
     // Если ось не выполняется, значит ее состояние нам не интересно
     if (!in_proc_.contains(axis))
@@ -779,19 +776,22 @@ void multi_axis_ctl::wire_status_was_changed(char axis)
         return;
 
     // Ось успешно завершила выполнять движение
-    if (node::is_ready(info_[axis].ctl))
+    if (node::is_ready(info_[axis].ctl) && emsg.empty())
     {
         eng::log::info("{}: {}: Отправляем на выполнение следующий этап", name(), axis);
         execute_phase(axis);
         return;
     }
 
-    eng::log::error("{}: {}: Движение было прервано", name(), axis);
+    eng::log::error("{}: {}: Движение было прервано: {}", name(), axis, emsg);
+
+    node::ready(ictl_, std::format("{}: {}", info_[axis].name, emsg));
 
     // Удаляем проблемную ось, она и так прекратила работу
     in_proc_.erase(axis);
 
-    deactivate(true);
+    if (!in_proc_.empty())
+        terminate_execution();
 }
 
 // Np, [ speed, Na, [ axis, distance ], ... ], ... 

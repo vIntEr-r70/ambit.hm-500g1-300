@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <string_view>
 
 class motion_control
 {
@@ -19,7 +20,7 @@ public:
 
     virtual bool is_active() const noexcept = 0;
 
-    virtual void do_hard_stop() const noexcept = 0;
+    virtual void do_hard_stop(std::string_view) const noexcept = 0;
 
 public:
 

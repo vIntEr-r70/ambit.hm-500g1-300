@@ -45,10 +45,10 @@ class auto_mode final
     eng::timer::id_t pause_timer_;
     eng::timer::id_t proc_timer_;
 
-    std::bitset<2> output_;
-    void(auto_mode::*sstate_)(std::size_t, eng::sibus::istatus);
-
     std::function<void(std::string_view)> axis_ctl_listener_;
+    std::function<void(std::string_view)> stuff_ctl_listener_;
+
+    bool system_ready_{ false };
 
 public:
 
@@ -58,25 +58,13 @@ private:
 
     void activate();
 
-    void deactivate();
+    void stop_execution();
 
-    void terminate_execution(std::string_view);
-
-    void execution_done();
+    void system_ready_monitor();
 
 private:
 
-    void ss_wait_system_ready(std::size_t, eng::sibus::istatus);
-
-    void ss_system_ready(std::size_t, eng::sibus::istatus);
-
-    void ss_system_in_proc(std::size_t, eng::sibus::istatus);
-
-    void ss_wait_moving_start(std::size_t, eng::sibus::istatus);
-
-    void ss_wait_moving_done(std::size_t, eng::sibus::istatus);
-
-private:
+    void s_wait_stuff_activated();
 
     void s_initialize();
 

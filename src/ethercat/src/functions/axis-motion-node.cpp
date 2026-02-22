@@ -44,7 +44,23 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
 
     node::set_deactivate_handler(ictl_, [this]
     {
-        deactivate();
+        eng::log::info("{}: {}", name(), __func__);
+
+        // Если ресурс так и не получен либо не выполняет движений
+        // нет необходимости его финализировать, просто освобождаем
+        if (servo_motor_.control() == nullptr)
+            return;
+
+        eng::log::info("\t- WAIT FOR DONE");
+
+        // Необходимо сначала привести драйвер в исходное состояние
+        // Остановить выполнение движения если оно происходит
+        // Освобождаем ресурс чтобы другие могли воспользоваться
+        by_position_.update_speed_limit(0.0);
+        by_velocity_.update_speed_limit(0.0);
+        by_time_.reset();
+
+        node::terminate(ictl_, "Завершаем движение");
     });
 
     auto tid = eng::timer::create([this]
@@ -62,28 +78,6 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
     };
 }
 
-// Провод от нас отключен
-void axis_motion_node::deactivate()
-{
-    eng::log::info("{}: {}", name(), __func__);
-
-    // Если ресурс так и не получен либо не выполняет движений
-    // нет необходимости его финализировать, просто освобождаем
-    if (servo_motor_.control() == nullptr)
-        return;
-
-    eng::log::info("\t- WAIT FOR DONE");
-
-    // Необходимо сначала привести драйвер в исходное состояние
-    // Остановить выполнение движения если оно происходит
-    // Освобождаем ресурс чтобы другие могли воспользоваться
-    by_position_.update_speed_limit(0.0);
-    by_velocity_.update_speed_limit(0.0);
-    by_time_.reset();
-
-    node::terminate(ictl_, "Завершаем движение");
-}
-
 void axis_motion_node::update_output_info()
 {
     double local_position = servo_motor_.position() - origin_offset_;
@@ -93,15 +87,11 @@ void axis_motion_node::update_output_info()
     node::set_port_value(status_, { servo_motor_.status() });
 }
 
-void axis_motion_node::motion_done(bool is_ok)
+void axis_motion_node::motion_done(std::string_view emsg)
 {
     eng::log::info("{}: {}", name(), __func__);
     update_output_info();
-
-    if (is_ok == false)
-        node::terminate(ictl_, "Выполнение было прервано");
-
-    node::ready(ictl_);
+    node::ready(ictl_, emsg);
 }
 
 void axis_motion_node::start_command_execution(eng::abc::pack args)
