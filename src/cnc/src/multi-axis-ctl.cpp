@@ -93,7 +93,7 @@ multi_axis_ctl::multi_axis_ctl()
         auto ctl = node::add_output_wire(std::string(1, axis));
         info.second.ctl = ctl;
 
-        node::set_wire_status_handler(ctl, [this,axis]
+        node::set_wire_status_handler(ctl, [this,axis](eng::sibus::istatus, std::string_view)
         {
             wire_status_was_changed(axis);
         });

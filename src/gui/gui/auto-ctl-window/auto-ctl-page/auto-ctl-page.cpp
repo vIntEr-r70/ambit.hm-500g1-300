@@ -142,7 +142,7 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
     });
 
     ctl_ = node::add_output_wire();
-    node::set_wire_status_handler(ctl_, [this] {
+    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus, std::string_view) {
         update_widget_view();
     });
 

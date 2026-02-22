@@ -84,7 +84,7 @@ AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_vie
     ctl_ = node::add_output_wire();
 
     // Обработчик состояния связи с требуемой осью
-    node::set_wire_status_handler(ctl_, [this]
+    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus, std::string_view)
     {
         update_axis_view();
     });

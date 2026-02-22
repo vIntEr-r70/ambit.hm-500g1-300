@@ -36,15 +36,23 @@ auto_mode::auto_mode()
 
     // Управление движением
     axis_ctl_ = node::add_output_wire("axis");
-    node::set_wire_status_handler(axis_ctl_, [this]
+    node::set_wire_status_handler(axis_ctl_, [this](eng::sibus::istatus status, std::string_view emsg)
     {
-        eng::log::info("{}[axis-ctl]: -> {}", name(), eng::sibus::to_string(node::status(axis_ctl_)));
-        (this->*sstate_)(0, node::status(axis_ctl_));
+        eng::log::info("{}[axis-ctl]: -> {}", name(), eng::sibus::to_string(status));
+
+        if (!axis_ctl_listener_)
+            return;
+
+        decltype(axis_ctl_listener_) handler;
+        std::swap(handler, axis_ctl_listener_);
+        handler(emsg);
+
+        // (this->*sstate_)(0, node::status(axis_ctl_));
     });
 
     // Управление движением
     stuff_ctl_ = node::add_output_wire("stuff");
-    node::set_wire_status_handler(stuff_ctl_, [this]
+    node::set_wire_status_handler(stuff_ctl_, [this](eng::sibus::istatus, std::string_view)
     {
         eng::log::info("{}[stuff-ctl]: -> {}", name(), eng::sibus::to_string(node::status(stuff_ctl_)));
         if (isc_.is_in_state(nullptr))
@@ -240,6 +248,14 @@ void auto_mode::deactivate()
     node::terminate(ictl_, "Выполнение программы остановлено");
 }
 
+void auto_mode::terminate_execution(std::string_view)
+{
+}
+
+void auto_mode::execution_done()
+{
+}
+
 void auto_mode::s_initialize()
 {
     eng::log::info("{}: {}", name(), __func__);
@@ -319,7 +335,25 @@ void auto_mode::s_start_moving()
 
     node::activate(axis_ctl_, std::move(args));
 
-    sstate_ = &auto_mode::ss_wait_moving_start;
+    axis_ctl_listener_ = [this](std::string_view emsg)
+    {
+        if (!node::is_active(axis_ctl_))
+        {
+            terminate_execution(emsg);
+            return;
+        }
+
+        axis_ctl_listener_ = [this](std::string_view emsg)
+        {
+            if (!node::is_ready(axis_ctl_))
+            {
+                terminate_execution(emsg);
+                return;
+            }
+
+            isc_.switch_to_state(&auto_mode::s_moving_done);
+        };
+    };
 
     execute_operation();
 }
@@ -350,7 +384,7 @@ void auto_mode::s_program_execution_loop()
 
             node::set_port_value(phase_id_out_, { });
 
-            deactivate();
+            execution_done();
 
             return;
         }
@@ -368,8 +402,7 @@ void auto_mode::s_program_execution_loop()
             break;
 
         default:
-            eng::log::error("{}: Программа на необрабатываемом этапе", name());
-            deactivate();
+            terminate_execution("Программа на необрабатываемом этапе");
             break;
         }
 

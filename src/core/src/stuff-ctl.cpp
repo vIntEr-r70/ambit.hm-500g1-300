@@ -30,14 +30,14 @@ stuff_ctl::stuff_ctl()
     // });
 
     fc_.ctl = node::add_output_wire("fc");
-    node::set_wire_status_handler(fc_.ctl, [this] {
+    node::set_wire_status_handler(fc_.ctl, [this](eng::sibus::istatus, std::string_view) {
         isc_.touch_current_state();
     });
 
     for (std::size_t i = 0; i < sp_.size(); ++i)
     {
         sp_[i].ctl = node::add_output_wire(std::format("sp{}", i));
-        node::set_wire_status_handler(sp_[i].ctl, [this, i] {
+        node::set_wire_status_handler(sp_[i].ctl, [this, i](eng::sibus::istatus, std::string_view) {
             isc_.touch_current_state();
         });
     }
@@ -47,7 +47,7 @@ stuff_ctl::stuff_ctl()
     for (auto &[ axis, desc ] : axis_)
     {
         desc.ctl = node::add_output_wire(std::format("{}", axis));
-        node::set_wire_status_handler(desc.ctl, [this, axis] {
+        node::set_wire_status_handler(desc.ctl, [this, axis](eng::sibus::istatus, std::string_view) {
             isc_.touch_current_state();
         });
     }

@@ -48,6 +48,8 @@ class auto_mode final
     std::bitset<2> output_;
     void(auto_mode::*sstate_)(std::size_t, eng::sibus::istatus);
 
+    std::function<void(std::string_view)> axis_ctl_listener_;
+
 public:
 
     auto_mode();
@@ -57,6 +59,10 @@ private:
     void activate();
 
     void deactivate();
+
+    void terminate_execution(std::string_view);
+
+    void execution_done();
 
 private:
 

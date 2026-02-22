@@ -46,7 +46,7 @@ drainage_ctl::drainage_ctl()
     // Провод управления клапаном выбора куда
     // насос будет откачивать жидкость
     va_ctl_ = node::add_output_wire();
-    node::set_wire_status_handler(va_ctl_, [this] {
+    node::set_wire_status_handler(va_ctl_, [this](eng::sibus::istatus, std::string_view) {
         // update_valve_state();
     });
 
