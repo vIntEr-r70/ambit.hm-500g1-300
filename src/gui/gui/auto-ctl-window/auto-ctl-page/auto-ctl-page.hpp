@@ -5,11 +5,10 @@
 #include <eng/sibus/node.hpp>
 
 class RoundButton;
-class QStackedWidget;
 class QLabel;
 class program_model_mode;
 class program_widget;
-class problem_list_widget;
+class status_message_widget;
 
 struct program_record_t;
 
@@ -21,9 +20,8 @@ class auto_ctl_page final
 
     program_model_mode *model_;
 
-    QStackedWidget *stack_;
     program_widget *program_widget_;
-    problem_list_widget *problem_list_widget_;
+    status_message_widget *status_msg_widget_;
 
     eng::sibus::output_wire_id_t ctl_;
     eng::sibus::output_port_id_t program_;
@@ -60,7 +58,7 @@ private:
 
     void go_to_main();
 
-    void update_widget_view(std::string_view);
+    void update_widget_view(eng::sibus::istatus, std::string_view);
 
     void update_phase_id(eng::abc::pack);
 

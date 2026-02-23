@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
     gui/auto-ctl-window/auto-ctl-page/auto-ctl-page.cpp
     gui/auto-ctl-window/auto-ctl-page/problem-list-widget.cpp
     gui/auto-ctl-window/auto-ctl-page/program-model-mode.cpp
+    gui/auto-ctl-window/auto-ctl-page/status-message-widget.cpp
     gui/auto-ctl-window/editor-page/editor-page.cpp
     gui/auto-ctl-window/editor-page/editor-page-header-widget.cpp
     gui/auto-ctl-window/editor-page/AutoParamKeyboard.cpp

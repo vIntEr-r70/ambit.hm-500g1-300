@@ -21,7 +21,8 @@ void program_model_editor::set_current_row(std::size_t row)
         dataChanged(createIndex(current_row_, 0), createIndex(current_row_, 0));
 
     current_row_ = row;
-    dataChanged(createIndex(row, 0), createIndex(row, 0));
+    if (current_row_ != program_.rows())
+        dataChanged(createIndex(row, 0), createIndex(row, 0));
 }
 
 void program_model_editor::change_sprayer(std::size_t row, std::size_t rid, std::size_t id)

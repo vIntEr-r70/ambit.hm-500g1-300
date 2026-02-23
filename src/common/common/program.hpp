@@ -197,8 +197,8 @@ struct program
         main_ops.push_back({
                 false,
                 std::vector<fc_item_t>(fc_count, fc_item_t{ 0.0f, 0.0f }),
-                std::vector<bool>(sprayer_count, false), 
-                std::vector<double>(s_axis.size(), 0.0f), 
+                std::vector<bool>(sprayer_count, false),
+                std::vector<double>(s_axis.size(), 0.0f),
                 { 0.0f, std::vector<double>(t_axis.size(), 0.0f) }
             });
     }
@@ -224,7 +224,7 @@ struct program
         for (std::size_t i = 0; i < t_axis.size(); ++i)
         {
             auto it = std::find(s_axis.begin(), s_axis.end(), t_axis[i]);
-            if (it == s_axis.end()) 
+            if (it == s_axis.end())
                 t_axis_m.push_back(i);
         }
 
@@ -346,7 +346,7 @@ struct program
         std::size_t fc_op_id = 0;
         std::size_t center_op_id = 0;
 
-        for (auto &&type : phases)
+        for (auto type : phases)
         {
             switch(type)
             {
@@ -378,7 +378,7 @@ struct program
     std::size_t get_rid(op_type rtype, std::size_t op_id) const noexcept
     {
         std::size_t rid = 0;
-        std::for_each(phases.begin(), phases.begin() + op_id, 
+        std::for_each(phases.begin(), phases.begin() + op_id,
             [&rid, rtype] (auto type) { rid += (type == rtype) ? 1 : 0; });
         return rid;
     }

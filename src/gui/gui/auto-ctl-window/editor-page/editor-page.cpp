@@ -3,6 +3,7 @@
 #include "../common/program-widget.hpp"
 #include "../common/program-record.hpp"
 #include "../common/ProgramModelHeader.h"
+#include "common/program-checkers.hpp"
 #include "AutoParamKeyboard.h"
 #include "common/load-axis-list.hpp"
 #include "EditorMessageBox.h"
@@ -257,6 +258,17 @@ void editor_page::make_save()
             return;
         }
         fname_ = fname;
+    }
+
+    model_->set_current_row(model_->prog().rows());
+
+    // Проверяем программу на валидность перед сохранением
+    auto bad_loop_rid = check_program::find_bad_loop(model_->prog());
+    if (bad_loop_rid)
+    {
+        model_->set_current_row(*bad_loop_rid);
+        msg_->show_error("Переход цикла сам на себя или ниже запрещен");
+        return;
     }
 
     eng::buffer::id_t buf = eng::buffer::create();

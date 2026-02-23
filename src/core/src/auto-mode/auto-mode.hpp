@@ -8,8 +8,6 @@
 #include <eng/timer.hpp>
 #include <eng/stopwatch.hpp>
 
-#include <bitset>
-
 class auto_mode final
     : public eng::sibus::node
 {
@@ -62,6 +60,8 @@ private:
 
     void system_ready_monitor();
 
+    void init_stuff_ctl();
+
 private:
 
     void s_wait_stuff_activated();
@@ -100,7 +100,7 @@ private:
 
     void upload_program(eng::abc::pack);
 
-    bool prepare_program(bool&, std::array<bool, 3> &, std::vector<char> &);
+    void prepare_program(bool&, std::array<bool, 3> &, std::vector<char> &);
 
     void create_operation(struct program const&, std::size_t, bool &, std::array<bool, 3> &) noexcept;
 

@@ -434,10 +434,16 @@ QWidget* AutoParamKeyboard::create_loop_page()
         {
             loop_page_.le[i] = create_line_edit(w);
             loop_page_.le[i]->setMaximumWidth(130);
-            loop_page_.validator[i] = new QDoubleValidator(w);
-            loop_page_.le[i]->setValidator(loop_page_.validator[i]);
+            loop_page_.validator[i] = new QIntValidator(w);
             hL->addWidget(loop_page_.le[i]);
         }
+
+        loop_page_.validator[0]->setBottom(1);
+        loop_page_.le[0]->setValidator(loop_page_.validator[0]);
+
+        loop_page_.validator[1]->setBottom(0);
+        loop_page_.le[1]->setValidator(loop_page_.validator[1]);
+
         vL->addLayout(hL);
     }
 

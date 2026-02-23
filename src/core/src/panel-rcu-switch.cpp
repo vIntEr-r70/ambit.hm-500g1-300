@@ -33,6 +33,6 @@ void panel_rcu_switch::update_output(eng::abc::pack args)
         node::set_port_value(panel_, { !rcu });
 
         node::set_port_value(mode_, { rcu ? "rcu" : "panel" });
-        node::set_port_value(rcu_led_, { rcu });
+        node::set_port_value(rcu_led_, { !rcu });
     }
 }

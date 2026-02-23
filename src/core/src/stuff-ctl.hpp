@@ -1,37 +1,30 @@
 #pragma once
 
-#include "common/internal-state-ctl.hpp"
-
 #include <eng/sibus/node.hpp>
 
+#include <string_view>
 #include <unordered_map>
 
 class stuff_ctl final
     : public eng::sibus::node
 {
-    typedef void (stuff_ctl::*activate_command)(eng::abc::pack);
-
-    internal_state_ctl<stuff_ctl> isc_;
-
     eng::sibus::input_wire_id_t ictl_;
 
-    template <typename T>
     struct unit_t
     {
         bool in_use;
-        std::optional<T> value;
+        bool in_active;
         eng::sibus::output_wire_id_t ctl;
+        std::string emsg;
     };
 
-    struct fc_set_t
-    {
-        double i;
-        double p;
-    };
-    unit_t<fc_set_t> fc_;
+    unit_t fc_;
+    std::array<unit_t, 3> sp_;
+    std::unordered_map<char, unit_t> axis_;
 
-    std::array<unit_t<bool>, 3> sp_;
-    std::unordered_map<char, unit_t<double>> axis_;
+    std::unordered_map<char, std::string> axis_name_;
+
+    bool initialized_{ false };
 
 public:
 
@@ -41,35 +34,31 @@ private:
 
     void activate(eng::abc::pack);
 
-    void deactivate();
+    void deactivate_all();
+
+    void terminate_execution(std::string_view, std::string_view);
 
 private:
 
-    void do_command(eng::abc::pack);
+    void apply_state(eng::abc::pack);
 
-    void cmd_operation(eng::abc::pack);
+    void apply_fc_state(double, double);
 
-private:
+    void apply_sp_state(std::size_t, bool);
 
-    void s_wait_system_ready();
-
-    void s_lazy_state();
-
-    void s_ctl_state();
+    void apply_axis_state(char, double);
 
 private:
 
-    void apply_fc_state();
+    void ctl_fc_state(std::string_view);
 
-    void apply_sp_state(std::size_t);
+    void ctl_sp_state(std::size_t, std::string_view);
 
-    void apply_axis_state(char);
+    void ctl_axis_state(char, std::string_view);
 
 private:
 
-    void load_axis_list();
-
-    bool is_stuff_usable() const;
+    bool is_stuff_usable();
 
     bool in_use_any() const;
 

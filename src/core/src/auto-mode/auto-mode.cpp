@@ -146,12 +146,7 @@ void auto_mode::activate()
     bool use_fc{ false };
     std::array<bool, 3> use_sp { false };
     std::vector<char> use_spin_axis;
-    if (!prepare_program(use_fc, use_sp, use_spin_axis))
-    {
-        eng::log::error("{}: Программа содержит ошибки", name());
-        node::reject(ictl_, "Программа содержит ошибки");
-        return;
-    }
+    prepare_program(use_fc, use_sp, use_spin_axis);
 
     // Формируем требования к системе
     eng::abc::pack args{ use_fc };
@@ -171,22 +166,34 @@ void auto_mode::activate()
         if (node::is_active(stuff_ctl_))
         {
             isc_.switch_to_state(&auto_mode::s_initialize);
+            init_stuff_ctl();
+            return;
+        }
 
-            stuff_ctl_listener_ = [this](std::string_view emsg)
-            {
-                if (!emsg.empty())
-                {
-                    eng::log::error("{}: {}", name(), emsg);
-                    node::ready(ictl_, emsg);
-                    stop_execution();
-                }
-            };
+        eng::log::error("{}: Не удалось инициализировать периферию", name());
+        node::ready(ictl_, emsg);
+
+        stop_execution();
+    };
+}
+
+void auto_mode::init_stuff_ctl()
+{
+    stuff_ctl_listener_ = [this](std::string_view emsg)
+    {
+        eng::log::info("stuff_ctl_listener: DONE");
+
+        if (!emsg.empty())
+        {
+            eng::log::error("{}: {}", name(), emsg);
+            node::ready(ictl_, emsg);
+
+            stop_execution();
 
             return;
         }
-        eng::log::error("{}: Не удалось инициализировать периферию", name());
-        node::ready(ictl_, "Не удалось инициализировать периферию");
-        stop_execution();
+
+        init_stuff_ctl();
     };
 }
 
@@ -419,7 +426,7 @@ void auto_mode::upload_program(eng::abc::pack args)
     system_ready_monitor();
 }
 
-bool auto_mode::prepare_program(bool &use_fc, std::array<bool, 3> &use_sp, std::vector<char> &use_spin_axis)
+void auto_mode::prepare_program(bool &use_fc, std::array<bool, 3> &use_sp, std::vector<char> &use_spin_axis)
 {
     eng::log::info("{}: auto_mode::prepare_program", name());
 
@@ -469,8 +476,6 @@ bool auto_mode::prepare_program(bool &use_fc, std::array<bool, 3> &use_sp, std::
     });
 
     eng::log::info("{}: Программа сформирована, этапов {}", name(), phases_.size());
-
-    return true;
 }
 
 void auto_mode::create_operation(program const& p, std::size_t rid, bool &use_fc, std::array<bool, 3> &use_sp) noexcept

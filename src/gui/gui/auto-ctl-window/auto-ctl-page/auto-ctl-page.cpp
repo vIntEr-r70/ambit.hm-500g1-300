@@ -1,6 +1,6 @@
 #include "auto-ctl-page.hpp"
-#include "problem-list-widget.hpp"
 #include "program-model-mode.hpp"
+#include "status-message-widget.hpp"
 
 #include "../common/program-widget.hpp"
 #include "../common/program-record.hpp"
@@ -16,7 +16,6 @@
 #include <QHeaderView>
 #include <QGraphicsDropShadowEffect>
 #include <QTableWidget>
-#include <QStackedWidget>
 
 #include <eng/log.hpp>
 #include <eng/base64.hpp>
@@ -122,15 +121,12 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
         }
         vL->addWidget(w);
 
-        stack_ = new QStackedWidget(this);
-        {
-            program_widget_ = new program_widget(this, *model_);
-            stack_->addWidget(program_widget_);
+        status_msg_widget_ = new status_message_widget(this);
+        status_msg_widget_->hide();
+        vL->addWidget(status_msg_widget_);
 
-            problem_list_widget_ = new problem_list_widget(this);
-            stack_->addWidget(problem_list_widget_);
-        }
-        vL->addWidget(stack_);
+        program_widget_ = new program_widget(this, *model_);
+        vL->addWidget(program_widget_);
     }
 
     node::add_input_port_unsafe("phase-id", [this](eng::abc::pack args) {
@@ -142,14 +138,14 @@ auto_ctl_page::auto_ctl_page(QWidget *parent) noexcept
     });
 
     ctl_ = node::add_output_wire();
-    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus, std::string_view emsg)
+    node::set_wire_status_handler(ctl_, [this](eng::sibus::istatus status, std::string_view emsg)
     {
-        update_widget_view(emsg);
+        update_widget_view(status, emsg);
     });
 
     program_ = node::add_output_port("program");
 
-    update_widget_view("Инициализация системы");
+    update_widget_view(eng::sibus::istatus::blocked, "Инициализация системы");
 }
 
 void auto_ctl_page::go_to_editor()
@@ -186,6 +182,8 @@ void auto_ctl_page::init(program_record_t const *r)
     }
 
     model_->reset_loop();
+
+    status_msg_widget_->reset();
 }
 
 void auto_ctl_page::make_start()
@@ -200,6 +198,8 @@ void auto_ctl_page::make_start()
 
     btn_start_->setEnabled(false);
     node::activate(ctl_, { });
+
+    status_msg_widget_->reset();
 }
 
 void auto_ctl_page::make_continue()
@@ -220,22 +220,21 @@ void auto_ctl_page::make_stop()
     node::deactivate(ctl_);
 }
 
-void auto_ctl_page::update_widget_view(std::string_view emsg)
+void auto_ctl_page::update_widget_view(eng::sibus::istatus status, std::string_view emsg)
 {
     btn_stop_->hide();
     btn_start_->hide();
     btn_continue_->hide();
 
+    status_msg_widget_->update(status, emsg);
+
     if (node::is_blocked(ctl_))
     {
-        problem_list_widget_->clear();
-        problem_list_widget_->append(emsg);
-        stack_->setCurrentWidget(problem_list_widget_);
+        btn_start_->show();
+        btn_start_->setEnabled(false);
     }
     else
     {
-        stack_->setCurrentWidget(program_widget_);
-
         if (node::is_ready(ctl_))
         {
             btn_start_->show();

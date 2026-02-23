@@ -2,8 +2,9 @@
 
 #include <InteractWidgets/InteractWidget.h>
 
-#include "common/program.hpp"
+#include <QIntValidator>
 
+#include "common/program.hpp"
 
 class QLabel;
 class QLineEdit;
@@ -126,7 +127,7 @@ private:
     struct
     {
         QWidget *w;
-        QDoubleValidator *validator[2];
+        QIntValidator *validator[2];
         QLineEdit* le[2];
 
     } loop_page_;
