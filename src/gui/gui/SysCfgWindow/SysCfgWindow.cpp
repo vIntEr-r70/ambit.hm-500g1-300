@@ -7,7 +7,7 @@
 
 #include <SysCfgWindow/AxisSettingsWidget.h>
 #include <SysCfgWindow/ModbusUnitCtrlWidget/ModbusUnitCtrlWidget.h>
-#include <SysCfgWindow/HardwareSetsWidget.h>
+// #include <SysCfgWindow/HardwareSetsWidget.h>
 #include <SysCfgWindow/FcCfgWidget/LimitsWidget.h>
 #include <SysCfgWindow/LockCtrlWindow/LockCtrlWindow.h>
 
@@ -30,14 +30,14 @@ SysCfgWindow::SysCfgWindow(QWidget *parent)
     axisSettingsW_ = new AxisSettingsWidget(this);
     // modbusCtrlW_ = new ModbusUnitCtrlWidget(this, global::rpc(), global::signer());
     sysSetsW_ = new SysSetsWidget(this);
-    hwSetsW_ = new HardwareSetsWidget(this);
+    // hwSetsW_ = new HardwareSetsWidget(this);
     fcLimitsW_ = new LimitsWidget(this, "fc");
     bkiCfgW_ = new BkiCfgWidget(this);
     lock_ctl_ = new LockCtrlWindow(this);
 
     tab_->addTab(sysSetsW_, "Система");
     tab_->addTab(axisSettingsW_, "Настройки ШД");
-    tab_->addTab(hwSetsW_, "Hardware");
+    // tab_->addTab(hwSetsW_, "Hardware");
     // tab_->addTab(modbusCtrlW_, "Регистры");
     tab_->addTab(fcLimitsW_, "Тоководы");
     tab_->addTab(lock_ctl_, "Блокировки");
@@ -53,7 +53,7 @@ void SysCfgWindow::set_guid(int guid)
     tab_->setTabVisible(tab_->indexOf(axisSettingsW_), false);
     tab_->setTabVisible(tab_->indexOf(sysSetsW_), false);
     tab_->setTabVisible(tab_->indexOf(fcLimitsW_), false);
-    tab_->setTabVisible(tab_->indexOf(hwSetsW_), false);
+    // tab_->setTabVisible(tab_->indexOf(hwSetsW_), false);
     // tab_->setTabVisible(tab_->indexOf(modbusCtrlW_), false);
     tab_->setTabVisible(tab_->indexOf(bkiCfgW_), false);
 

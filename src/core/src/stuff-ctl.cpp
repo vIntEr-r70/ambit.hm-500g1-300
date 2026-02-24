@@ -102,8 +102,8 @@ void stuff_ctl::activate(eng::abc::pack args)
 
     if (initialized_)
     {
-        args.pop_front();
         eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
+        args.pop_front();
         apply_state(std::move(args));
         return;
     }
@@ -208,7 +208,7 @@ void stuff_ctl::ctl_fc_state(std::string_view emsg)
 
     if (emsg.empty())
     {
-        if (fc_.in_active && node::is_active(fc_.ctl))
+        if (fc_.in_active == node::is_active(fc_.ctl))
             return;
         emsg = "Не соответствует заданному состоянию";
     }
@@ -224,7 +224,7 @@ void stuff_ctl::ctl_sp_state(std::size_t idx, std::string_view emsg)
 
     if (emsg.empty())
     {
-        if (sp.in_active && node::is_active(sp.ctl))
+        if (sp.in_active == node::is_active(sp.ctl))
             return;
         emsg = "Не соответствует заданному состоянию";
     }
@@ -240,7 +240,7 @@ void stuff_ctl::ctl_axis_state(char key, std::string_view emsg)
 
     if (emsg.empty())
     {
-        if (axis.in_active && node::is_active(axis.ctl))
+        if (axis.in_active == node::is_active(axis.ctl))
             return;
         emsg = "Не соответствует заданному состоянию";
     }

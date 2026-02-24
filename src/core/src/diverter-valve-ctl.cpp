@@ -25,8 +25,7 @@ diverter_valve_ctl::diverter_valve_ctl(std::string_view name, std::size_t H_coun
     // Требуемое состояние насоса
     node::add_input_port("H", [this](eng::abc::pack args)
     {
-        pump_ = eng::abc::get<bool>(args);
-        // update_state();
+        turn_on_off_pump(eng::abc::get<bool>(args));
     });
 
     // Управление насосами
@@ -35,46 +34,38 @@ diverter_valve_ctl::diverter_valve_ctl(std::string_view name, std::size_t H_coun
         // Реальное положение задвижки
         node::add_input_port(std::format("VP{}", i + 1), [this, i](eng::abc::pack args)
         {
+            // 0, 1, 2, 3 - возможные значения положения задвижки
             auto state = eng::abc::get<std::uint8_t>(args);
-            // vp_real_ = eng::abc::get<std::uint8_t>(args);
             eng::log::info("{}: VP{} = {}", node::name(), i, state);
-            // update_state();
+            items_[i].vp_real = (state == 1 || state == 2) ? state : 0;
+            turn_on_off_pump(false);
         });
 
         auto h_id = node::add_output_port(std::format("H{}", i + 1));
         auto vp_id = node::add_output_port(std::format("VP{}", i + 1));
 
-        items_.emplace_back(h_id, vp_id);
+        items_.emplace_back(h_id, vp_id, 0);
     }
 }
 
-void diverter_valve_ctl::update_state()
+void diverter_valve_ctl::turn_on_off_pump(bool value)
 {
-    // eng::log::info("{}: {}", name(), __func__);
-    //
-    // // Если мы не знаем реального положения задвижки,
-    // // ничего делать мы не имеем права
-    // if (!vp_real_ || H_.empty())
-    //     return;
-    //
-    // // Задвижка находится в процессе переключения
-    // if (*vp_real_ != vp_.to_ulong())
-    //     return;
-    //
-    // // От нас хотят странного
-    // if (vp_.count() != 1)
-    //     return;
-    //
-    // // Если необходимо изменить состояние насоса
-    // if (pump_)
-    // {
-    //     // Определяем какой насос должен быть активирован
-    //     // исходя из положения задвижки
-    //     std::size_t idx = vp_.test(0) ? 0 : 1;
-    //     idx = std::min(idx, H_.size() - 1);
-    //
-    //     node::set_port_value(H_[idx], { pump_.value() });
-    //
-    //     pump_.reset();
-    // }
+    eng::log::info("{}: {}", name(), __func__);
+
+    // Если насос один
+    if (items_.size() == 1)
+    {
+        bool pump_state = (items_[0].vp_real != 0) && value;
+        node::set_port_value(items_[0].H, { pump_state });
+    }
+    // Если насосов два то положение задвижки определяет какой нам надо включить
+    else
+    {
+        std::size_t idx = (items_[0].vp_real == items_[1].vp_real) ? items_[0].vp_real : 0;
+        for (std::size_t i = 0; i < items_.size(); ++i)
+        {
+            bool pump_state = value && (idx == (i + 1));
+            node::set_port_value(items_[i].H, { pump_state });
+        }
+    }
 }

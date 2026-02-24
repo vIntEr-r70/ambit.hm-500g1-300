@@ -176,7 +176,7 @@ void frequency_converter::read_status_done(readed_regs_t regs)
     if (status != estatus::damaged)
     {
         // Значение статуса не изменилось
-        if (status == status_ && status_.has_value())
+        if (status_.has_value() && status == *status_)
             return;
     }
 
@@ -187,12 +187,13 @@ void frequency_converter::read_status_done(readed_regs_t regs)
 
         node::set_port_value(p_out_[pout::damaged], { false });
         node::set_port_value(p_out_[pout::powered], { false });
+
+        node::ready(ictl_);
     }
     // Мы включились
     else if (status == estatus::powered)
     {
         eng::log::info("{}: status = powered", name());
-
         node::set_port_value(p_out_[pout::powered], { true });
     }
     // Мы оказались в аварии
@@ -201,8 +202,11 @@ void frequency_converter::read_status_done(readed_regs_t regs)
         // Если статус авария, могут измениться маски ошибок
 
         auto src = regs.subspan(1);
-        if (status == status_ && status_.has_value() && std::ranges::equal(src, damages_))
+        if (status_.has_value() && status == *status_ && std::ranges::equal(src, damages_))
             return;
+
+        if (!status_.has_value() || status != *status_)
+            node::ready(ictl_, "Авария");
 
         eng::log::info("{}: status = damaged", name());
 
@@ -217,10 +221,6 @@ void frequency_converter::read_status_done(readed_regs_t regs)
         eng::log::info("{}: status = ? ({})", name(), regs[0]);
         return;
     }
-
-    // Если это первый статус с момента восстановления связи
-    if (!status_.has_value() || (status_.value() != estatus::powered && node::is_active(ictl_)))
-        node::ready(ictl_);
 
     // Запоминаем новое значение статуса
     status_ = status;

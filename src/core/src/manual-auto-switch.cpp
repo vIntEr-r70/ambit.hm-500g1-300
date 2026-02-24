@@ -20,7 +20,6 @@ void manual_auto_switch::update_output(eng::abc::pack args)
     {
         node::set_port_value(manual_, { false });
         node::set_port_value(auto_, { false });
-
         node::set_port_value(mode_, { });
     }
     else
@@ -29,7 +28,6 @@ void manual_auto_switch::update_output(eng::abc::pack args)
 
         node::set_port_value(auto_, { mauto });
         node::set_port_value(manual_, { !mauto });
-
         node::set_port_value(mode_, { mauto ? "auto" : "manual" });
     }
 }

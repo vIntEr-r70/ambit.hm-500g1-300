@@ -78,15 +78,21 @@ void MainFrame::register_on_bus_done()
 
     // NavigationPanel_->add(new ArcsWindow(this), "arcs", true);
 
+    auto mimic = new MnemonicWindow(this);
+    NavigationPanel_->add(mimic, "mimic", true);
+    connect(mimic, &MnemonicWindow::set_navigation_icon_color,
+            [this](std::optional<QColor> clr) {
+                NavigationPanel_->set_button_color("mimic", clr);
+            });
+
+
+    // auto nw = new NotifyWindow(this);
+    // connect(nw, &NotifyWindow::update_state, [this](char state)
+    //     { NavigationPanel_->set_notify_state("diag", state); });
+    // NavigationPanel_->add(nw, "diag", true);
+
     sys_cfg_window_ = new SysCfgWindow(this);
     NavigationPanel_->add(sys_cfg_window_, "scfg", true);
-
-    NavigationPanel_->add(new MnemonicWindow(this), "mimic", true);
-
-    auto nw = new NotifyWindow(this);
-    connect(nw, &NotifyWindow::update_state, [this](char state)
-        { NavigationPanel_->set_notify_state("diag", state); });
-    NavigationPanel_->add(nw, "diag", true);
 
     // auto dw = new DiagnosticWindow(this);
     // NavigationPanel_->add(dw, "diag", true);

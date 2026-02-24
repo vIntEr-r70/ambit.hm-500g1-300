@@ -7,7 +7,7 @@
 class error_mask final
     : public eng::sibus::node
 {
-    std::bitset<3> ebits_;
+    std::bitset<9> ebits_;
 
     eng::sibus::output_port_id_t error_;
     bool result_{ false };

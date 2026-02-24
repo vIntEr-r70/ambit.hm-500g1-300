@@ -1,13 +1,14 @@
 #include "src/stuff-ctl.hpp"
 #include "src/sprayer-ctl.hpp"
-#include "src/intervals.hpp"
+#include "src/lock-intervals.hpp"
+#include "src/lock-flags.hpp"
 #include "src/auto-mode/auto-mode.hpp"
 #include "src/speed-node.hpp"
 #include "src/panel-button-ctl.hpp"
 #include "src/current-conductors.hpp"
 #include "src/barrel-ctl.hpp"
 #include "src/barrel-lvl-ctl.hpp"
-// #include "src/drainage-ctl.hpp"
+#include "src/drainage-ctl.hpp"
 #include "src/error-mask.hpp"
 #include "src/bki-ctl.hpp"
 #include "src/emg-ctl.hpp"
@@ -40,21 +41,22 @@ auto main() -> int
     panel_button_ctl sp2("btn-sp2-ctl");
 
     panel_button_ctl h1("btn-H1-ctl");
-    panel_button_ctl h2("btn-H3-ctl");
+    panel_button_ctl h2("btn-H3-H5-ctl");
 
     current_conductors cc0;
 
     manual_auto_switch mas;
     panel_rcu_switch prs;
 
-    intervals intervals(conf_path);
+    lock_intervals intervals(conf_path);
+    lock_flags flags(conf_path);
 
     speed_node speed_x{ 'X' };
     speed_node speed_y{ 'Y' };
     speed_node speed_z{ 'Z' };
     speed_node speed_v{ 'V' };
 
-    // drainage_ctl dc;
+    drainage_ctl dc;
 
     barrel_ctl bc0{ "fc" };
     barrel_ctl bc1{ "water" };

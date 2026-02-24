@@ -15,24 +15,18 @@ class PLC110 final
 
     std::unordered_map<std::size_t, handler_t> read_task_handlers_;
 
-    struct spin_value_t
+    template <typename T>
+    struct sens_t
     {
-        std::int32_t value;
+        T value;
         bool initialized{ false };
         eng::sibus::output_port_id_t port_id;
     };
-    spin_value_t spin_;
 
-    template <std::size_t BITS>
-    struct bits_value_t
-    {
-        std::bitset<BITS> bitset;
-        bool initialized{ false };
-        std::array<eng::sibus::output_port_id_t, BITS> ports_id;
-    };
-    bits_value_t<32> bits_;
+    sens_t<std::int32_t> spin_;
 
-    std::array<bits_value_t<8>, 2> mk_bits_;
+    std::array<sens_t<bool>, 32> plc_;
+    std::array<std::array<sens_t<bool>, 8>, 2> mk_;
 
     std::bitset<20> outputs_;
     std::array<std::bitset<8>, 2> mk_outputs_;
@@ -53,7 +47,7 @@ private:
 
     void read_spin_done(readed_regs_t);
 
-    void read_bits_done(readed_regs_t);
+    void read_plc_done(readed_regs_t);
 
     void read_mk_1_done(readed_regs_t);
 

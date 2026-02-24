@@ -108,16 +108,26 @@ auto_mode::auto_mode()
 
 void auto_mode::system_ready_monitor()
 {
+    eng::log::info("{}: {}", name(), __func__);
+
     if (!isc_.is_in_state(nullptr))
+    {
+        eng::log::info("\tsystem was activated");
         return;
+    }
 
     bool ready = !program_b64_.empty() &&
         node::is_ready(axis_ctl_) &&
         node::is_ready(stuff_ctl_);
 
     if (system_ready_ == ready)
+    {
+        eng::log::info("\tsystem the same state");
         return;
+    }
     system_ready_ = ready;
+
+    eng::log::info("\tupdate system state: {}", system_ready_);
 
     if (!system_ready_)
         node::terminate(ictl_, "Система не готова к работе");
@@ -421,8 +431,8 @@ void auto_mode::process_axis_positions()
 
 void auto_mode::upload_program(eng::abc::pack args)
 {
-    eng::log::info("{}: upload_program: {}", name(), program_b64_);
     program_b64_ = args ? eng::abc::get_sv(args) : "";
+    eng::log::info("{}: upload_program: {}", name(), program_b64_);
     system_ready_monitor();
 }
 

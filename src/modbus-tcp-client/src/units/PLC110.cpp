@@ -2,30 +2,30 @@
 
 #include <eng/log.hpp>
 
+#include <algorithm>
+
 PLC110::PLC110(std::string_view host, std::uint16_t port)
     : eng::sibus::node("PLC110")
     , modbus_unit(host, port, 100)
 {
-    std::size_t idx;
-
-    idx = modbus_unit::add_read_task(0x0000, 2, 100);
+    std::size_t idx = modbus_unit::add_read_task(0x0000, 2, 100);
     read_task_handlers_[idx] = &PLC110::read_spin_done;
     spin_.port_id = node::add_output_port("spin");
 
     idx = modbus_unit::add_read_task(0x0016, 1, 100);
     read_task_handlers_[idx] = &PLC110::read_mk_1_done;
-    for (std::size_t i = 0; i < mk_bits_[0].bitset.size(); ++i)
-        mk_bits_[0].ports_id[i] = node::add_output_port(std::format("m1b{}", i + 1));
+    for (std::size_t i = 0; i < mk_[0].size(); ++i)
+        mk_[0][i].port_id = node::add_output_port(std::format("m1b{}", i + 1));
 
     idx = modbus_unit::add_read_task(0x0019, 1, 100);
     read_task_handlers_[idx] = &PLC110::read_mk_2_done;
-    for (std::size_t i = 0; i < mk_bits_[1].bitset.size(); ++i)
-        mk_bits_[1].ports_id[i] = node::add_output_port(std::format("m2b{}", i + 1));
+    for (std::size_t i = 0; i < mk_[1].size(); ++i)
+        mk_[1][i].port_id = node::add_output_port(std::format("m2b{}", i + 1));
 
     idx = modbus_unit::add_read_task(0x0004, 2, 100);
-    read_task_handlers_[idx] = &PLC110::read_bits_done;
-    for (std::size_t i = 0; i < bits_.bitset.size(); ++i)
-        bits_.ports_id[i] = node::add_output_port(std::format("b{}", i + 5));
+    read_task_handlers_[idx] = &PLC110::read_plc_done;
+    for (std::size_t i = 0; i < plc_.size(); ++i)
+        plc_[i].port_id = node::add_output_port(std::format("b{}", i + 5));
 
     for (std::size_t i = 0; i < outputs_.size(); ++i)
     {
@@ -57,6 +57,23 @@ void PLC110::read_task_done(std::size_t idx, readed_regs_t regs)
 
 void PLC110::connection_was_lost()
 {
+    std::ranges::for_each(plc_, [this](auto &item)
+    {
+        item.initialized = false;
+        node::set_port_value(item.port_id, { });
+    });
+
+    std::ranges::for_each(mk_[0], [this](auto &item)
+    {
+        item.initialized = false;
+        node::set_port_value(item.port_id, { });
+    });
+
+    std::ranges::for_each(mk_[1], [this](auto &item)
+    {
+        item.initialized = false;
+        node::set_port_value(item.port_id, { });
+    });
 }
 
 void PLC110::now_unit_online()
@@ -81,28 +98,27 @@ void PLC110::read_spin_done(readed_regs_t regs)
     node::set_port_value(spin_.port_id, { spin_.value });
 }
 
-void PLC110::read_bits_done(readed_regs_t regs)
+void PLC110::read_plc_done(readed_regs_t regs)
 {
     std::uint32_t value;
     std::memcpy(&value, regs.data(), sizeof(value));
 
-    decltype(bits_.bitset) bitset(value);
-    decltype(bits_.bitset) diff_bits = bitset ^ bits_.bitset;
+    std::bitset<32> bitset(value);
 
-    if (!diff_bits.count() && bits_.initialized)
-        return;
-
-    bits_.bitset = bitset;
-
-    for (std::size_t i = 0; i < bits_.bitset.size(); ++i)
+    for (std::size_t i = 0; i < plc_.size(); ++i)
     {
-        if (!diff_bits[i] && bits_.initialized)
-            continue;
-        eng::log::info("PLC110[b{}]: {}", i + 5, bitset[i] ? "ON" : "OFF");
-        node::set_port_value(bits_.ports_id[i], { bits_.bitset.test(i) });
-    }
+        auto &item = plc_[i];
 
-    bits_.initialized = true;
+        if (item.value == bitset[i] && item.initialized)
+            continue;
+
+        item.value = bitset[i];
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
+
+        eng::log::info("{}[b{}]: {}", name(), i + 5, item.value ? "ON" : "OFF");
+    }
 }
 
 void PLC110::read_mk_1_done(readed_regs_t regs)
@@ -117,25 +133,24 @@ void PLC110::read_mk_2_done(readed_regs_t regs)
 
 void PLC110::read_mk_done(std::size_t idx, readed_regs_t regs)
 {
-    auto &bits = mk_bits_[idx];
+    auto &mk = mk_[idx];
 
-    decltype(bits.bitset) bitset(regs[0]);
-    decltype(bits.bitset) diff_bits = bitset ^ bits.bitset;
+    std::bitset<8> bitset(regs[0]);
 
-    if (!diff_bits.count() && bits.initialized)
-        return;
-
-    bits.bitset = bitset;
-
-    for (std::size_t i = 0; i < bits.bitset.size(); ++i)
+    for (std::size_t i = 0; i < mk.size(); ++i)
     {
-        if (!diff_bits[i] && bits.initialized)
-            continue;
-        eng::log::info("PLC110[m{}b{}]: {}", idx + 1, i + 1, bitset[i] ? "ON" : "OFF");
-        node::set_port_value(bits.ports_id[i], { bits.bitset.test(i) });
-    }
+        auto &item = mk[i];
 
-    bits.initialized = true;
+        if (item.value == bitset[i] && item.initialized)
+            continue;
+
+        item.value = bitset[i];
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
+
+        eng::log::info("{}[m{}b{}]: {}", name(), idx + 1, i + 1, item.value ? "ON" : "OFF");
+    }
 }
 
 void PLC110::write_outputs()

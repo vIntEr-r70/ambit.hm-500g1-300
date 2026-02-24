@@ -14,7 +14,7 @@ LiquidSystemWindow::LiquidSystemWindow(QWidget *parent)
         {
             hL->addStretch();
 
-            auto *w1 = new QuenchMediaWidget(this, "fc", "Вода ТВЧ");
+            auto *w1 = new QuenchMediaWidget(this, "fc", "Вода ТВЧ", false);
             w1->setFixedWidth(300);
             hL->addWidget(w1);
             auto *w2 = new QuenchMediaWidget(this, "water", "Закалочная вода");

@@ -5,7 +5,8 @@ project(core)
 add_executable(${PROJECT_NAME}
     main.cpp
 
-    src/intervals.cpp
+    src/lock-intervals.cpp
+    src/lock-flags.cpp
 
     src/auto-mode/auto-mode.cpp
     src/auto-mode/vm.cpp

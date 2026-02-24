@@ -29,6 +29,10 @@ class PR205_A14 final
     std::array<sens_t<std::uint8_t>, 3> vp_;
     std::bitset<8> bs_0х4001_{ 0 };
 
+    // sens_t<bool> pump_;
+
+    std::array<sens_t<bool>, 5> sens_;
+
 public:
 
     PR205_A14(std::string_view, std::uint16_t);
@@ -45,7 +49,11 @@ private:
 
     void read_dp_done(readed_regs_t);
 
+    void read_sens_done(readed_regs_t);
+
     void read_vp_done(readed_regs_t);
 
     void switch_vp(std::size_t, bool);
+
+    void switch_pump(bool);
 };

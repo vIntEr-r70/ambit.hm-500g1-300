@@ -12,8 +12,8 @@ class stuff_ctl final
 
     struct unit_t
     {
-        bool in_use;
-        bool in_active;
+        bool in_use{ false };
+        bool in_active{ false };
         eng::sibus::output_wire_id_t ctl;
         std::string emsg;
     };

@@ -10,18 +10,25 @@ PR205_A14::PR205_A14(std::string_view host, std::uint16_t port)
 {
     std::size_t idx;
 
-    idx = modbus_unit::add_read_task(0x4012, dt_.size(), 1000);
+    idx = modbus_unit::add_read_task(0x4002, dt_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A14::read_dt_done;
     for (std::size_t i = 0; i < dt_.size(); ++i)
         dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x4014, dp_.size(), 1000);
+    idx = modbus_unit::add_read_task(0x4004, dp_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A14::read_dp_done;
     for (std::size_t i = 0; i < dp_.size(); ++i)
         dp_[i].port_id = add_output_port(std::format("DP{}", i + 1));
 
     idx = modbus_unit::add_read_task(0x400A, 1, 200);
     read_task_handlers_[idx] = &PR205_A14::read_vp_done;
+
+    idx = modbus_unit::add_read_task(0x4000, 1, 200);
+    read_task_handlers_[idx] = &PR205_A14::read_sens_done;
+
+    static constexpr std::size_t idx_map[] = { 3, 4, 1, 2, 5 };
+    for (std::size_t i = 0; i < sens_.size(); ++i)
+        sens_[i].port_id = node::add_output_port(std::format("P{}", idx_map[i]));
 
     for (std::size_t i = 0; i < vp_.size(); ++i)
     {
@@ -30,6 +37,12 @@ PR205_A14::PR205_A14(std::string_view host, std::uint16_t port)
         });
         vp_[i].port_id = node::add_output_port(std::format("VP{}", i + 1));
     }
+
+    node::add_input_port("H", [this](eng::abc::pack args)
+    {
+        switch_pump(eng::abc::get<bool>(args));
+    });
+    // pump_.port_id = node::add_output_port("H");
 }
 
 void PR205_A14::read_task_done(std::size_t idx, readed_regs_t regs)
@@ -46,6 +59,18 @@ void PR205_A14::connection_was_lost()
     });
 
     std::ranges::for_each(dp_, [this](auto &item)
+    {
+        item.initialized = false;
+        node::set_port_value(item.port_id, { });
+    });
+
+    std::ranges::for_each(sens_, [this](auto &item)
+    {
+        item.initialized = false;
+        node::set_port_value(item.port_id, { });
+    });
+
+    std::ranges::for_each(vp_, [this](auto &item)
     {
         item.initialized = false;
         node::set_port_value(item.port_id, { });
@@ -86,8 +111,37 @@ void PR205_A14::read_dp_done(readed_regs_t regs)
     }
 }
 
+void PR205_A14::read_sens_done(readed_regs_t regs)
+{
+    std::bitset<5> bitset{ regs[0] };
+
+    for (std::size_t i = 0; i < sens_.size(); ++i)
+    {
+        auto &item = sens_[i];
+
+        if (item.value == bitset[i] && item.initialized)
+            continue;
+
+        item.value = bitset[i];
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
+    }
+}
+
 void PR205_A14::read_vp_done(readed_regs_t regs)
 {
+    // std::bitset<8> value(regs[0]);
+    //
+    // if (pump_.value != value.test(0) || !pump_.initialized)
+    // {
+    //     pump_.value = value.test(0);
+    //     pump_.initialized = true;
+    //
+    //     eng::log::info("{}: H = {}", name(), pump_.value);
+    //     node::set_port_value(pump_.port_id, { pump_.value });
+    // }
+
     for (std::size_t i = 0; i < vp_.size(); ++i)
     {
         auto &item = vp_[i];
@@ -114,6 +168,13 @@ void PR205_A14::switch_vp(std::size_t idx, bool value)
 
     modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
 
+    eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
+}
+
+void PR205_A14::switch_pump(bool value)
+{
+    bs_0х4001_.set(0, value);
+    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
     eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
 }
 

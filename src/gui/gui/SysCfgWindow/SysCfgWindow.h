@@ -6,7 +6,7 @@ class QTabWidget;
 class AxisSettingsWidget;
 class ModbusUnitCtrlWidget;
 class SysSetsWidget;
-class HardwareSetsWidget;
+// class HardwareSetsWidget;
 class LimitsWidget;
 class LockCtrlWindow;
 class BkiCfgWidget;
@@ -31,7 +31,7 @@ private:
     AxisSettingsWidget* axisSettingsW_;
     ModbusUnitCtrlWidget* modbusCtrlW_;
     SysSetsWidget* sysSetsW_;
-    HardwareSetsWidget* hwSetsW_;
+    // HardwareSetsWidget* hwSetsW_;
     LimitsWidget *fcLimitsW_;
     BkiCfgWidget *bkiCfgW_;
     LockCtrlWindow *lock_ctl_;
