@@ -70,7 +70,7 @@ void BkiCfgWidget::load_config()
         if (json.empty())
             return;
         eng::json::value cfg(json);
-        vsb_->setJsonValue(cfg.get<bool>());
+        vsb_->set_value(cfg.get<bool>());
     });
 }
 

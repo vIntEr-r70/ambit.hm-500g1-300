@@ -1,7 +1,5 @@
 #include "EditorMessageBox.h"
 
-#include <aem/log.h>
-
 EditorMessageBox::EditorMessageBox(QWidget *parent)
     : MessageBox(parent, MessageBox::HeadError)
 {

@@ -3,8 +3,6 @@
 #include <vector>
 #include <QAbstractTableModel>
 
-#include <aem/json.hpp>
-
 class ArcsListModel
     : public QAbstractTableModel
 {
@@ -30,7 +28,7 @@ public:
 
     inline bool isPageLoaded(std::size_t const pId) const noexcept { return validPages_[pId]; }
 
-    void append(std::size_t, nlohmann::json const &);
+    // void append(std::size_t, nlohmann::json const &);
 
     inline std::size_t rows() const noexcept { return arcsCount_; }
 

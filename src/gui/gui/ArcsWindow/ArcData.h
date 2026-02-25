@@ -2,8 +2,6 @@
 
 #include "ArcInfo.h"
 
-#include <aem/buffer.h>
-
 class ArcData
 {
     typedef double (ArcData::*Handler)(std::size_t) const;
@@ -93,22 +91,22 @@ public:
 
 private:
 
-    double ft_bool(std::size_t) const noexcept;
-    double ft_int8(std::size_t) const noexcept;
-    double ft_int16(std::size_t) const noexcept;
-    double ft_int32(std::size_t) const noexcept;
-    double ft_int64(std::size_t) const noexcept;
-    double ft_uint8(std::size_t) const noexcept;
-    double ft_uint16(std::size_t) const noexcept;
-    double ft_uint32(std::size_t) const noexcept;
-    double ft_uint64(std::size_t) const noexcept;
-    double ft_float(std::size_t) const noexcept;
-    double ft_double(std::size_t) const noexcept;
-    double ft_string(std::size_t) const noexcept;
+    // double ft_bool(std::size_t) const noexcept;
+    // double ft_int8(std::size_t) const noexcept;
+    // double ft_int16(std::size_t) const noexcept;
+    // double ft_int32(std::size_t) const noexcept;
+    // double ft_int64(std::size_t) const noexcept;
+    // double ft_uint8(std::size_t) const noexcept;
+    // double ft_uint16(std::size_t) const noexcept;
+    // double ft_uint32(std::size_t) const noexcept;
+    // double ft_uint64(std::size_t) const noexcept;
+    // double ft_float(std::size_t) const noexcept;
+    // double ft_double(std::size_t) const noexcept;
+    // double ft_string(std::size_t) const noexcept;
 
     TypeId type(char const*) const noexcept;
     std::size_t typeSize(TypeId) const noexcept;
-    Handler typeHandler(TypeId) const noexcept;
+    // Handler typeHandler(TypeId) const noexcept;
 
 public:
 
@@ -120,7 +118,7 @@ private:
     std::size_t loadOffset_{ 0 };
     bool shouldContinue_{ false };
 
-    aem::buffer data_;
+    // aem::buffer data_;
     std::vector<Handler> handlers_;
     Records* records_{ nullptr };
 

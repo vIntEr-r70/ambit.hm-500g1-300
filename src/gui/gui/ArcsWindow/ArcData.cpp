@@ -83,24 +83,24 @@ bool ArcData::append(uint8_t const* data, std::size_t size) noexcept
 
         records_ = !ss ? new StaticRecords() : nullptr;
 
-        for (auto const& type : cols)
-        {
-            records_->addColSize(typeSize(type));
-            handlers_.push_back(typeHandler(type));
-        }
+        // for (auto const& type : cols)
+        // {
+        //     records_->addColSize(typeSize(type));
+        //     handlers_.push_back(typeHandler(type));
+        // }
 
-        //! Часть данных может быть заголовком, учитываем это
-        data_.clear();
-        data_.append(data + (size - leftSize), leftSize);
-
-        records_->updateDataSize(data_.size());
+        // //! Часть данных может быть заголовком, учитываем это
+        // data_.clear();
+        // data_.append(data + (size - leftSize), leftSize);
+        //
+        // records_->updateDataSize(data_.size());
 
         return true;
     }
 
-    //! Сохраняем данные во внутреннем буфере
-    data_.append(data, size);
-    records_->updateDataSize(data_.size());
+    // //! Сохраняем данные во внутреннем буфере
+    // data_.append(data, size);
+    // records_->updateDataSize(data_.size());
 
     return false;
 }
@@ -134,42 +134,42 @@ double ft_base(uint8_t const* data) noexcept {
     return static_cast<double>(*reinterpret_cast<T const*>(data));
 }
 
-double ArcData::ft_bool(std::size_t shift) const noexcept {
-    return ft_base<bool>(data_.cbegin() + shift);
-}
-double ArcData::ft_int8(std::size_t shift) const noexcept {
-    return ft_base<int8_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_int16(std::size_t shift) const noexcept {
-    return ft_base<int16_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_int32(std::size_t shift) const noexcept {
-    return ft_base<int32_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_int64(std::size_t shift) const noexcept {
-    return ft_base<int64_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_uint8(std::size_t shift) const noexcept {
-    return ft_base<uint8_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_uint16(std::size_t shift) const noexcept {
-    return ft_base<uint16_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_uint32(std::size_t shift) const noexcept {
-    return ft_base<uint32_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_uint64(std::size_t shift) const noexcept {
-    return ft_base<uint64_t>(data_.cbegin() + shift);
-}
-double ArcData::ft_float(std::size_t shift) const noexcept {
-    return ft_base<float>(data_.cbegin() + shift);
-}
-double ArcData::ft_double(std::size_t shift) const noexcept {
-    return ft_base<double>(data_.cbegin() + shift);
-}
-double ArcData::ft_string(std::size_t shift) const noexcept {
-    return std::stod(reinterpret_cast<char const*>(data_.cbegin() + shift));
-}
+// double ArcData::ft_bool(std::size_t shift) const noexcept {
+//     return ft_base<bool>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_int8(std::size_t shift) const noexcept {
+//     return ft_base<int8_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_int16(std::size_t shift) const noexcept {
+//     return ft_base<int16_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_int32(std::size_t shift) const noexcept {
+//     return ft_base<int32_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_int64(std::size_t shift) const noexcept {
+//     return ft_base<int64_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_uint8(std::size_t shift) const noexcept {
+//     return ft_base<uint8_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_uint16(std::size_t shift) const noexcept {
+//     return ft_base<uint16_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_uint32(std::size_t shift) const noexcept {
+//     return ft_base<uint32_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_uint64(std::size_t shift) const noexcept {
+//     return ft_base<uint64_t>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_float(std::size_t shift) const noexcept {
+//     return ft_base<float>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_double(std::size_t shift) const noexcept {
+//     return ft_base<double>(data_.cbegin() + shift);
+// }
+// double ArcData::ft_string(std::size_t shift) const noexcept {
+//     return std::stod(reinterpret_cast<char const*>(data_.cbegin() + shift));
+// }
 
 ArcData::TypeId ArcData::type(char const* typeName) const noexcept
 {
@@ -220,28 +220,28 @@ std::size_t ArcData::typeSize(TypeId ti) const noexcept
     }
 }
 
-ArcData::Handler ArcData::typeHandler(TypeId ti) const noexcept
-{
-    switch(ti)
-    {
-    case TypeId::t_bool:    return &ArcData::ft_bool;
-
-    case TypeId::t_int8:    return &ArcData::ft_int8;
-    case TypeId::t_int16:   return &ArcData::ft_int16;
-    case TypeId::t_int32:   return &ArcData::ft_int32;
-    case TypeId::t_int64:   return &ArcData::ft_int64;
-
-    case TypeId::t_uint8:   return &ArcData::ft_uint8;
-    case TypeId::t_uint16:  return &ArcData::ft_uint16;
-    case TypeId::t_uint32:  return &ArcData::ft_uint32;
-    case TypeId::t_uint64:  return &ArcData::ft_uint64;
-
-    case TypeId::t_float:   return &ArcData::ft_float;
-    case TypeId::t_double:  return &ArcData::ft_double;
-
-    default:                return &ArcData::ft_string;
-    }
-}
+// ArcData::Handler ArcData::typeHandler(TypeId ti) const noexcept
+// {
+//     // switch(ti)
+//     // {
+//     // case TypeId::t_bool:    return &ArcData::ft_bool;
+//     //
+//     // case TypeId::t_int8:    return &ArcData::ft_int8;
+//     // case TypeId::t_int16:   return &ArcData::ft_int16;
+//     // case TypeId::t_int32:   return &ArcData::ft_int32;
+//     // case TypeId::t_int64:   return &ArcData::ft_int64;
+//     //
+//     // case TypeId::t_uint8:   return &ArcData::ft_uint8;
+//     // case TypeId::t_uint16:  return &ArcData::ft_uint16;
+//     // case TypeId::t_uint32:  return &ArcData::ft_uint32;
+//     // case TypeId::t_uint64:  return &ArcData::ft_uint64;
+//     //
+//     // case TypeId::t_float:   return &ArcData::ft_float;
+//     // case TypeId::t_double:  return &ArcData::ft_double;
+//     //
+//     // default:                return &ArcData::ft_string;
+//     // }
+// }
 
 
 

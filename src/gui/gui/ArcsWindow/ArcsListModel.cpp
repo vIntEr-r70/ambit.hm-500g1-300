@@ -3,8 +3,6 @@
 #include <QColor>
 #include <QStringList>
 
-#include <aem/log.h>
-
 //! Цвета записей в таблице:
 //! цвет фона: обычный архив
 //! синеватый: базовый архив
@@ -30,34 +28,34 @@ void ArcsListModel::reset(std::size_t arcsCount)
     endResetModel();
 }
 
-void ArcsListModel::append(std::size_t const pId, nlohmann::json const &resp)
-{
-    beginResetModel();
-
-    std::size_t const rowId = pId * pageSize_;
-    for (std::size_t row = 0; row < resp.size(); ++row)
-    {
-        auto const& rec = resp[row];
-        
-        //! 0 - индекс архива
-        aId_[rowId + row] = rec[0].get<std::size_t>();
-
-        std::size_t dB = (rowId + row) * header_.size();
-        std::size_t cIdx = 0;
-
-        //! Дата и время создания архива в UTC
-        data_[dB + cIdx++] = QString::fromStdString(rec[1].get_ref<std::string const &>());
-        //! Название программы, по которой проводилось испытание
-        data_[dB + cIdx++] = QString::fromStdString(rec[2].get_ref<std::string const &>());
-        //! Размер архива в байтах
-        data_[dB + cIdx++] = rec[3].get<qlonglong>();
-        //! Информация об архиве 
-        data_[dB + cIdx++] = QString::fromStdString(rec[4].get_ref<std::string const &>());
-    }
-    validPages_[pId] = true;
-
-    endResetModel();
-}
+// void ArcsListModel::append(std::size_t const pId, nlohmann::json const &resp)
+// {
+//     beginResetModel();
+//
+//     std::size_t const rowId = pId * pageSize_;
+//     for (std::size_t row = 0; row < resp.size(); ++row)
+//     {
+//         auto const& rec = resp[row];
+//
+//         //! 0 - индекс архива
+//         aId_[rowId + row] = rec[0].get<std::size_t>();
+//
+//         std::size_t dB = (rowId + row) * header_.size();
+//         std::size_t cIdx = 0;
+//
+//         //! Дата и время создания архива в UTC
+//         data_[dB + cIdx++] = QString::fromStdString(rec[1].get_ref<std::string const &>());
+//         //! Название программы, по которой проводилось испытание
+//         data_[dB + cIdx++] = QString::fromStdString(rec[2].get_ref<std::string const &>());
+//         //! Размер архива в байтах
+//         data_[dB + cIdx++] = rec[3].get<qlonglong>();
+//         //! Информация об архиве 
+//         data_[dB + cIdx++] = QString::fromStdString(rec[4].get_ref<std::string const &>());
+//     }
+//     validPages_[pId] = true;
+//
+//     endResetModel();
+// }
 
 int ArcsListModel::rowCount(QModelIndex const&) const
 {

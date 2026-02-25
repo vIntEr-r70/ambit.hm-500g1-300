@@ -72,10 +72,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${Qt5Widgets_LIBRARIES}
     ${Qt5PrintSupport_LIBRARIES}
-    aem::aem
     gui-core::gui-core
-    -lfmt
-    stdc++exp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE
