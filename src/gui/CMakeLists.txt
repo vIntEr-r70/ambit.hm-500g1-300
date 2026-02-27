@@ -51,22 +51,17 @@ add_executable(${PROJECT_NAME}
     gui/SysCfgWindow/SysSetsWidget.cpp
     gui/SysCfgWindow/BkiCfgWidget.cpp
 
-    gui/ArcsWindow/BaseArcsLoader.cpp
-    gui/ArcsWindow/ArcsWindow.cpp
-    gui/ArcsWindow/ArcDataViewWidget.cpp
-    gui/ArcsWindow/ArcsListWidget.cpp
-    gui/ArcsWindow/ArcsListModel.cpp
-    gui/ArcsWindow/ArcData.cpp
-    gui/ArcsWindow/ArcInfo.cpp
-    gui/ArcsWindow/ArcDataView.cpp
-    gui/ArcsWindow/DiagramView.cpp
+    # gui/ArcsWindow/BaseArcsLoader.cpp
+    # gui/ArcsWindow/ArcsWindow.cpp
+    # gui/ArcsWindow/ArcDataViewWidget.cpp
+    # gui/ArcsWindow/ArcsListWidget.cpp
+    # gui/ArcsWindow/ArcsListModel.cpp
+    # gui/ArcsWindow/ArcData.cpp
+    # gui/ArcsWindow/ArcInfo.cpp
+    # gui/ArcsWindow/ArcDataView.cpp
+    # gui/ArcsWindow/DiagramView.cpp
 
     gui/LiquidSystem/LiquidSystemWindow.cpp
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${Qt5Widgets_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -75,12 +70,26 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gui-core::gui-core
 )
 
-target_compile_features(${PROJECT_NAME} PRIVATE
-    cxx_std_26
-)
+if(MSVC)
 
-target_compile_options(${PROJECT_NAME} PRIVATE
-    -Wno-deprecated-declarations
-    -Wno-template-id-cdtor
-)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:gui>
+            $<TARGET_FILE_DIR:gui>
+        COMMAND_EXPAND_LISTS
+    )
+
+    target_compile_options(${PROJECT_NAME} PRIVATE /std:c++latest)
+
+else()
+
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_26)
+
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wno-deprecated-declarations
+        -Wno-template-id-cdtor
+    )
+
+endif()
+
 

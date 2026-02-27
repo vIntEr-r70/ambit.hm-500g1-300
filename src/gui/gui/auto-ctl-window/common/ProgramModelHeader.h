@@ -5,7 +5,7 @@
 
 #include <QString>
 
-class program;
+struct program;
 class QTableWidget;
 
 class ProgramModelHeader

@@ -12,6 +12,7 @@
 #include <eng/log.hpp>
 
 #include <bitset>
+#include <array>
 
 AxisCtlItemWidget::AxisCtlItemWidget(QWidget* parent, char axis, std::string_view name, bool rotation)
     : QWidget(parent)

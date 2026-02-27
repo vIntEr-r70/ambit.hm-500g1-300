@@ -1,9 +1,9 @@
 #pragma once
 
-#include <InteractWidgets/MessageBox.h>
+#include <InteractWidgets/message-box.hpp>
 
 class EditorMessageBox final
-    : public MessageBox
+    : public iw::message_box
 {
     typedef std::function<void()> question_cb_t;
 

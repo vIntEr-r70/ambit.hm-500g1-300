@@ -265,7 +265,7 @@ void auto_ctl_page::update_phase_id(eng::abc::pack args)
     program_widget_->scroll_to_selected();
 }
 
-constexpr static std::tuple<int, int, int> hms(double sec)
+static std::tuple<int, int, int> hms(double sec)
 {
     int seconds = static_cast<int>(std::lround(sec));
     int h = seconds / 3600;

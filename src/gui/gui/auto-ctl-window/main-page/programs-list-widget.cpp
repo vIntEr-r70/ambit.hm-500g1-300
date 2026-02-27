@@ -11,7 +11,7 @@
 
 #include <Widgets/RoundButton.h>
 #include <Widgets/VerticalScroll.h>
-#include <InteractWidgets/MessageBox.h>
+#include <InteractWidgets/message-box.hpp>
 
 #include <eng/log.hpp>
 
@@ -30,7 +30,7 @@ programs_list_widget::programs_list_widget(QWidget* parent, main_page_header_wid
     model_->add_local_path(std::move(path));
     model_->add_usb_path("/mnt");
 
-    question_msg_box_ = new MessageBox(this, MessageBox::HeadQuestion);
+    question_msg_box_ = new iw::message_box(this, iw::message_box::HeadQuestion);
 
     QFont f(QWidget::font());
     f.setPointSize(16);

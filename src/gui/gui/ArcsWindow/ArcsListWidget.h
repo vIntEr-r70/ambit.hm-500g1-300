@@ -4,6 +4,8 @@
 
 #include <QWidget>
 
+#include <array>
+
 class ScrollableTableView;
 class RoundButton;
 

@@ -283,7 +283,7 @@ void editor_page::make_save()
 
     span = eng::buffer::get_content_region(buf);
 
-    QFile file(path.c_str());
+    QFile file(path.string().c_str());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         eng::buffer::destroy(buf);

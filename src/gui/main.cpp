@@ -12,8 +12,19 @@
 #include <eng/sibus/client.hpp>
 #include <eng/log.hpp>
 
-int main(int argc, char *argv[])
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
+auto main(int argc, char *argv[]) -> int
 {
+#ifdef _WIN32
+    // Устанавливаем UTF-8 для вывода в консоль
+    SetConsoleOutputCP(CP_UTF8);
+    // Устанавливаем UTF-8 для ввода (если нужно)
+    SetConsoleCP(CP_UTF8);
+#endif
+
     QApplication a(argc, argv);
     a.setStyle("plastique");
     a.setDoubleClickInterval(500);
@@ -25,13 +36,15 @@ int main(int argc, char *argv[])
 
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
+#ifndef _WIN32
     int id = QFontDatabase::addApplicationFont("Roboto-Regular.ttf");
     if (id < 0)
         eng::log::error("Не удалось загрузить шрифт....");
     else
         QApplication::setFont(QFontDatabase::applicationFontFamilies(id).at(0));
+#endif
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
     QScreen* screen = QGuiApplication::primaryScreen();
     QRect screenGeometry(screen->geometry());
 #else

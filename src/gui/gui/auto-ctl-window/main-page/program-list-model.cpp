@@ -11,6 +11,7 @@
 #include <uv.h>
 
 #include <bitset>
+#include <array>
 
 struct context_t
 {
@@ -51,7 +52,7 @@ namespace
 
     static std::list<program_record_t> cache;
 
-    constexpr static program_record_t& alloc_record(context_t &ctx)
+    static program_record_t& alloc_record(context_t &ctx)
     {
         // eng::log::info("{}", __func__);
 
@@ -66,13 +67,13 @@ namespace
         return ctx.file.front();
     }
 
-    constexpr static void free_record(context_t &ctx)
+    static void free_record(context_t &ctx)
     {
         // eng::log::info("{}", __func__);
         cache.splice(cache.begin(), ctx.file, ctx.file.begin());
     }
 
-    constexpr static void free_record(std::list<program_record_t> &list, program_record_t &r)
+    static void free_record(std::list<program_record_t> &list, program_record_t &r)
     {
         // eng::log::info("{}", __func__);
         cache.splice(cache.begin(), list, r.iterator);
@@ -134,10 +135,10 @@ void program_list_model::start_monitoring_directory(context_t &ctx)
                 ctx->dirty_files.emplace_back(filename);
                 process_dirty_files(*ctx);
             },
-            ctx.path.c_str(), 0);
+            ctx.path.string().c_str(), 0);
 
     // Открываем директорию для чтения ее содержимого
-    uv_fs_opendir(uv_default_loop(), &ctx.read, ctx.path.c_str(),
+    uv_fs_opendir(uv_default_loop(), &ctx.read, ctx.path.string().c_str(),
             [](uv_fs_t *req)
             {
                 context_t *ctx = static_cast<context_t*>(req->data);
@@ -481,7 +482,7 @@ void program_list_model::process_dirty_files(context_t &ctx)
     std::swap(ctx.process_file, ctx.dirty_files.back());
     ctx.dirty_files.pop_back();
 
-    uv_fs_stat(uv_default_loop(), &ctx.read, ctx.path.c_str(),
+    uv_fs_stat(uv_default_loop(), &ctx.read, ctx.path.string().c_str(),
         [](uv_fs_t *req)
         {
             context_t *ctx = static_cast<context_t*>(req->data);
@@ -552,7 +553,7 @@ void program_list_model::read_dir_entry(context_t &ctx)
             });
 }
 
-static constexpr bool analyze_file_data(context_t &ctx)
+static bool analyze_file_data(context_t &ctx)
 {
     program_record_t &r = ctx.file.front();
 
@@ -604,7 +605,7 @@ void program_list_model::read_file_data(context_t &ctx, std::size_t fsize, std::
     int flags = 0;
     int mode = O_RDONLY;
 
-    uv_fs_open(uv_default_loop(), &ctx.read, ctx.path.c_str(), flags, mode,
+    uv_fs_open(uv_default_loop(), &ctx.read, ctx.path.string().c_str(), flags, mode,
         [](uv_fs_t *req)
         {
             context_t *ctx = static_cast<context_t*>(req->data);
@@ -659,7 +660,7 @@ void program_list_model::copy_next_file(context_t &ctx)
 
     int flags = 0;
 
-    uv_fs_copyfile(uv_default_loop(), &ctx.copy, src.c_str(), ctx.path.c_str(), flags,
+    uv_fs_copyfile(uv_default_loop(), &ctx.copy, src.string().c_str(), ctx.path.string().c_str(), flags,
             [](uv_fs_t *req)
             {
                 context_t *ctx = static_cast<context_t*>(req->data);

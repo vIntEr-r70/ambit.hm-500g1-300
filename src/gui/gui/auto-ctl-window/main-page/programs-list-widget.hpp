@@ -3,7 +3,7 @@
 #include <QWidget>
 
 class QTableView;
-class MessageBox;
+namespace iw { class message_box; }
 class program_list_model;
 class RoundButton;
 class main_page_header_widget;
@@ -19,7 +19,7 @@ class programs_list_widget final
     program_list_model *model_;
     QTableView *list_;
 
-    MessageBox *question_msg_box_;
+    iw::message_box *question_msg_box_;
 
     RoundButton *btn_to_hd_;
     RoundButton *btn_to_usb_;

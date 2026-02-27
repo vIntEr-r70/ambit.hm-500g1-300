@@ -4,6 +4,7 @@
 #include <eng/json/builder.hpp>
 
 #include <string>
+#include <array>
 
 namespace axis_config
 {
@@ -49,7 +50,7 @@ namespace axis_config
     };
 
     // Загружаем из JSON
-    constexpr static void load(desc &axis, std::string_view json)
+    static void load(desc &axis, std::string_view json)
     {
         eng::json::object obj(json);
 
@@ -79,7 +80,7 @@ namespace axis_config
     }
 
     // Сохраняем в JSON
-    constexpr static void save(desc const &axis, eng::json::builder_t &jb)
+    static void save(desc const &axis, eng::json::builder_t &jb)
     {
         eng::json::add_object(jb, [&axis](auto &jb)
         {
