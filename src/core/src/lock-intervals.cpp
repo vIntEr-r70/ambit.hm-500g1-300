@@ -6,7 +6,7 @@
 #include <eng/sibus/client.hpp>
 
 #include <algorithm>
-#include <bitset>
+#include <cmath>
 
 lock_intervals::lock_intervals(std::filesystem::path const &path)
     : eng::sibus::node("lock-intervals")

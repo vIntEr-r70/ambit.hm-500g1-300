@@ -1,7 +1,6 @@
 #pragma once
 
-#include "modbus-unit.hpp"
-
+#include <eng/modbus/unit.hpp>
 #include <eng/sibus/node.hpp>
 
 #include <unordered_map>
@@ -9,7 +8,7 @@
 
 class PLC110 final
     : public eng::sibus::node
-    , public modbus_unit
+    , public eng::modbus::unit
 {
     typedef void (PLC110::*handler_t)(readed_regs_t);
 
@@ -33,7 +32,7 @@ class PLC110 final
 
 public:
 
-    PLC110(std::string_view, std::uint16_t);
+    PLC110(std::uint8_t);
 
 private:
 

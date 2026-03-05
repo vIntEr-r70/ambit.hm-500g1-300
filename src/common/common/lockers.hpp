@@ -9,6 +9,7 @@
 #include <vector>
 #include <filesystem>
 #include <bitset>
+#include <climits>
 
 namespace ambit
 {

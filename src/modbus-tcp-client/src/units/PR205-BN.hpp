@@ -1,7 +1,6 @@
 #pragma once
 
-#include "modbus-unit.hpp"
-
+#include <eng/modbus/unit.hpp>
 #include <eng/sibus/node.hpp>
 
 #include <bitset>
@@ -9,7 +8,7 @@
 
 class PR205_BN final
     : public eng::sibus::node
-    , public modbus_unit
+    , public eng::modbus::unit
 {
     typedef void (PR205_BN::*read_handler_t)(readed_regs_t);
     typedef void (PR205_BN::*write_handler_t)();
@@ -36,7 +35,7 @@ class PR205_BN final
 
 public:
 
-    PR205_BN(std::size_t, std::string_view, std::uint16_t);
+    PR205_BN(std::uint8_t, std::size_t);
 
 private:
 

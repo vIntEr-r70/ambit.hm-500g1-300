@@ -6,7 +6,7 @@
 #include <eng/sibus/client.hpp>
 
 #include <algorithm>
-#include <bitset>
+#include <cmath>
 
 lock_flags::lock_flags(std::filesystem::path const &path)
     : eng::sibus::node("lock-flags")

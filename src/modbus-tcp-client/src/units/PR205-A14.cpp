@@ -4,26 +4,26 @@
 
 #include <algorithm>
 
-PR205_A14::PR205_A14(std::string_view host, std::uint16_t port)
+PR205_A14::PR205_A14(std::uint8_t slave_id)
     : eng::sibus::node("PR205-A14")
-    , modbus_unit(host, port)
+    , eng::modbus::unit(slave_id)
 {
     std::size_t idx;
 
-    idx = modbus_unit::add_read_task(0x4002, dt_.size(), 1000);
+    idx = unit::add_read_task(0x4002, dt_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A14::read_dt_done;
     for (std::size_t i = 0; i < dt_.size(); ++i)
         dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x4004, dp_.size(), 1000);
+    idx = unit::add_read_task(0x4004, dp_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A14::read_dp_done;
     for (std::size_t i = 0; i < dp_.size(); ++i)
         dp_[i].port_id = add_output_port(std::format("DP{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x400A, 1, 200);
+    idx = unit::add_read_task(0x400A, 1, 200);
     read_task_handlers_[idx] = &PR205_A14::read_vp_done;
 
-    idx = modbus_unit::add_read_task(0x4000, 1, 200);
+    idx = unit::add_read_task(0x4000, 1, 200);
     read_task_handlers_[idx] = &PR205_A14::read_sens_done;
 
     static constexpr std::size_t idx_map[] = { 3, 4, 1, 2, 5 };
@@ -166,7 +166,7 @@ void PR205_A14::switch_vp(std::size_t idx, bool value)
     bs_0х4001_.set(idx + 0, value);
     bs_0х4001_.set(idx + 1, !value);
 
-    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_0х4001_.to_ulong());
 
     eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
 }
@@ -174,7 +174,7 @@ void PR205_A14::switch_vp(std::size_t idx, bool value)
 void PR205_A14::switch_pump(bool value)
 {
     bs_0х4001_.set(0, value);
-    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_0х4001_.to_ulong());
     eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
 }
 

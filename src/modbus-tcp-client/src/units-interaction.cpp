@@ -11,6 +11,7 @@
 #include <eng/modbus/tcp/receiver.hpp>
 #include <eng/utils.hpp>
 #include <eng/tcp/client.hpp>
+#include <eng/pipe/connector.hpp>
 #include <eng/result.hpp>
 #include <eng/uv/writer.hpp>
 #include <eng/uv/reader.hpp>
@@ -130,8 +131,18 @@ namespace global
 
         eng::log::info("connect: IP: {}, PORT: {}", host, port);
 
+#if defined(_WIN32) || !defined(BUILDROOT)
+    #ifdef _WIN32
+        std::string ipc = std::format("\\\\.\\pipe\\{}", host);
+    #else
+        std::string ipc = std::format("/tmp/{}", host);
+    #endif
+
+        eng::pipe::connect(ipc, [client](uv_stream_t *stream)
+#else
         // Инициируем установку соединения с устройством
         eng::tcp::connect(host, port, [client](uv_stream_t *stream)
+#endif
         {
             // Если не удалось установить соединение, через 1 минуту повторяем попытку
             if (stream == nullptr)

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "modbus-unit.hpp"
-
+#include <eng/modbus/unit.hpp>
 #include <eng/sibus/node.hpp>
 
 #include <unordered_map>
-// #include <bitset>
 
 class PR200 final
     : public eng::sibus::node
-    , public modbus_unit
+    , public eng::modbus::unit
 {
     typedef void (PR200::*handler_t)(readed_regs_t);
 

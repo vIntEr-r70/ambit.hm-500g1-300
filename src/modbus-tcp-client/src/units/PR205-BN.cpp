@@ -4,23 +4,23 @@
 
 #include <algorithm>
 
-PR205_BN::PR205_BN(std::size_t id, std::string_view host, std::uint16_t port)
+PR205_BN::PR205_BN(std::uint8_t slave_id, std::size_t id)
     : eng::sibus::node(std::format("PR205-B{}", id))
-    , modbus_unit(host, port)
+    , eng::modbus::unit(slave_id)
 {
     std::size_t idx;
 
-    idx = modbus_unit::add_read_task(0x4002, 4, 1000);
+    idx = unit::add_read_task(0x4002, 4, 1000);
     read_task_handlers_[idx] = &PR205_BN::read_dt_done;
     for (std::size_t i = 0; i < dt_.size(); ++i)
         dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x4006, fc_.size(), 1000);
+    idx = unit::add_read_task(0x4006, fc_.size(), 1000);
     read_task_handlers_[idx] = &PR205_BN::read_fc_done;
     for (std::size_t i = 0; i < fc_.size(); ++i)
         fc_[i].port_id = add_output_port(std::format("FC{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x4001, 1, 200);
+    idx = unit::add_read_task(0x4001, 1, 200);
     read_task_handlers_[idx] = &PR205_BN::read_state_done;
 
     for (std::size_t i = 0; i < pumps_.size(); ++i)
@@ -165,19 +165,19 @@ void PR205_BN::read_state_done(readed_regs_t regs)
 void PR205_BN::start_stop_pump(std::size_t idx, bool value)
 {
     bs_0х4001_.set(idx + 0, value);
-    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
 
 void PR205_BN::on_off_heater(std::size_t idx, bool value)
 {
     bs_0х4001_.set(idx + 2, value);
-    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
 
 void PR205_BN::open_close_valve(std::size_t idx, bool value)
 {
     bs_0х4001_.set(idx + 3, value);
-    modbus_unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_0х4001_.to_ulong());
 }
 
 

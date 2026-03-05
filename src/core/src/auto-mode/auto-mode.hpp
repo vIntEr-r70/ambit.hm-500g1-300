@@ -8,6 +8,8 @@
 #include <eng/timer.hpp>
 #include <eng/stopwatch.hpp>
 
+#include <cmath>
+
 class auto_mode final
     : public eng::sibus::node
 {

@@ -9,22 +9,22 @@
 #include <string_view>
 #include <span>
 
-PR205_A1::PR205_A1(std::string_view host, std::uint16_t port)
+PR205_A1::PR205_A1(std::uint8_t slave_id)
     : eng::sibus::node("PR205-A1")
-    , modbus_unit(host, port)
+    , eng::modbus::unit(slave_id)
 {
     std::size_t idx;
 
-    idx = modbus_unit::add_read_task(0x4001, fc_.size(), 1000);
+    idx = unit::add_read_task(0x4001, fc_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A1::read_fc_done;
 
-    idx = modbus_unit::add_read_task(0x4006, dt_.size(), 1000);
+    idx = unit::add_read_task(0x4006, dt_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A1::read_dt_done;
 
-    idx = modbus_unit::add_read_task(0x4008, dp_.size(), 1000);
+    idx = unit::add_read_task(0x4008, dp_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A1::read_dp_done;
 
-    idx = modbus_unit::add_read_task(0x4005, 1, 200);
+    idx = unit::add_read_task(0x4005, 1, 200);
     read_task_handlers_[idx] = &PR205_A1::read_state_done;
 
     using span_list = std::initializer_list<std::pair<std::span<sens_t<std::uint16_t>>, std::string_view>>;
@@ -151,6 +151,6 @@ void PR205_A1::open_close_valve(std::size_t idx, bool value)
     eng::log::info("{}: {}: idx = {}, value = {}", name(), __func__, idx, value);
 
     bs_0х4005_.set(idx, value);
-    modbus_unit::write_single(0x4005, bs_0х4005_.to_ulong());
+    unit::write_single(0x4005, bs_0х4005_.to_ulong());
 }
 

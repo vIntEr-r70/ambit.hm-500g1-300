@@ -4,23 +4,23 @@
 
 #include <algorithm>
 
-PR205_A2::PR205_A2(std::string_view host, std::uint16_t port)
+PR205_A2::PR205_A2(std::uint8_t slave_id)
     : eng::sibus::node("PR205-A2")
-    , modbus_unit(host, port)
+    , eng::modbus::unit(slave_id)
 {
     std::size_t idx;
 
-    idx = modbus_unit::add_read_task(0x4002, fc_.size(), 1000);
+    idx = unit::add_read_task(0x4002, fc_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A2::read_fc_done;
     for (std::size_t i = 0; i < fc_.size(); ++i)
         fc_[i].port_id = add_output_port(std::format("FC{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x400A, dt_.size(), 1000);
+    idx = unit::add_read_task(0x400A, dt_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A2::read_dt_done;
     for (std::size_t i = 0; i < dt_.size(); ++i)
         dt_[i].port_id = add_output_port(std::format("DT{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x4011, dp_.size(), 1000);
+    idx = unit::add_read_task(0x4011, dp_.size(), 1000);
     read_task_handlers_[idx] = &PR205_A2::read_dp_done;
     for (std::size_t i = 0; i < dp_.size(); ++i)
         dp_[i].port_id = add_output_port(std::format("DP{}", i + 1));

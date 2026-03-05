@@ -1,12 +1,13 @@
 #include "frequency-converter.hpp"
-#include "modbus-unit.hpp"
 
 #include <eng/timer.hpp>
 #include <eng/log.hpp>
 
-frequency_converter::frequency_converter(std::size_t unit_id)
+#include <cmath>
+
+frequency_converter::frequency_converter(std::size_t slave_id)
     : eng::sibus::node{ "fc-ctl" }
-    , modbus_unit(unit_id)
+    , eng::modbus::unit(slave_id)
 {
     p_out_[pout::powered] = node::add_output_port("powered");
     p_out_[pout::online] = node::add_output_port("online");
@@ -51,27 +52,26 @@ frequency_converter::frequency_converter(std::size_t unit_id)
         iup_[kP] = std::min(P_max_, eng::abc::get<double>(args));
         write_sets();
     });
+
+    // Опрос текущего состояния устройства
+    std::size_t idx = unit::add_read_task(0xA411, 5, 300);
+    read_task_handlers_[idx] = &frequency_converter::read_status_done;
+
+    // Опрос частоты
+    idx = unit::add_read_task(0xA430, 1, 1000);
+    read_task_handlers_[idx] = &frequency_converter::read_F_done;
+
+    // Опрос входного и выходного напряжений и тока
+    idx = unit::add_read_task(0xA432, 3, 1000);
+    read_task_handlers_[idx] = &frequency_converter::read_UUI_done;
+
+    // Опрос мощности
+    idx = unit::add_read_task(0xA437, 1, 1000);
+    read_task_handlers_[idx] = &frequency_converter::read_P_done;
 }
 
 void frequency_converter::register_on_bus_done()
 {
-    // Опрос текущего состояния устройства
-    std::size_t idx = modbus_unit::add_read_task(0xA411, 5, 300);
-    read_task_handlers_[idx] = &frequency_converter::read_status_done;
-
-    // Опрос частоты
-    idx = modbus_unit::add_read_task(0xA430, 1, 1000);
-    read_task_handlers_[idx] = &frequency_converter::read_F_done;
-
-    // Опрос входного и выходного напряжений и тока
-    idx = modbus_unit::add_read_task(0xA432, 3, 1000);
-    read_task_handlers_[idx] = &frequency_converter::read_UUI_done;
-
-    // Опрос мощности
-    idx = modbus_unit::add_read_task(0xA437, 1, 1000);
-    read_task_handlers_[idx] = &frequency_converter::read_P_done;
-
-    modbus_unit::start_working();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ void frequency_converter::activate(eng::abc::pack args)
     if (status_.value() != estatus::powered)
     {
         eng::log::info("{}: CMD: write start and reset errors", name());
-        modbus_unit::write_single(0xA410, 0x0003);
+        unit::write_single(0xA410, 0x0003);
     }
 }
 
@@ -116,12 +116,12 @@ void frequency_converter::deactivate()
 
     case estatus::powered:
         eng::log::info("{}: CMD: write stop", name());
-        modbus_unit::write_single(0xA410, 0x0000);
+        unit::write_single(0xA410, 0x0000);
         break;
 
     case estatus::damaged:
         eng::log::info("{}: CMD: reset errors", name());
-        modbus_unit::write_single(0xA410, 0x0002);
+        unit::write_single(0xA410, 0x0002);
         break;
     }
 }
@@ -132,7 +132,7 @@ void frequency_converter::now_unit_online()
 
     // Отправляем команду на сброс ошибок
     eng::log::info("{}: CMD: reset errors", name());
-    modbus_unit::write_single(0xA410, 0x0002);
+    unit::write_single(0xA410, 0x0002);
 
     node::set_port_value(p_out_[pout::online], { true });
 }
@@ -264,7 +264,7 @@ void frequency_converter::write_priority_sets()
     eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
 
     eng::log::info("{}: CMD: write sets", name());
-    modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
+    unit::write_multiple(0xA420, { iup.data(), iup.size() });
 }
 
 void frequency_converter::write_sets()
@@ -282,7 +282,7 @@ void frequency_converter::write_sets()
     eng::log::info("{}: I = {}, U = {}, P = {}", name(), iup[kI], iup[kU], iup[kP]);
 
     eng::log::info("{}: CMD: write sets", name());
-    modbus_unit::write_multiple(0xA420, { iup.data(), iup.size() });
+    unit::write_multiple(0xA420, { iup.data(), iup.size() });
 }
 
 

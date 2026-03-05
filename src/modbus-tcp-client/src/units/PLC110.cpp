@@ -4,25 +4,25 @@
 
 #include <algorithm>
 
-PLC110::PLC110(std::string_view host, std::uint16_t port)
+PLC110::PLC110(std::uint8_t slave_id)
     : eng::sibus::node("PLC110")
-    , modbus_unit(host, port, 100)
+    , eng::modbus::unit(slave_id)
 {
-    std::size_t idx = modbus_unit::add_read_task(0x0000, 2, 100);
+    std::size_t idx = unit::add_read_task(0x0000, 2, 100);
     read_task_handlers_[idx] = &PLC110::read_spin_done;
     spin_.port_id = node::add_output_port("spin");
 
-    idx = modbus_unit::add_read_task(0x0016, 1, 100);
+    idx = unit::add_read_task(0x0016, 1, 100);
     read_task_handlers_[idx] = &PLC110::read_mk_1_done;
     for (std::size_t i = 0; i < mk_[0].size(); ++i)
         mk_[0][i].port_id = node::add_output_port(std::format("m1b{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x0019, 1, 100);
+    idx = unit::add_read_task(0x0019, 1, 100);
     read_task_handlers_[idx] = &PLC110::read_mk_2_done;
     for (std::size_t i = 0; i < mk_[1].size(); ++i)
         mk_[1][i].port_id = node::add_output_port(std::format("m2b{}", i + 1));
 
-    idx = modbus_unit::add_read_task(0x0004, 2, 100);
+    idx = unit::add_read_task(0x0004, 2, 100);
     read_task_handlers_[idx] = &PLC110::read_plc_done;
     for (std::size_t i = 0; i < plc_.size(); ++i)
         plc_[i].port_id = node::add_output_port(std::format("b{}", i + 5));
@@ -155,7 +155,7 @@ void PLC110::read_mk_done(std::size_t idx, readed_regs_t regs)
 
 void PLC110::write_outputs()
 {
-    if (!modbus_unit::is_online())
+    if (!unit::is_online())
         return;
     update_outputs();
 }
@@ -166,14 +166,14 @@ void PLC110::update_outputs()
     values[0] = outputs_.to_ulong() & 0xFFFF;
     values[1] = (outputs_.to_ulong() >> 16) & 0x000F;
 
-    modbus_unit::write_multiple(0x0006, std::span{ values });
+    unit::write_multiple(0x0006, std::span{ values });
 
     eng::log::info("PLC110::OUTPUTS: {}", outputs_.to_string());
 }
 
 void PLC110::write_mk_outputs(std::size_t imk)
 {
-    if (!modbus_unit::is_online())
+    if (!unit::is_online())
         return;
     update_mk_outputs(imk);
 }
@@ -183,7 +183,7 @@ void PLC110::update_mk_outputs(std::size_t imk)
     static std::uint16_t address[] { 0x0015, 0x0018 };
 
     std::uint16_t value = mk_outputs_[imk].to_ulong() & 0x00FF;
-    modbus_unit::write_single(address[imk], value);
+    unit::write_single(address[imk], value);
 
     eng::log::info("PLC110::MK[{}]::OUTPUTS: {}", imk, mk_outputs_[imk].to_string());
 }

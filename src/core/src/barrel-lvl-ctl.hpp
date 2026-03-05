@@ -4,6 +4,8 @@
 #include <eng/timer.hpp>
 #include <eng/stopwatch.hpp>
 
+#include <cmath>
+
 class barrel_lvl_ctl final
     : public eng::sibus::node
 {

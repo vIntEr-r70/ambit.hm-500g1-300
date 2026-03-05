@@ -1,8 +1,6 @@
 #pragma once
 
-#include "eng/sibus/sibus.hpp"
-#include "modbus-unit.hpp"
-
+#include <eng/modbus/unit.hpp>
 #include <eng/sibus/node.hpp>
 #include <eng/timer.hpp>
 
@@ -10,7 +8,7 @@
 
 class frequency_converter final
     : public eng::sibus::node
-    , public modbus_unit
+    , public eng::modbus::unit
 {
     typedef void (frequency_converter::*read_handler_t)(readed_regs_t);
     std::unordered_map<std::size_t, read_handler_t> read_task_handlers_;

@@ -1,4 +1,3 @@
-#include "modbus-rtu-master.hpp"
 #include "slaves/frequency-converter.hpp"
 #include "slaves/PR200.hpp"
 
@@ -7,45 +6,38 @@
 #include <eng/utils.hpp>
 #include <eng/sibus/client.hpp>
 
-// #include <print>
+#if !defined(BUILDROOT) || defined(_WIN32)
+    #include <eng/modbus/pipe-master.hpp>
+#else
+    #include <eng/modbus/rtu-master.hpp>
+#endif
 
 auto main(int argc, char *argv[]) -> int
 {
     eng::sibus::client::init();
 
-    // std::filesystem::path conf_path = std::filesystem::current_path();
-    // if (argc > 1)
-    //     conf_path = argv[1];
-    //
-    // std::println("LOAD MODBUS UNITS CONFIGURATIONS:");
-    //
-    // if (std::filesystem::is_directory(conf_path))
-    // {
-    //     for (auto const& dir_entry : std::filesystem::directory_iterator{ conf_path })
-    //         new unit_node(dir_entry.path());
-    // }
-    // else
-    // {
-    //     new unit_node(conf_path);
-    // }
+#if !defined(BUILDROOT) || defined(_WIN32)
+    eng::modbus::pipe_master master0("/tmp/ttyS0-10");
+    frequency_converter fc{ 10 };
+    master0.add_unit(fc);
+
+    eng::modbus::pipe_master master1("/tmp/ttyS0-11");
+    PR200 pr200{ 11 };
+    master1.add_unit(pr200);
+#else
+    eng::modbus::rtu_master master("/dev/ttyS0");
 
     frequency_converter fc{ 10 };
-    PR200 pr200{ 11 };
+    master.add_unit(fc);
 
-#ifdef BUILDROOT 
-    modbus_rtu_master::init("/dev/ttyS0");
-    // modbus_rtu_master::init("/dev/ttyUSB0");
-#else
-    modbus_rtu_master::init("/dev/ttySOCAT0");
+    PR200 pr200{ 11 };
+    master.add_unit(pr200);
 #endif
+
 
     // Инициализация закончена,
     // запускаем цикл выполнения
-    int result = eng::run();
-
-    modbus_rtu_master::destroy();
-
-    return result;
+    return eng::run();
 }
 
 

@@ -6,24 +6,23 @@
 
 PR200::PR200(std::uint8_t id)
     : eng::sibus::node("PR200")
-    , modbus_unit(id)
+    , eng::modbus::unit(id)
 {
     for (std::size_t i = 0; i < fc_.size(); ++i)
         fc_[i].port_id = node::add_output_port(std::format("FC{}", i + 1));
 
     for (std::size_t i = 0; i < dt_.size(); ++i)
         dt_[i].port_id = node::add_output_port(std::format("DT{}", i + 1));
+
+    std::size_t idx = unit::add_read_task(0x0200, fc_.size(), 1000);
+    read_task_handlers_[idx] = &PR200::read_fc_done;
+
+    idx = unit::add_read_task(0x0202, dt_.size(), 1000);
+    read_task_handlers_[idx] = &PR200::read_dt_done;
 }
 
 void PR200::register_on_bus_done()
 {
-    std::size_t idx = modbus_unit::add_read_task(0x0200, fc_.size(), 1000);
-    read_task_handlers_[idx] = &PR200::read_fc_done;
-
-    idx = modbus_unit::add_read_task(0x0202, dt_.size(), 1000);
-    read_task_handlers_[idx] = &PR200::read_dt_done;
-
-    modbus_unit::start_working();
 }
 
 void PR200::read_task_done(std::size_t idx, readed_regs_t regs)

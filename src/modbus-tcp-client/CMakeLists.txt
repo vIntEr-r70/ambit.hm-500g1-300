@@ -6,11 +6,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/units-interaction.cpp
+    # src/units-interaction.cpp
     # src/unit-conf-loader.cpp
     # src/unit-node.cpp
 
-    src/modbus-unit.cpp
+    # src/modbus-unit.cpp
     src/units/PR205-A1.cpp
     src/units/PR205-A2.cpp
     src/units/PR205-BN.cpp
