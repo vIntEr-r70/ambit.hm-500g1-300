@@ -16,8 +16,7 @@ namespace devices
         {
         case 0xA410: {
             std::bitset<2> bits(value);
-            if (bits.test(1))
-                reset_callback_();
+            if (bits.test(1)) reset_callback_();
             power_callback_(bits.test(0));
             break; }
         case 0xA420:
@@ -27,7 +26,7 @@ namespace devices
             uset_callback_(value);
             break;
         case 0xA422:
-            pset_callback_(value * 0.001);
+            pset_callback_(value * 0.1);
             break;
         }
     }

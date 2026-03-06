@@ -71,6 +71,8 @@ axis_motion_node::axis_motion_node(char axis, servo_motor &servo_motor)
 
     servo_motor_.driver_was_running = [this](bool ready)
     {
+        eng::log::info("{}: driver_was_running {}", name(), ready ? "OK" : "FAIL");
+
         if (ready)
             node::ready(ictl_);
         else
@@ -89,7 +91,7 @@ void axis_motion_node::update_output_info()
 
 void axis_motion_node::motion_done(std::string_view emsg)
 {
-    eng::log::info("{}: {}", name(), __func__);
+    eng::log::info("{}: {}, emsg = {}", name(), __func__, emsg);
     update_output_info();
     node::ready(ictl_, emsg);
 }
@@ -246,5 +248,6 @@ bool axis_motion_node::cmd_timed_shift(eng::abc::pack const &args)
 
 void axis_motion_node::register_on_bus_done()
 {
+    eng::log::info("{}: {}", name(), __func__);
 }
 

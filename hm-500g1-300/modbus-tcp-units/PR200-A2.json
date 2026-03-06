@@ -1,0 +1,26 @@
+{
+    "host": "10.0.0.12",
+
+    "regs":
+    [
+        { "address": 0x0200, "type": "u16", "tag": "FC1" },
+        { "address": 0x0201, "type": "u16", "tag": "FC2" },
+        { "address": 0x0202, "type": "u16", "tag": "FC3" },
+        { "address": 0x0203, "type": "u16", "tag": "FC4" },
+        { "address": 0x0204, "type": "u16", "tag": "FC5" },
+        { "address": 0x0205, "type": "u16", "tag": "FC6" },
+
+        { "address": 0x0208, "type": "u16", "tag": "DT1" },
+        { "address": 0x0209, "type": "u16", "tag": "DT2" },
+        { "address": 0x020A, "type": "u16", "tag": "DT3" },
+        { "address": 0x020B, "type": "u16", "tag": "DT4" },
+        { "address": 0x020C, "type": "u16", "tag": "DT5" },
+        { "address": 0x020D, "type": "u16", "tag": "DT6" },
+        { "address": 0x020E, "type": "u16", "tag": "DT7" },
+
+        { "address": 0x020F, "type": "u16", "tag": "DP1" },
+
+        { "address": 0x0211, "type": "u16", "tag": "vmask" }
+    ]
+}
+

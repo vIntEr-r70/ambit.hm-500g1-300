@@ -159,7 +159,7 @@ void auto_mode::activate()
     prepare_program(use_fc, use_sp, use_spin_axis);
 
     // Формируем требования к системе
-    eng::abc::pack args{ use_fc };
+    eng::abc::pack args{ "prepare", use_fc };
     for (std::size_t i = 0; i < use_sp.size(); ++i)
         args.push(use_sp[i]);
     args.push<std::uint8_t>(use_spin_axis.size());
@@ -403,7 +403,7 @@ void auto_mode::s_program_execution_loop()
 
 void auto_mode::execute_operation()
 {
-    eng::abc::pack args;
+    eng::abc::pack args{ };
     vm_.fill_stuff_task(vm_.op_phase_id(), args);
     node::activate(stuff_ctl_, std::move(args));
 }

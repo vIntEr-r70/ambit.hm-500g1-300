@@ -1,0 +1,6 @@
+[
+    { "axis": "X", "name": "Ось X" },
+    { "axis": "Y", "name": "Ось Y" },
+    { "axis": "Z", "name": "Ось Z" },
+    { "axis": "V", "name": "Ось V", "rotation": true }
+]

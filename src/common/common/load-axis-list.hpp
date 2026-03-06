@@ -14,7 +14,10 @@ namespace ambit
     {
         char const *LIAEM_RO_PATH = std::getenv("LIAEM_RO_PATH");
         if (LIAEM_RO_PATH == nullptr)
+        {
+            eng::log::error("LIAEM_RO_PATH not defined");
             return false;
+        }
 
         std::filesystem::path path(LIAEM_RO_PATH);
         path /= "axis.json";

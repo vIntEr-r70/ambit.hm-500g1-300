@@ -8,6 +8,8 @@
 class stuff_ctl final
     : public eng::sibus::node
 {
+    using commands_handler = void(stuff_ctl::*)(eng::abc::pack const &);
+
     eng::sibus::input_wire_id_t ictl_;
 
     struct unit_t
@@ -24,7 +26,7 @@ class stuff_ctl final
 
     std::unordered_map<char, std::string> axis_name_;
 
-    bool initialized_{ false };
+    bool axis_load_ok_;
 
 public:
 
@@ -32,7 +34,7 @@ public:
 
 private:
 
-    void activate(eng::abc::pack);
+    void start_command_execution(eng::abc::pack);
 
     void deactivate_all();
 
@@ -40,7 +42,11 @@ private:
 
 private:
 
-    void apply_state(eng::abc::pack);
+    void cmd_prepare(eng::abc::pack const &);
+
+    void cmd_operation(eng::abc::pack const &);
+
+private:
 
     void apply_fc_state(double, double);
 
@@ -57,8 +63,6 @@ private:
     void ctl_axis_state(char, std::string_view);
 
 private:
-
-    bool is_stuff_usable();
 
     bool in_use_any() const;
 

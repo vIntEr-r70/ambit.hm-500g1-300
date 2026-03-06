@@ -33,4 +33,6 @@ private:
     void init_callbacks();
 
     void invert_error_mask_bit(std::size_t, std::size_t);
+
+    void update_power_label();
 };

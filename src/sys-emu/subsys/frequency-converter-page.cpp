@@ -111,6 +111,7 @@ frequency_converter_page::frequency_converter_page(QWidget *parent)
     }
 
     init_callbacks();
+    update_power_label();
 }
 
 void frequency_converter_page::init_callbacks()
@@ -123,6 +124,8 @@ void frequency_converter_page::init_callbacks()
                 errors_[ireg].buttons[i]->setBgColor(Qt::white);
             errors_[ireg].mask.reset();
         }
+        status_.reset(1);
+        syslink::device<devices::FC>().set(0xA411, status_.to_ulong());
     };
 
     syslink::device<devices::FC>().iset_callback_ = [this](double value)
@@ -145,8 +148,16 @@ void frequency_converter_page::init_callbacks()
 
     syslink::device<devices::FC>().power_callback_ = [this](bool powered)
     {
-        lbl_powered_->setStyleSheet(powered? "background-color: green" : "");
+        status_.set(0, powered);
+        syslink::device<devices::FC>().set(0xA411, status_.to_ulong());
+
+        update_power_label();
     };
+}
+
+void frequency_converter_page::update_power_label()
+{
+    lbl_powered_->setStyleSheet(status_.test(0) ? "background-color: green; font-size: 12pt;" : "font-size: 12pt;");
 }
 
 void frequency_converter_page::invert_error_mask_bit(std::size_t ireg, std::size_t ibit)
@@ -166,5 +177,7 @@ void frequency_converter_page::invert_error_mask_bit(std::size_t ireg, std::size
     if (err) status_.set(0, false);
 
     syslink::device<devices::FC>().set(0xA411, status_.to_ulong());
+
+    update_power_label();
 }
 

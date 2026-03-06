@@ -1,7 +1,10 @@
 #include "ethercat.hpp"
 #include "ethercat-slave.hpp"
 
-#include <ecrt.h>
+#if defined(BUILDROOT) && !defined(_WIN32)
+    #include <ecrt.h>
+#endif
+
 #include <eng/timer.hpp>
 #include <eng/utils.hpp>
 
@@ -12,12 +15,14 @@
 #include <unordered_map>
 #include <print>
 
+#if defined(BUILDROOT) && !defined(_WIN32)
 ec_master_t *master_ = nullptr;
-
 ec_domain_t *domain_ = nullptr;
+static std::vector<ec_pdo_entry_reg_t> domain_regs_;
+#endif
+
 std::uint8_t *domain_data = nullptr;
 static std::vector<unsigned int> domain_data_offset;
-static std::vector<ec_pdo_entry_reg_t> domain_regs_;
 static std::vector<std::uint8_t> pdo_local_memory;
 
 // static std::function<void(std::string const &, std::string const &, std::string const &)> callback_;
@@ -225,7 +230,10 @@ struct sdo_entry_t
     std::uint8_t subidx;
     entry_type_t *type;
 
+#if defined(BUILDROOT) && !defined(_WIN32)
     ec_sdo_request_t *request{ nullptr };
+#endif
+
     std::string value;
 };
 
@@ -250,11 +258,13 @@ struct slave_t
 {
     ethercat_slave *slave;
 
+#if defined(BUILDROOT) && !defined(_WIN32)
     ec_slave_config_t *config;
 
     // Настройки PDO
     std::vector<ec_pdo_entry_info_t> pdo_entry_transmit;
     std::vector<ec_pdo_entry_info_t> pdo_entry_receive;
+#endif
 
     std::vector<pdo_ro_entry_t> pdo_ro_entry;
     std::vector<pdo_rw_entry_t> pdo_rw_entry;
@@ -268,7 +278,8 @@ static std::vector<slave_t> slaves_;
 static void init_slave(slave_t &slave)
 {
     slave_info_t cfg = slave.slave->info();
-    
+
+#if defined(BUILDROOT) && !defined(_WIN32)
     slave.config = ecrt_master_slave_config(master_,
         cfg.target.alias, cfg.target.position, cfg.VendorID, cfg.ProductCode);
 
@@ -308,6 +319,7 @@ static void init_slave(slave_t &slave)
         std::println("ERROR: init_slave: 1");
         return;
     }
+#endif
 
     // std::ranges::for_each(slave.sdo_ro_entry, [&slave](auto &entry) {
     //     entry.request = ecrt_slave_config_create_sdo_request(slave.config, entry.index, entry.subidx, entry.type->size() / 8);
@@ -389,6 +401,7 @@ static void apply_slave_pdo_entry_data(std::vector<T> &pdo_entry_list, bool need
 template <typename T, typename F>
 static void apply_slave_sdo_entry_data(std::vector<T> &sdo_entry_list, F fn)
 {
+#if defined(BUILDROOT) && !defined(_WIN32)
     std::ranges::for_each(sdo_entry_list, [&fn](auto &entry)
     {
         if (entry.request == nullptr)
@@ -428,12 +441,14 @@ static void apply_slave_sdo_entry_data(std::vector<T> &sdo_entry_list, F fn)
             return;
         }
     });
+#endif
 }
 
 static std::uint8_t *mem_hw_ = nullptr;
 
 static void domain_process()
 {
+#if defined(BUILDROOT) && !defined(_WIN32)
     bool need_initialize = pdo_local_memory.empty();
     if (need_initialize)
     {
@@ -492,6 +507,7 @@ static void domain_process()
             }
         });
     });
+#endif
 }
 
 namespace ethercat
@@ -500,7 +516,7 @@ namespace ethercat
     // bool init(std::function<void(std::string const &, std::string const &, std::string const &)> callback)
     bool init()
     {
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
 
         master_ = ecrt_request_master(0);
         if (!master_)
@@ -568,7 +584,7 @@ namespace ethercat
 
             std::uint64_t nsec = wakeupTime.tv_sec * NSEC_PER_SEC + wakeupTime.tv_nsec;
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
 
             ecrt_master_receive(master_);
 
@@ -587,7 +603,7 @@ namespace ethercat
                         slave.slave->update((nsec + 0.0) / NSEC_PER_SEC);
                     });
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
                 }
 
                 ecrt_domain_queue(domain_);
@@ -711,16 +727,20 @@ namespace ethercat
 
     void pdo::add(ethercat_slave *slave, std::uint16_t index, std::uint8_t subidx, value_holder_base_ro &vh)
     {
+#if defined(BUILDROOT) && !defined(_WIN32)
         slave_t &item = register_slave(slave);
         item.pdo_entry_receive.emplace_back(index, subidx, vh.size() * 8);
         item.pdo_ro_entry.emplace_back(w2str(index, subidx), &vh);
+#endif
     }
 
     void pdo::add(ethercat_slave *slave, std::uint16_t index, std::uint8_t subidx, value_holder_base_rw &vh)
     {
+#if defined(BUILDROOT) && !defined(_WIN32)
         slave_t &item = register_slave(slave);
         item.pdo_entry_transmit.emplace_back(index, subidx, vh.size() * 8);
         item.pdo_rw_entry.emplace_back(w2str(index, subidx), &vh);
+#endif
     }
 
     void add_ro_sdo(std::uint16_t index, std::uint8_t subidx, std::string_view type)

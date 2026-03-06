@@ -85,6 +85,7 @@ class multi_axis_ctl final
         eng::sibus::output_wire_id_t ctl;
     };
     std::unordered_map<char, axis_info_t> info_;
+    bool axis_loaded_ok_{ false };
 
     std::unordered_map<char, std::size_t> in_proc_;
 

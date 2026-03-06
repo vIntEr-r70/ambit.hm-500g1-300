@@ -1,0 +1,11 @@
+{
+    "host": "10.0.0.10",
+
+    "regs":
+    [
+        { "address": 0x0000, "type": "s32", "tag": "spin" },
+        { "address": 0x0004, "type": "u32", "tag": "bits" }
+    ]
+}
+
+

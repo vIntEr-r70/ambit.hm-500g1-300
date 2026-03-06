@@ -1,0 +1,17 @@
+{
+    "host": "10.0.0.11",
+
+    "regs":
+    [
+        { "address": 0x0200, "type": "u16", "tag": "FC1" },
+        { "address": 0x0201, "type": "u16", "tag": "FC2" },
+
+        { "address": 0x0204, "type": "u16", "tag": "DT1" },
+
+        { "address": 0x0206, "type": "u16", "tag": "DP1" },
+        { "address": 0x0207, "type": "u16", "tag": "DP2" },
+
+        { "address": 0x0208, "type": "u16", "tag": "vmask" }
+    ]
+}
+

@@ -18,13 +18,13 @@ auto main() -> int
     eng::sibus::client::init();
 
 #if !defined(BUILDROOT) || defined(_WIN32)
-    eng::modbus::pipe_master plc100("/tmp/10.0.0.10");
-    eng::modbus::pipe_master pr205_a1("/tmp/10.0.0.11");
-    eng::modbus::pipe_master pr205_a2("/tmp/10.0.0.12");
-    eng::modbus::pipe_master pr205_a14("/tmp/10.0.0.16");
-    eng::modbus::pipe_master pr205_b2("/tmp/10.0.0.13");
-    eng::modbus::pipe_master pr205_b6("/tmp/10.0.0.14");
-    eng::modbus::pipe_master pr205_b10("/tmp/10.0.0.15");
+    eng::modbus::pipe_master plc100("10.0.0.10");
+    eng::modbus::pipe_master pr205_a1("10.0.0.11");
+    eng::modbus::pipe_master pr205_a2("10.0.0.12");
+    eng::modbus::pipe_master pr205_a14("10.0.0.16");
+    eng::modbus::pipe_master pr205_b2("10.0.0.13");
+    eng::modbus::pipe_master pr205_b6("10.0.0.14");
+    eng::modbus::pipe_master pr205_b10("10.0.0.15");
 #else
     eng::modbus::tcp_master plc100("10.0.0.10", 502);
     eng::modbus::tcp_master pr205_a1("10.0.0.11", 502);
@@ -47,13 +47,13 @@ auto main() -> int
     PR205_A14 unit_pr205_a14(0);
     pr205_a14.add_unit(unit_pr205_a14);
 
-    PR205_BN unit_pr205_b2(2, 0);
+    PR205_BN unit_pr205_b2(0, 2);
     pr205_b2.add_unit(unit_pr205_b2);
 
-    PR205_BN unit_pr205_b6(6, 0);
+    PR205_BN unit_pr205_b6(0, 6);
     pr205_b6.add_unit(unit_pr205_b6);
 
-    PR205_BN unit_pr205_b10(10, 0);
+    PR205_BN unit_pr205_b10(0, 10);
     pr205_b10.add_unit(unit_pr205_b10);
 
     // Инициализация закончена,

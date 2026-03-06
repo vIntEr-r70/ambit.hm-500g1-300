@@ -12,7 +12,7 @@ stuff_ctl::stuff_ctl()
 
     node::set_activate_handler(ictl_, [this](eng::abc::pack args)
     {
-        activate(std::move(args));
+        start_command_execution(std::move(args));
     });
     node::set_deactivate_handler(ictl_, [this]
     {
@@ -38,7 +38,7 @@ stuff_ctl::stuff_ctl()
         });
     }
 
-    ambit::load_axis_list([this](char axis, std::string_view axis_name, bool rotation)
+    axis_load_ok_ = ambit::load_axis_list([this](char axis, std::string_view axis_name, bool rotation)
     {
         if (!rotation) return;
         axis_[axis] = { false };
@@ -90,26 +90,32 @@ void stuff_ctl::deactivate_all()
         }
         desc.in_use = false;
     }
+}
 
-    initialized_ = false;
+void stuff_ctl::start_command_execution(eng::abc::pack args)
+{
+    static std::unordered_map<std::string_view, commands_handler> const map {
+        { "prepare",    &stuff_ctl::cmd_prepare     },
+        { "operation",  &stuff_ctl::cmd_operation   },
+    };
+
+    std::string_view cmd = eng::abc::get<std::string_view>(args, 0);
+    auto it = map.find(cmd);
+    if (it == map.end())
+    {
+        node::reject(ictl_, std::format("Незнакомая комманда: {}", cmd));
+        return;
+    }
+
+    args.pop_front();
+
+    (this->*(it->second))(args);
 }
 
 // Нам сообщают, какие устройства задействованы в режиме
 // [ fc, sp0, sp1, sp2, N, [ X, Y, ... ] ]
-void stuff_ctl::activate(eng::abc::pack args)
+void stuff_ctl::cmd_prepare(eng::abc::pack const &args)
 {
-    eng::log::info("{}: {}: 1", name(), __func__);
-
-    if (initialized_)
-    {
-        eng::log::info("{}: do-command: {}", name(), eng::abc::get_sv(args));
-        args.pop_front();
-        apply_state(std::move(args));
-        return;
-    }
-
-    eng::log::info("{}: {}: 2", name(), __func__);
-
     std::size_t iarg = 0;
 
     fc_.in_use = eng::abc::get<bool>(args, iarg++);
@@ -133,17 +139,38 @@ void stuff_ctl::activate(eng::abc::pack args)
         eng::log::info("{}: init: {} = {}", name(), axis, axis_[axis].in_use);
     }
 
-    eng::log::info("{}: {}: 3", name(), __func__);
-
     // Проверяем готовность системы
-    initialized_ = is_stuff_usable();
+    if (fc_.in_use && !fc_.emsg.empty())
+    {
+        eng::log::error("{}: {}", name(), fc_.emsg);
+        node::reject(ictl_, fc_.emsg);
+        return;
+    }
 
-    eng::log::info("{}: {}: 4", name(), __func__);
+    for (std::size_t i = 0; i < sp_.size(); ++i)
+    {
+        if (sp_[i].in_use && !sp_[i].emsg.empty())
+        {
+            eng::log::error("{}: Спрейер №{} {}", name(), i + 1, sp_[i].emsg);
+            node::reject(ictl_, std::format("Спрейер №{} {}", i + 1, sp_[i].emsg));
+            return;
+        }
+    }
+
+    for (auto const &[ axis, desc ] : axis_)
+    {
+        if (desc.in_use && !desc.emsg.empty())
+        {
+            eng::log::error("{}: Ось {} недоступна для работы: {}", name(), axis, desc.emsg);
+            node::reject(ictl_, std::format("Ось {}: {}", axis, desc.emsg));
+            return;
+        }
+    }
 }
 
 // Разбираем операцию и передаем на выполнение
 // [ fc-i, fc-p, sp0, sp1, sp2, N, [ axis, speed, ... ] ]
-void stuff_ctl::apply_state(eng::abc::pack args)
+void stuff_ctl::cmd_operation(eng::abc::pack const &args)
 {
     std::size_t iarg = 0;
 
@@ -262,40 +289,9 @@ bool stuff_ctl::in_use_any() const
     return false;
 }
 
-bool stuff_ctl::is_stuff_usable()
-{
-    if (fc_.in_use && !fc_.emsg.empty())
-    {
-        eng::log::error("{}: {}", name(), fc_.emsg);
-        node::reject(ictl_, fc_.emsg);
-        return false;
-    }
-
-    for (std::size_t i = 0; i < sp_.size(); ++i)
-    {
-        if (sp_[i].in_use && !sp_[i].emsg.empty())
-        {
-            eng::log::error("{}: Спрейер №{} {}", name(), i + 1, sp_[i].emsg);
-            node::reject(ictl_, std::format("Спрейер №{} {}", i + 1, sp_[i].emsg));
-            return false;
-        }
-    }
-
-    for (auto const &[ axis, desc ] : axis_)
-    {
-        if (desc.in_use && !desc.emsg.empty())
-        {
-            eng::log::error("{}: Ось {} недоступна для работы: {}", name(), axis, desc.emsg);
-            node::reject(ictl_, std::format("Ось {}: {}", axis, desc.emsg));
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void stuff_ctl::register_on_bus_done()
 {
-    node::ready(ictl_);
+    if (axis_load_ok_)
+        node::ready(ictl_);
 }
 

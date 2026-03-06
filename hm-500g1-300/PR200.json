@@ -1,0 +1,13 @@
+{
+    "host": "10.0.0.10",
+
+    "regs":
+    [
+        { "address": 0x0200, "type": "u16", "tag": "FC1" },
+        { "address": 0x0201, "type": "u16", "tag": "FC2" },
+
+        { "address": 0x0202, "type": "u16", "tag": "DT1" },
+        { "address": 0x0203, "type": "u16", "tag": "DT2" }
+    ]
+}
+

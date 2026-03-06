@@ -15,8 +15,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     stdc++exp
 )
 
-target_compile_features(${PROJECT_NAME} PRIVATE
-    cxx_std_26
-)
+if(WIN32)
+    target_compile_options(${PROJECT_NAME} PRIVATE /std:c++latest)
+else()
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_26)
+endif()
 
 

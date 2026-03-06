@@ -47,7 +47,7 @@ void servo_motor::update(double seconds)
 
 void servo_motor::turning_on()
 {
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
     std::int32_t rpos = real_pos();
     set_target_pos(rpos);
 
@@ -97,7 +97,7 @@ void servo_motor::turning_on()
 
 void servo_motor::turning_off()
 {
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
     switch(get_status())
     {
     case servo_motor_status::fault:
@@ -171,7 +171,7 @@ void servo_motor::fault_reset_2()
 
 void servo_motor::running()
 {
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
     if (control_mode_ == control_mode::csp)
     {
         switch(get_status())
@@ -210,7 +210,7 @@ void servo_motor::control_mode_csp(double dt)
             cfg_ratio_.reset();
         }
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
         std::uint32_t rpos = real_pos();
 #else
         std::uint32_t rpos = 0;
@@ -222,7 +222,7 @@ void servo_motor::control_mode_csp(double dt)
         return;
     }
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
     // Получаем текущее состояние входов драйвера
     std::bitset<32> status{ DI() };
 
@@ -258,7 +258,7 @@ void servo_motor::control_mode_csp(double dt)
     {
         double next_position = ctl_->next_position(position_, dt);
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
         bool overtravel =
             (next_position > position_ && status.test(1)) ||
             (next_position < position_ && status.test(0));
@@ -277,7 +277,7 @@ void servo_motor::control_mode_csp(double dt)
 
         position_ = next_position;
 
-#ifdef BUILDROOT
+#if defined(BUILDROOT) && !defined(_WIN32)
         set_target_pos(std::lround(position_ * ratio_));
 #endif
     }

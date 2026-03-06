@@ -68,7 +68,7 @@ multi_axis_ctl::multi_axis_ctl()
         terminate_execution();
     });
 
-    ambit::load_axis_list([this](char axis, std::string_view axis_name, bool)
+    axis_loaded_ok_ = ambit::load_axis_list([this](char axis, std::string_view axis_name, bool)
     {
         info_[axis].name = axis_name;
         info_[axis].acc = 0.0;
@@ -762,7 +762,8 @@ std::size_t multi_axis_ctl::calculate_group_axis_move_step(std::size_t istep, mo
 // Запускаем цикл выполнения движения по нескольким осям
 void multi_axis_ctl::register_on_bus_done()
 {
-    node::ready(ictl_);
+    if (axis_loaded_ok_)
+        node::ready(ictl_);
 }
 
 void multi_axis_ctl::wire_status_was_changed(char axis, std::string_view emsg)

@@ -200,6 +200,7 @@ void frequency_converter::read_status_done(readed_regs_t regs)
     else if (status == estatus::damaged)
     {
         // Если статус авария, могут измениться маски ошибок
+        node::set_port_value(p_out_[pout::powered], { false });
 
         auto src = regs.subspan(1);
         if (status_.has_value() && status == *status_ && std::ranges::equal(src, damages_))
