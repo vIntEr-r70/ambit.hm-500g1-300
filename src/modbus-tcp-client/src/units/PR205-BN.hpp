@@ -5,6 +5,7 @@
 
 #include <bitset>
 #include <unordered_map>
+#include <array>
 
 class PR205_BN final
     : public eng::sibus::node
@@ -31,7 +32,7 @@ class PR205_BN final
     std::array<sens_t<bool>, 2> valves_;
     std::array<sens_t<bool>, 1> heater_;
 
-    std::bitset<8> bs_0х4001_{ 0 };
+    std::bitset<8> bs_h4001_{ 0 };
 
 public:
 

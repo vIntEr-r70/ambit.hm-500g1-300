@@ -4,6 +4,7 @@
 #include <eng/sibus/node.hpp>
 
 #include <unordered_map>
+#include <array>
 
 class PR205_A2 final
     : public eng::sibus::node

@@ -4,6 +4,7 @@
 
 #include <string_view>
 #include <unordered_map>
+#include <array>
 
 class stuff_ctl final
     : public eng::sibus::node

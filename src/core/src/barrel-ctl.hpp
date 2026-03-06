@@ -2,6 +2,8 @@
 
 #include <eng/sibus/node.hpp>
 
+#include <optional>
+
 class barrel_ctl final
     : public eng::sibus::node
 {

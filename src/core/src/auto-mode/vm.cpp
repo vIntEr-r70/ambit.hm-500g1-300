@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
+#include <array>
 
 vm::vm(std::vector<VmPhase*> const &phases, std::vector<char> const &target_axis) noexcept
     : phases_(phases)

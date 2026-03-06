@@ -16,8 +16,6 @@ include_directories(PRIVATE src/common)
 if (NOT MSVC)
     add_subdirectory(src/libs/libaem)
     add_subdirectory(src/gate)
-    add_subdirectory(src/ethercat)
-    add_subdirectory(src/modbus-rtu-master)
 endif ()
 
 add_subdirectory(src/libs/libeng)
@@ -27,4 +25,7 @@ add_subdirectory(src/sys-emu)
 add_subdirectory(src/cnc)
 add_subdirectory(src/core)
 add_subdirectory(src/modbus-tcp-client)
+add_subdirectory(src/modbus-rtu-master)
+add_subdirectory(src/ethercat)
+
 

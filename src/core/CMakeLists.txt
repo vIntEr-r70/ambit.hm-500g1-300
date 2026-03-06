@@ -38,11 +38,11 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     eng::eng
-    stdc++exp
 )
 
-target_compile_features(${PROJECT_NAME} PRIVATE
-    cxx_std_26
-)
-
+if(WIN32)
+    target_compile_options(${PROJECT_NAME} PRIVATE /std:c++latest)
+else()
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_26)
+endif()
 

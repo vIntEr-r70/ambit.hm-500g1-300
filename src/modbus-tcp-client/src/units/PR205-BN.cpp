@@ -116,7 +116,7 @@ void PR205_BN::read_dt_done(readed_regs_t regs)
 
 void PR205_BN::read_state_done(readed_regs_t regs)
 {
-    decltype(bs_0х4001_) bitset{ regs[0] };
+    decltype(bs_h4001_) bitset{ regs[0] };
 
     for (std::size_t i = 0; i < pumps_.size(); ++i)
     {
@@ -164,20 +164,20 @@ void PR205_BN::read_state_done(readed_regs_t regs)
 
 void PR205_BN::start_stop_pump(std::size_t idx, bool value)
 {
-    bs_0х4001_.set(idx + 0, value);
-    unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    bs_h4001_.set(idx + 0, value);
+    unit::write_single(0x4001, bs_h4001_.to_ulong());
 }
 
 void PR205_BN::on_off_heater(std::size_t idx, bool value)
 {
-    bs_0х4001_.set(idx + 2, value);
-    unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    bs_h4001_.set(idx + 2, value);
+    unit::write_single(0x4001, bs_h4001_.to_ulong());
 }
 
 void PR205_BN::open_close_valve(std::size_t idx, bool value)
 {
-    bs_0х4001_.set(idx + 3, value);
-    unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    bs_h4001_.set(idx + 3, value);
+    unit::write_single(0x4001, bs_h4001_.to_ulong());
 }
 
 

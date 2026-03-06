@@ -8,7 +8,6 @@
 #include <eng/log.hpp>
 
 #include <algorithm>
-#include <optional>
 #include <sstream>
 #include <numeric>
 #include <chrono>
@@ -581,7 +580,7 @@ std::size_t multi_axis_ctl::calculate_move_step(std::size_t istep)
     return istep + 1;
 }
 
-constexpr static std::optional<double> calculate_vmax(double S, double T, double a, double v0, double v1)
+static std::optional<double> calculate_vmax(double S, double T, double a, double v0, double v1)
 {
     double b = a * T + v0 + v1;
     double c = a * S + (v0 * v0 + v1 * v1) * 0.5;
@@ -599,7 +598,7 @@ constexpr static std::optional<double> calculate_vmax(double S, double T, double
     return (b * 0.5) - std::sqrt(discriminant);
 }
 
-constexpr static std::optional<double> calculate_min_time(double S, double a, double v0, double v1)
+static std::optional<double> calculate_min_time(double S, double a, double v0, double v1)
 {
     // 1. Сначала считаем пиковую скорость для треугольного профиля
     double v_max_sq = a * S + (v0 * v0 + v1 * v1) * 0.5;
@@ -616,7 +615,7 @@ constexpr static std::optional<double> calculate_min_time(double S, double a, do
     return (2.0 * v_max - v0 - v1) / a;
 }
 
-constexpr static double calculate_max_v1(double S, double a, double v0)
+static double calculate_max_v1(double S, double a, double v0)
 {
     return std::sqrt(v0 * v0 + 2 * a * S);
 }

@@ -4,6 +4,7 @@
 #include <eng/log.hpp>
 
 #include <cmath>
+#include <algorithm>
 
 frequency_converter::frequency_converter(std::size_t slave_id)
     : eng::sibus::node{ "fc-ctl" }

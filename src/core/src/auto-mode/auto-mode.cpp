@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <array>
 
 template <typename T>
 static constexpr std::string to_string_axis_position(T const &list)

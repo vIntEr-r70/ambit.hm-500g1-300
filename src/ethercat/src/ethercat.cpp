@@ -31,9 +31,6 @@ static std::vector<std::tuple<std::string, std::string, std::string>> pdo_bit_se
 static std::vector<std::tuple<std::string, std::string, std::string>> pdo_bit_reset_list;
 static std::vector<std::tuple<std::string, std::string, std::string>> pdo_value_set_list;
 
-#define NSEC_PER_SEC (1000000000L)
-#define TIMESPEC2NS(T) ((uint64_t) (T).tv_sec * NSEC_PER_SEC + (T).tv_nsec)
-
 static inline std::uint32_t w2dw(std::uint16_t index, std::uint8_t subindex)
 {
     std::uint32_t key = index;
@@ -82,7 +79,8 @@ struct entry_type_signed_t
 
     void set_value(std::uint8_t *ptr, std::string_view v) const override
     {
-        if (!std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr)))
+        auto result = std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr));
+        if (result.ec != std::errc{})
         {
             std::println("ethercat::from_string: Не удалось получить значение из строки: {}", v);
         }
@@ -116,7 +114,8 @@ struct entry_type_unsigned_t
 
     void set_value(std::uint8_t *ptr, std::string_view v) const override
     {
-        if (!std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr)))
+        auto result = std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr));
+        if (result.ec != std::errc())
         {
             std::println("ethercat::set_value: Не удалось получить значение из строки: {}", v);
         }
@@ -146,7 +145,8 @@ struct entry_type_floating_t
 
     void set_value(std::uint8_t *ptr, std::string_view v) const override
     {
-        if (!std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr)))
+        auto result = std::from_chars(v.data(), v.data() + v.size(), *reinterpret_cast<T*>(ptr));
+        if (result.ec != std::errc())
         {
             std::println("ethercat::from_string: Не удалось получить значение из строки: {}", v);
         }
@@ -579,10 +579,10 @@ namespace ethercat
 
         eng::timer::add_ms(2, []
         {
-            struct timespec wakeupTime, time;
-            clock_gettime(CLOCK_MONOTONIC, &wakeupTime);
-
-            std::uint64_t nsec = wakeupTime.tv_sec * NSEC_PER_SEC + wakeupTime.tv_nsec;
+            auto wakeup_time = std::chrono::steady_clock::now();            
+            auto duration = wakeup_time.time_since_epoch();
+            std::uint64_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+            double seconds = std::chrono::duration<double>(duration).count();
 
 #if defined(BUILDROOT) && !defined(_WIN32)
 
@@ -599,8 +599,9 @@ namespace ethercat
                 {
                     domain_process();
 #endif
-                    std::ranges::for_each(slaves_, [nsec](auto &slave) {
-                        slave.slave->update((nsec + 0.0) / NSEC_PER_SEC);
+                    std::ranges::for_each(slaves_, [seconds](auto &slave)
+                    {
+                        slave.slave->update(seconds);
                     });
 
 #if defined(BUILDROOT) && !defined(_WIN32)
@@ -609,7 +610,7 @@ namespace ethercat
                 ecrt_domain_queue(domain_);
             }
 
-            ecrt_master_application_time(master_, nsec);
+            ecrt_master_application_time(master_, nsec * );
             ecrt_master_sync_slave_clocks(master_);
 
             ecrt_master_send(master_);

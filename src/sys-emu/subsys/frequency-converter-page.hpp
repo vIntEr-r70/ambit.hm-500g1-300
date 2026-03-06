@@ -3,6 +3,7 @@
 #include <QWidget>
 
 #include <bitset>
+#include <array>
 
 class RoundButton;
 class QLabel;

@@ -54,10 +54,6 @@ lock_flags::lock_flags(std::filesystem::path const &path)
         update_locker(idx, std::nullopt);
 }
 
-static constexpr bool is_in_range(double value, double min, double max) noexcept {
-    return (std::isnan(min) || (value > min)) && (std::isnan(max) || (value < max));
-};
-
 void lock_flags::update_locker(std::size_t idx, std::optional<bool> value)
 {
     auto &ll = lockers_[idx];

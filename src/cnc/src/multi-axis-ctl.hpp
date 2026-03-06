@@ -2,7 +2,9 @@
 
 #include "eng/sibus/sibus.hpp"
 #include <eng/sibus/node.hpp>
+
 #include <unordered_set>
+#include <optional>
 
 class multi_axis_ctl final
     : public eng::sibus::node

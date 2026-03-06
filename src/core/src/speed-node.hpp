@@ -2,6 +2,8 @@
 
 #include <eng/sibus/node.hpp>
 
+#include <array>
+
 class speed_node final
     : public eng::sibus::node
 {

@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <bitset>
+#include <array>
 
 class PLC110 final
     : public eng::sibus::node

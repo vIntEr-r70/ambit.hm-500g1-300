@@ -5,6 +5,7 @@
 #include <eng/timer.hpp>
 
 #include <cstddef>
+#include <array>
 
 class frequency_converter final
     : public eng::sibus::node

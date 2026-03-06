@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <bitset>
 #include <climits>
+#include <array>
 
 namespace ambit
 {
@@ -73,7 +74,7 @@ namespace ambit
             }
             catch(std::exception const &e)
             {
-                eng::log::error("ambit::lock_system::load_config[{}]: {}", fname.filename().native(), e.what());
+                eng::log::error("ambit::lock_system::load_config[{}]: {}", fname.filename().string(), e.what());
             }
 
             return false;

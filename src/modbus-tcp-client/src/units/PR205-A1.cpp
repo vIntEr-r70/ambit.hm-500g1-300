@@ -130,7 +130,7 @@ void PR205_A1::read_dp_done(readed_regs_t regs)
 
 void PR205_A1::read_state_done(readed_regs_t regs)
 {
-    decltype(bs_0х4005_) bitset{ regs[0] };
+    decltype(bs_h4005_) bitset{ regs[0] };
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
@@ -150,7 +150,7 @@ void PR205_A1::open_close_valve(std::size_t idx, bool value)
 {
     eng::log::info("{}: {}: idx = {}, value = {}", name(), __func__, idx, value);
 
-    bs_0х4005_.set(idx, value);
-    unit::write_single(0x4005, bs_0х4005_.to_ulong());
+    bs_h4005_.set(idx, value);
+    unit::write_single(0x4005, bs_h4005_.to_ulong());
 }
 

@@ -26,7 +26,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     eng::eng
-    stdc++exp
 )
 
 if (CMAKE_TOOLCHAIN_FILE AND NOT WIN32)

@@ -6,10 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    # src/modbus-rtu-master.cpp
     src/slaves/frequency-converter.cpp
     src/slaves/PR200.cpp
-    # src/modbus-unit.cpp
 )
 
 message(${PROJECT_SOURCE_DIR})
@@ -20,7 +18,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     eng::eng
-    stdc++exp
 )
 
 if(WIN32)

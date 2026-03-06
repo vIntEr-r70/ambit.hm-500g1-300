@@ -163,18 +163,18 @@ void PR205_A14::switch_vp(std::size_t idx, bool value)
 {
     idx = (idx * 2) + 1;
 
-    bs_0х4001_.set(idx + 0, value);
-    bs_0х4001_.set(idx + 1, !value);
+    bs_h4001_.set(idx + 0, value);
+    bs_h4001_.set(idx + 1, !value);
 
-    unit::write_single(0x4001, bs_0х4001_.to_ulong());
+    unit::write_single(0x4001, bs_h4001_.to_ulong());
 
-    eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
+    eng::log::info("{}: {} = {}", name(), __func__, bs_h4001_.to_string());
 }
 
 void PR205_A14::switch_pump(bool value)
 {
-    bs_0х4001_.set(0, value);
-    unit::write_single(0x4001, bs_0х4001_.to_ulong());
-    eng::log::info("{}: {} = {}", name(), __func__, bs_0х4001_.to_string());
+    bs_h4001_.set(0, value);
+    unit::write_single(0x4001, bs_h4001_.to_ulong());
+    eng::log::info("{}: {} = {}", name(), __func__, bs_h4001_.to_string());
 }
 

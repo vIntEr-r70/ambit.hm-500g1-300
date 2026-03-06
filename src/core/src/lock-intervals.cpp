@@ -56,7 +56,7 @@ lock_intervals::lock_intervals(std::filesystem::path const &path)
         update_locker(idx, NAN);
 }
 
-static constexpr bool is_in_range(double value, double min, double max) noexcept {
+static bool is_in_range(double value, double min, double max) noexcept {
     return (std::isnan(min) || (value > min)) && (std::isnan(max) || (value < max));
 };
 
