@@ -7,6 +7,7 @@
 
 #include <eng/timer.hpp>
 #include <eng/utils.hpp>
+#include <eng/log.hpp>
 
 #include <vector>
 #include <algorithm>
@@ -516,6 +517,8 @@ namespace ethercat
     // bool init(std::function<void(std::string const &, std::string const &, std::string const &)> callback)
     bool init()
     {
+        eng::log::info("ethercat::init");
+
 #if defined(BUILDROOT) && !defined(_WIN32)
 
         master_ = ecrt_request_master(0);
@@ -579,6 +582,8 @@ namespace ethercat
 
         eng::timer::add_ms(2, []
         {
+
+
             auto wakeup_time = std::chrono::steady_clock::now();            
             auto duration = wakeup_time.time_since_epoch();
             std::uint64_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
@@ -728,8 +733,8 @@ namespace ethercat
 
     void pdo::add(ethercat_slave *slave, std::uint16_t index, std::uint8_t subidx, value_holder_base_ro &vh)
     {
-#if defined(BUILDROOT) && !defined(_WIN32)
         slave_t &item = register_slave(slave);
+#if defined(BUILDROOT) && !defined(_WIN32)        
         item.pdo_entry_receive.emplace_back(index, subidx, vh.size() * 8);
         item.pdo_ro_entry.emplace_back(w2str(index, subidx), &vh);
 #endif
@@ -737,8 +742,8 @@ namespace ethercat
 
     void pdo::add(ethercat_slave *slave, std::uint16_t index, std::uint8_t subidx, value_holder_base_rw &vh)
     {
-#if defined(BUILDROOT) && !defined(_WIN32)
         slave_t &item = register_slave(slave);
+#if defined(BUILDROOT) && !defined(_WIN32)        
         item.pdo_entry_transmit.emplace_back(index, subidx, vh.size() * 8);
         item.pdo_rw_entry.emplace_back(w2str(index, subidx), &vh);
 #endif
