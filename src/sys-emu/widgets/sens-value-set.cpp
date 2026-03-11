@@ -6,9 +6,10 @@
 #include <QSettings>
 #include <QTimer>
 
-sens_value_set::sens_value_set(QWidget *parent, QString key)
+sens_value_set::sens_value_set(QWidget *parent, QString key, double k)
     : QWidget(parent)
     , key_(key)
+    , k_(k)
 {
     QVBoxLayout *vL = new QVBoxLayout(this);
     {
@@ -45,7 +46,7 @@ sens_value_set::sens_value_set(QWidget *parent, QString key)
 
 void sens_value_set::update_value(int value)
 {
-    value_->setText(QString::number(value / 10.0, 'f', 1));
+    value_->setText(QString::number(value / k_, 'f', 1));
     emit change_value(value);
 }
 

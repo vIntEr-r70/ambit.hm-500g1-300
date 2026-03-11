@@ -25,11 +25,7 @@ panel_page::panel_page(QWidget *parent)
 
             QGridLayout *gL = new QGridLayout();
             {
-                pair_buttons *pb = new pair_buttons(this, "Питание\nТВЧ", false);
-                gL->addWidget(pb, 0, 0);
-                init_fc_power(pb);
-
-                pb = new pair_buttons(this, "Насос\nОхлажд. ТВЧ");
+                auto pb = new pair_buttons(this, "Насос\nОхлажд. ТВЧ");
                 gL->addWidget(pb, 1, 0);
                 init_pump_fc(pb);
 
@@ -150,16 +146,6 @@ panel_page::panel_page(QWidget *parent)
         }
         hL->addLayout(vL);
     }
-}
-
-void panel_page::init_fc_power(pair_buttons *pb)
-{
-    connect(pb, &pair_buttons::turn_on_pressed, [this] {
-        syslink::device<devices::FC>().set_online(true);
-    });
-    connect(pb, &pair_buttons::turn_off_pressed, [this] {
-        syslink::device<devices::FC>().set_online(false);
-    });
 }
 
 void panel_page::init_pump_fc(pair_buttons *pb)

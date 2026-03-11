@@ -4,7 +4,7 @@ namespace devices
 {
 
     PR200::PR200()
-        : modbus_device("ttyS0-11")
+        : modbus_device("ttyS0.11")
     {
     }
 

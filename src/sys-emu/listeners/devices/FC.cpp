@@ -6,7 +6,7 @@ namespace devices
 {
 
     FC::FC()
-        : modbus_device("ttyS0-10")
+        : modbus_device("ttyS0.10")
     {
     }
 

@@ -21,17 +21,17 @@ frequency_converter_page::frequency_converter_page(QWidget *parent)
             {
                 QHBoxLayout *hL = new QHBoxLayout(w);
                 {
-                    std::pair<QString, std::uint16_t> const list[] {
-                        { "U-in",   0xA432 },
-                        { "U-out",  0xA433 },
-                        { "F",      0xA430 },
-                        { "I",      0xA434 },
-                        { "P",      0xA437 },
+                    std::tuple<QString, std::uint16_t, double> const list[] {
+                        { "U-in",   0xA432, 1.0 },
+                        { "U-out",  0xA433, 1.0 },
+                        { "F",      0xA430, 100.0 },
+                        { "I",      0xA434, 10.0 },
+                        { "P",      0xA437, 10.0 },
                     };
                     std::ranges::for_each(list, [w, hL](auto item)
                     {
-                        auto wi = new sens_value_set(w, item.first);
-                        auto reg = item.second;
+                        auto wi = new sens_value_set(w, std::get<0>(item), std::get<2>(item));
+                        auto reg = std::get<1>(item);
                         connect(wi, &sens_value_set::change_value, [w, reg](int value) {
                             syslink::device<devices::FC>().set(reg, static_cast<std::int16_t>(value));
                         });

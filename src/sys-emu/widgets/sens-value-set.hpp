@@ -14,9 +14,11 @@ class sens_value_set final
     QScrollBar *sbv_;
     QString key_;
 
+    double k_{ 1.0 };
+
 public:
 
-    sens_value_set(QWidget *, QString);
+    sens_value_set(QWidget *, QString, double = 10.0);
 
 signals:
 

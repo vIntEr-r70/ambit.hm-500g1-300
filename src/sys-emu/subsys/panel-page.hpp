@@ -14,8 +14,6 @@ public:
 
 private:
 
-    void init_fc_power(pair_buttons *);
-
     void init_pump_fc(pair_buttons *);
 
     void init_pump_sprayer(pair_buttons *);

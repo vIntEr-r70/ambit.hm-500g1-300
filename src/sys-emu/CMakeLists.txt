@@ -60,7 +60,7 @@ if(MSVC)
         COMMAND_EXPAND_LISTS
     )
 
-    target_compile_options(${PROJECT_NAME} PRIVATE /std:c++latest)
+    target_compile_options(${PROJECT_NAME} PRIVATE /std:c++latest /EHsc)
 
 else()
 

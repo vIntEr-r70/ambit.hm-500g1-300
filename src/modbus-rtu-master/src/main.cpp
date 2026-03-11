@@ -17,11 +17,11 @@ auto main(int argc, char *argv[]) -> int
     eng::sibus::client::init();
 
 #if !defined(BUILDROOT) || defined(_WIN32)
-    eng::modbus::pipe_master master0("ttyS0-10");
+    eng::modbus::pipe_master master0("ttyS0.10");
     frequency_converter fc{ 10 };
     master0.add_unit(fc);
 
-    eng::modbus::pipe_master master1("ttyS0-11");
+    eng::modbus::pipe_master master1("ttyS0.11");
     PR200 pr200{ 11 };
     master1.add_unit(pr200);
 #else

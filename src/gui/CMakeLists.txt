@@ -65,9 +65,10 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${Qt5Widgets_LIBRARIES}
-    ${Qt5PrintSupport_LIBRARIES}
+    # ${Qt5Widgets_LIBRARIES}
+    # ${Qt5PrintSupport_LIBRARIES}
     gui-core::gui-core
+    eng::eng
 )
 
 if(MSVC)
