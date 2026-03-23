@@ -4,6 +4,7 @@
 #include "subsys/sens-dt-page.hpp"
 #include "subsys/sens-dp-page.hpp"
 #include "subsys/frequency-converter-page.hpp"
+#include "subsys/mimic-page.hpp"
 
 #include <QKeyEvent>
 
@@ -19,6 +20,7 @@ main_frame::main_frame()
     addTab(new sens_dt_page(this), "Температура");
     addTab(new sens_dp_page(this), "Давление");
     addTab(new frequency_converter_page(this), "ПЧ");
+    addTab(new mimic_page(this), "Мнемосхема");
 }
 
 void main_frame::keyPressEvent(QKeyEvent *e) noexcept

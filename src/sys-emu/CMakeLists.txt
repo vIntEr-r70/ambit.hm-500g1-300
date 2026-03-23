@@ -38,6 +38,7 @@ add_executable(${PROJECT_NAME}
     subsys/sens-dt-page.cpp
     subsys/sens-dp-page.cpp
     subsys/frequency-converter-page.cpp
+    subsys/mimic-page.cpp
 
     widgets/pair-buttons.cpp
     widgets/moving-buttons.cpp

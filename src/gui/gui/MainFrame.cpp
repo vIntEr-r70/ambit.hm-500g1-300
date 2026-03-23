@@ -131,7 +131,7 @@ void MainFrame::register_on_bus_done()
     NavigationPanel_->switch_to("manual");
     lock_msg_box_->allow(true);
 #else
-    NavigationPanel_->switch_to("auto");
+    NavigationPanel_->switch_to("mimic");
     lock_msg_box_->allow(true);
 #endif
 

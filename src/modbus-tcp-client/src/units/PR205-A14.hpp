@@ -26,10 +26,10 @@ class PR205_A14 final
     std::array<sens_t<std::uint16_t>, 2> dt_;
     std::array<sens_t<std::uint16_t>, 2> dp_;
 
-    std::array<sens_t<std::uint8_t>, 3> vp_;
+    std::array<sens_t<std::uint8_t>, 3> va_;
     std::bitset<8> bs_h4001_{ 0 };
 
-    // sens_t<bool> pump_;
+    sens_t<bool> pump_;
 
     std::array<sens_t<bool>, 5> sens_;
 
@@ -51,9 +51,11 @@ private:
 
     void read_sens_done(readed_regs_t);
 
-    void read_vp_done(readed_regs_t);
+    void read_pump_done(readed_regs_t);
 
-    void switch_vp(std::size_t, bool);
+    void read_va_done(readed_regs_t);
+
+    void switch_va(std::size_t, bool);
 
     void switch_pump(bool);
 };

@@ -36,12 +36,12 @@ PR205_A1::PR205_A1(std::uint8_t slave_id)
 
     for (std::size_t i = 0; i < valves_.size(); ++i)
     {
-        node::add_input_port_unsafe(std::format("A{}", i + 1), [this, i](eng::abc::pack args)
+        node::add_input_port_unsafe(std::format("VA{}", i + 1), [this, i](eng::abc::pack args)
         {
-            eng::log::info("A{} = {}", i, args.size());
+            eng::log::info("VA{} = {}", i, args.size());
             open_close_valve(i, args ? eng::abc::get<bool>(args) : false);
         });
-        valves_[i].port_id = node::add_output_port(std::format("A{}", i + 1));
+        valves_[i].port_id = node::add_output_port(std::format("VA{}", i + 1));
     }
 }
 

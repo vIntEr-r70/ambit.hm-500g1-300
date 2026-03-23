@@ -32,6 +32,8 @@ class PR205_BN final
     std::array<sens_t<bool>, 2> valves_;
     std::array<sens_t<bool>, 1> heater_;
 
+    std::array<sens_t<bool>, 2> lvl_sens_;
+
     std::bitset<8> bs_h4001_{ 0 };
 
 public:
@@ -51,6 +53,8 @@ private:
     void read_dt_done(readed_regs_t);
 
     void read_state_done(readed_regs_t);
+
+    void read_lvl_sens_done(readed_regs_t);
 
 private:
 

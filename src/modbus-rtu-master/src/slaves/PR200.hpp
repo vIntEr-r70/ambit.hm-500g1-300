@@ -14,15 +14,18 @@ class PR200 final
 
     std::unordered_map<std::size_t, handler_t> read_task_handlers_;
 
+    template <typename T>
     struct sens_t
     {
-        std::uint16_t value;
+        T value;
+        std::size_t idx;
         bool initialized{ false };
         eng::sibus::output_port_id_t port_id;
     };
 
-    std::array<sens_t, 2> fc_;
-    std::array<sens_t, 2> dt_;
+    std::array<sens_t<std::uint16_t>, 2> fc_;
+    std::array<sens_t<std::uint16_t>, 2> dt_;
+    std::array<sens_t<bool>, 1> output_;
 
 public:
 
@@ -43,5 +46,7 @@ private:
     void read_fc_done(readed_regs_t);
 
     void read_dt_done(readed_regs_t);
+
+    void read_output_state_done(readed_regs_t);
 };
 

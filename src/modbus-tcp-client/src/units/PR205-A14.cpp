@@ -21,28 +21,34 @@ PR205_A14::PR205_A14(std::uint8_t slave_id)
         dp_[i].port_id = add_output_port(std::format("DP{}", i + 1));
 
     idx = unit::add_read_task(0x400A, 1, 200);
-    read_task_handlers_[idx] = &PR205_A14::read_vp_done;
+    read_task_handlers_[idx] = &PR205_A14::read_va_done;
 
     idx = unit::add_read_task(0x4000, 1, 200);
     read_task_handlers_[idx] = &PR205_A14::read_sens_done;
 
-    static constexpr std::size_t idx_map[] = { 3, 4, 1, 2, 5 };
-    for (std::size_t i = 0; i < sens_.size(); ++i)
-        sens_[i].port_id = node::add_output_port(std::format("P{}", idx_map[i]));
+    idx = unit::add_read_task(0x4001, 1, 200);
+    read_task_handlers_[idx] = &PR205_A14::read_pump_done;
 
-    for (std::size_t i = 0; i < vp_.size(); ++i)
+    static constexpr std::size_t sens_idx_map[] = { 3, 4, 1, 2, 5 };
+    for (std::size_t i = 0; i < sens_.size(); ++i)
+        sens_[i].port_id = node::add_output_port(std::format("P{}", sens_idx_map[i]));
+
+    for (std::size_t i = 0; i < va_.size(); ++i)
     {
-        node::add_input_port(std::format("VP{}", i + 1), [this, i](eng::abc::pack args) {
-            switch_vp(i, eng::abc::get<bool>(args));
+        // Входящее состояние задвижки
+        node::add_input_port(std::format("VA{}", i + 1), [this, i](eng::abc::pack args)
+        {
+            switch_va(i, eng::abc::get<bool>(args));
         });
-        vp_[i].port_id = node::add_output_port(std::format("VP{}", i + 1));
+        // Реальное состояние задвижки
+        va_[i].port_id = node::add_output_port(std::format("VA{}", i + 1));
     }
 
     node::add_input_port("H", [this](eng::abc::pack args)
     {
         switch_pump(eng::abc::get<bool>(args));
     });
-    // pump_.port_id = node::add_output_port("H");
+    pump_.port_id = node::add_output_port("H");
 }
 
 void PR205_A14::read_task_done(std::size_t idx, readed_regs_t regs)
@@ -70,11 +76,14 @@ void PR205_A14::connection_was_lost()
         node::set_port_value(item.port_id, { });
     });
 
-    std::ranges::for_each(vp_, [this](auto &item)
+    std::ranges::for_each(va_, [this](auto &item)
     {
         item.initialized = false;
         node::set_port_value(item.port_id, { });
     });
+
+    pump_.initialized = false;
+    node::set_port_value(pump_.port_id, { });
 }
 
 void PR205_A14::read_dt_done(readed_regs_t regs)
@@ -129,22 +138,24 @@ void PR205_A14::read_sens_done(readed_regs_t regs)
     }
 }
 
-void PR205_A14::read_vp_done(readed_regs_t regs)
+void PR205_A14::read_pump_done(readed_regs_t regs)
 {
-    // std::bitset<8> value(regs[0]);
-    //
-    // if (pump_.value != value.test(0) || !pump_.initialized)
-    // {
-    //     pump_.value = value.test(0);
-    //     pump_.initialized = true;
-    //
-    //     eng::log::info("{}: H = {}", name(), pump_.value);
-    //     node::set_port_value(pump_.port_id, { pump_.value });
-    // }
+    std::bitset<1> bitset{ regs[0] };
 
-    for (std::size_t i = 0; i < vp_.size(); ++i)
+    if (pump_.value == bitset.test(0) && pump_.initialized)
+        return;
+
+    pump_.value = bitset.test(0);
+    pump_.initialized = true;
+
+    node::set_port_value(pump_.port_id, { pump_.value });
+}
+
+void PR205_A14::read_va_done(readed_regs_t regs)
+{
+    for (std::size_t i = 0; i < va_.size(); ++i)
     {
-        auto &item = vp_[i];
+        auto &item = va_[i];
 
         std::bitset<2> value(regs[0] >> (i * 2));
 
@@ -154,27 +165,24 @@ void PR205_A14::read_vp_done(readed_regs_t regs)
         item.value = value.to_ulong();
         item.initialized = true;
 
-        eng::log::info("{}: VP{} = {}", name(), i + 1, item.value);
-        node::set_port_value(item.port_id, { item.value });
+        if (value.test(0) == value.test(1))
+            node::set_port_value(item.port_id, { });
+        else
+            node::set_port_value(item.port_id, { value.test(1) });
     }
 }
 
-void PR205_A14::switch_vp(std::size_t idx, bool value)
+void PR205_A14::switch_va(std::size_t idx, bool value)
 {
     idx = (idx * 2) + 1;
-
     bs_h4001_.set(idx + 0, value);
     bs_h4001_.set(idx + 1, !value);
-
     unit::write_single(0x4001, bs_h4001_.to_ulong());
-
-    eng::log::info("{}: {} = {}", name(), __func__, bs_h4001_.to_string());
 }
 
 void PR205_A14::switch_pump(bool value)
 {
     bs_h4001_.set(0, value);
     unit::write_single(0x4001, bs_h4001_.to_ulong());
-    eng::log::info("{}: {} = {}", name(), __func__, bs_h4001_.to_string());
 }
 

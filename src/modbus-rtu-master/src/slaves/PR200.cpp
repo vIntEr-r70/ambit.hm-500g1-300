@@ -3,6 +3,7 @@
 #include <eng/log.hpp>
 
 #include <algorithm>
+#include <bitset>
 
 PR200::PR200(std::uint8_t id)
     : eng::sibus::node("PR200")
@@ -19,6 +20,12 @@ PR200::PR200(std::uint8_t id)
 
     idx = unit::add_read_task(0x0202, dt_.size(), 1000);
     read_task_handlers_[idx] = &PR200::read_dt_done;
+
+    idx = unit::add_read_task(0x021E, 1, 200);
+    read_task_handlers_[idx] = &PR200::read_output_state_done;
+
+    // Реальное состояние задвижки
+    output_[0] = { .idx = 7, .port_id = node::add_output_port("VA") };
 }
 
 void PR200::register_on_bus_done()
@@ -59,8 +66,6 @@ void PR200::read_fc_done(readed_regs_t regs)
 
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
-
-        eng::log::info("{}: FC{} = {}", name(), i + 1, v);
     }
 }
 
@@ -78,8 +83,24 @@ void PR200::read_dt_done(readed_regs_t regs)
 
         double v = static_cast<std::int16_t>(item.value) * 0.1;
         node::set_port_value(item.port_id, { v });
+    }
+}
 
-        eng::log::info("{}: DT{} = {}", name(), i + 1, v);
+void PR200::read_output_state_done(readed_regs_t regs)
+{
+    std::bitset<8> bitset{ regs[0] };
+
+    for (std::size_t i = 0; i < output_.size(); ++i)
+    {
+        auto &item = output_[i];
+
+        if (item.value == bitset[item.idx] && item.initialized)
+            continue;
+
+        item.value = bitset.test(item.idx);
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
     }
 }
 

@@ -23,6 +23,12 @@ PR205_BN::PR205_BN(std::uint8_t slave_id, std::size_t id)
     idx = unit::add_read_task(0x4001, 1, 200);
     read_task_handlers_[idx] = &PR205_BN::read_state_done;
 
+    idx = unit::add_read_task(0x4000, 1, 1000);
+    read_task_handlers_[idx] = &PR205_BN::read_lvl_sens_done;
+
+    for (std::size_t i = 0; i < lvl_sens_.size(); ++i)
+        lvl_sens_[i].port_id = node::add_output_port(std::format("P{}", i + 1));
+
     for (std::size_t i = 0; i < pumps_.size(); ++i)
     {
         node::add_input_port(std::format("H{}", i + 1), [this, i](eng::abc::pack args) {
@@ -114,9 +120,28 @@ void PR205_BN::read_dt_done(readed_regs_t regs)
     }
 }
 
+void PR205_BN::read_lvl_sens_done(readed_regs_t regs)
+{
+    std::bitset<8> bitset{ regs[0] };
+    bitset >>= 4;
+
+    for (std::size_t i = 0; i < lvl_sens_.size(); ++i)
+    {
+        auto &item = lvl_sens_[i];
+
+        if (item.value == bitset[i] && item.initialized)
+            continue;
+
+        item.value = bitset[i];
+        item.initialized = true;
+
+        node::set_port_value(item.port_id, { item.value });
+    }
+}
+
 void PR205_BN::read_state_done(readed_regs_t regs)
 {
-    decltype(bs_h4001_) bitset{ regs[0] };
+    std::bitset<8> bitset{ regs[0] };
 
     for (std::size_t i = 0; i < pumps_.size(); ++i)
     {
@@ -157,6 +182,8 @@ void PR205_BN::read_state_done(readed_regs_t regs)
 
         item.value = bitset[i];
         item.initialized = true;
+
+        eng::log::info("{}: VA{} = {}", name(), i + 1, item.value);
 
         node::set_port_value(item.port_id, { item.value });
     }

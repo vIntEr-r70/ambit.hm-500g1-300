@@ -2,39 +2,185 @@
     {
         "background": "mimic/page-1.png",
 
+        "tubes":
+        [
+            {
+                "model": [ [ 964, 46 ], [ 108, 46 ], [ 108, 151 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-top"
+            },
+            {
+                "model": [ [ 108, 184 ], [ 108, 285 ], [ 964, 285 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-bottom"
+            },
+            {
+                "model": [ [ 216, 49 ], [ 216, 151 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-сс-bottom"
+            },
+            {
+                "model": [ [ 216, 184 ], [ 216, 283 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-cc-bottom"
+            },
+            {
+                "model": [ [ 357, 49 ], [ 357, 283 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-tp-center"
+            },
+            {
+                "model": [ [ 357, 107 ], [ 306, 107 ], [ 306, 283 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-tp-left"
+            },
+            {
+                "model": [ [ 360, 107 ], [ 408, 107 ], [ 408, 283 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-tp-right"
+            },
+            {
+                "model": [ [ 543, 49 ], [ 543, 283 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-tsu"
+            },
+            {
+                "model": [ [ 721, 49 ], [ 721, 98 ] ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-in"
+            },
+            {
+                "model": [ [ 721, 121 ], [ 721, 128 ] ],
+                "valves +": [ "VA1" ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-out-top"
+            },
+            {
+                "model": [ [ 721, 128 ], [ 683, 128 ], [ 683, 233 ], [ 721, 233 ] ],
+                "valves +": [ "VA1" ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-out-left"
+            },
+            {
+                "model": [ [ 723, 128 ], [ 758, 128 ], [ 758, 233 ], [ 723, 233 ] ],
+                "valves +": [ "VA1" ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-out-right"
+            },
+            {
+                "model": [ [ 721, 233 ], [ 721, 283 ] ],
+                "valves +": [ "VA1" ],
+                "pumps": [ "H1" ],
+                "comments": "common-cooling-fc-out-bottom"
+            },
+            {
+                "model": [ [ 270, 444 ], [ 270, 353 ], [ 355, 353 ], [ 355, 507 ], [ 433, 507 ] ],
+                "pumps": [ "H7" ],
+                "comments": "collection-bath-in"
+            },
+            {
+                "model": [ [ 474, 494 ], [ 964, 494 ] ],
+                "pumps": [ "H7" ],
+                "valves -": [ "VA12" ],
+                "comments": "collection-bath-out-top"
+            },
+            {
+                "model": [ [ 474, 520 ], [ 964, 520 ] ],
+                "pumps": [ "H7" ],
+                "valves +": [ "VA12" ],
+                "comments": "collection-bath-out-bottom"
+            },
+            {
+                "model": [ [ 964, 457 ], [ 711, 457 ] ],
+                "comments": "air-in"
+            },
+            {
+                "model": [ [ 686, 457 ], [ 580, 457 ] ],
+                "valves +": [ "VA13" ],
+                "comments": "air-out"
+            },
+            {
+                "model": [ [ 964, 370 ], [ 613, 370 ] ],
+                "comments": "fluid-in"
+            },
+            {
+                "model": [ [ 613, 370 ], [ 613, 333 ], [ 547, 333 ] ],
+                "comments": "fluid-in-top"
+            },
+            {
+                "model": [ [ 524, 333 ], [ 504, 333 ] ],
+                "valves +": [ "VA14" ],
+                "comments": "fluid-out-top"
+            },
+            {
+                "model": [ [ 501, 333 ], [ 501, 313 ], [ 400, 313 ] ],
+                "valves +": [ "VA14" ],
+                "comments": "fluid-out-top-top"
+            },
+            {
+                "model": [ [ 501, 333 ], [ 501, 355 ], [ 400, 355 ] ],
+                "valves +": [ "VA14" ],
+                "comments": "fluid-out-top-bottom"
+            },
+            {
+                "model": [ [ 613, 370 ], [ 613, 409 ], [ 547, 409 ] ],
+                "comments": "fluid-in-bottom"
+            },
+            {
+                "model": [ [ 524, 409 ], [ 504, 409 ] ],
+                "valves +": [ "VA15" ],
+                "comments": "fluid-out-bottom"
+            },
+            {
+                "model": [ [ 501, 409 ], [ 501, 388 ], [ 429, 388 ] ],
+                "valves +": [ "VA15" ],
+                "comments": "fluid-out-bottom-top"
+            },
+            {
+                "model": [ [ 501, 409 ], [ 501, 430 ], [ 429, 430 ] ],
+                "valves +": [ "VA15" ],
+                "comments": "fluid-out-bottom-bottom"
+            }
+        ],
+
+        "pumps":
+        {
+            "H7": { "pos": [ 258, 444 ] }
+        },
+
         "pressure":
         {
-            "DP1": [ 659, 354 ],
-            "DP2": [ 710, 441 ],
-            "DP3": [ 722, 30  ]
+            "DP1": [ 659, 351 ],
+            "DP2": [ 725, 438 ],
+            "DP3": [ 737, 27  ]
         },
 
         "temperature":
         {
-            "DT1":  [ 710, 354 ],
-            "DT2":  [ 772, 30  ],
-            "DT3":  [ 644, 187 ],
-            "DT4":  [ 719, 187 ],
-            "DT5":  [ 505, 203 ],
-            "DT6":  [ 71 , 206 ],
-            "DT7":  [ 179, 206 ],
-            "DT8":  [ 267, 201 ],
-            "DT9":  [ 318, 201 ],
-            "DT10": [ 369, 201 ]
+            "DT1":  [ 710, 351 ],
+            "DT2":  [ 787, 27  ],
+            "DT3":  [ 664, 187 ],
+            "DT4":  [ 739, 187 ],
+            "DT5":  [ 524, 203 ],
+            "DT6":  [ 89 , 201 ],
+            "DT7":  [ 197, 201 ],
+            "DT8":  [ 287, 201 ],
+            "DT9":  [ 338, 201 ],
+            "DT10": [ 389, 201 ]
         },
 
         "inflow":
         {
-            "FC1":  [ 538, 316 ],
-            "FC2":  [ 538, 392 ],
-            "FC3":  [ 505, 151 ],
-            "FC4":  [ 71 , 98  ],
-            "FC5":  [ 179, 98  ],
-            "FC6":  [ 267, 151 ],
-            "FC7":  [ 318, 151 ],
-            "FC8":  [ 369, 151 ],
-            "FC18": [ 719, 137 ],
-            "FC19": [ 644, 137 ]
+            "FC1":  [ 560, 314 ],
+            "FC2":  [ 560, 390 ],
+            "FC3":  [ 524, 151 ],
+            "FC4":  [ 89 , 98  ],
+            "FC5":  [ 197, 98  ],
+            "FC6":  [ 287, 151 ],
+            "FC7":  [ 338, 151 ],
+            "FC8":  [ 389, 151 ],
+            "FC18": [ 739, 137 ],
+            "FC19": [ 664, 137 ]
         },
 
         "showers":
@@ -48,10 +194,15 @@
 
         "valves":
         {
-            "A1":  { "pos": [ 670, 78  ], "tplace": "left", "rotate": 90 },
-            "A13": { "pos": [ 644, 426 ] },
-            "A14": { "pos": [ 481, 302 ] },
-            "A15": { "pos": [ 481, 378 ] }
+            "VA1":  { "pos": [ 709, 98  ], "tplace": "left", "rotate": 90 },
+            "VA13": { "pos": [ 685, 446 ] },
+            "VA14": { "pos": [ 522, 322 ] },
+            "VA15": { "pos": [ 522, 398 ] }
+        },
+
+        "dvalves":
+        {
+            "VA12":  { "pos": [ 430, 486  ], "tplace": "top" }
         },
 
         "flags":
@@ -66,35 +217,94 @@
     {
         "background": "mimic/page-2.png",
 
+        "tubes":
+        [
+            {
+                "model": [ [ 407, 382 ], [ 357, 382 ] ],
+                "comments": "barrel-using-out"
+            },
+            {
+                "model": [ [ 331, 382 ], [ 194, 382 ] ],
+                "pumps": [ "H1" ],
+                "comments": "pump-using-out"
+            },
+            {
+                "model": [ [ 194, 241 ], [ 430, 241 ], [ 430, 260 ] ],
+                "pumps": [ "H1" ],
+                "comments": "barrel-using-in"
+            },
+            {
+                "model": [ [ 486, 351 ], [ 514, 351 ] ],
+                "comments": "barrel-cooling-out"
+            },
+            {
+                "model": [ [ 540, 351 ], [ 658, 351 ] ],
+                "pumps": [ "H2" ],
+                "comments": "pump-cooling-out"
+            },
+            {
+                "model": [ [ 658, 382 ], [ 486, 382 ] ],
+                "pumps": [ "H2" ],
+                "comments": "barrel-cooling-in"
+            },
+            {
+                "model": [ [ 804, 127 ], [ 804, 450 ] ],
+                "comments": "source"
+            },
+            {
+                "model": [ [ 801, 351 ], [ 707, 351 ] ],
+                "valves +": [ "VA5" ],
+                "comments": "source-in"
+            },
+            {
+                "model": [ [ 707, 382 ], [ 817, 382 ] ],
+                "valves +": [ "VA5" ],
+                "comments": "source-out"
+            },
+            {
+                "model": [ [ 789, 127 ], [ 789, 450 ] ],
+                "comments": "topping-up-in"
+            },
+            {
+                "model": [ [ 786, 278 ], [ 694, 278 ] ],
+                "comments": "topping-up-va-in"
+            },
+            {
+                "model": [ [ 672, 278 ], [ 486, 278 ] ],
+                "valves +": [ "VA4" ],
+                "comments": "topping-up-va-out"
+            }
+        ],
+
         "pressure":
         {
-            "DP4": [ 647, 103 ]
+            "DP4": [ 719, 183 ]
         },
 
         "temperature":
         {
-            "DT11": [ 647, 145 ],
-            "DT12": [ 403, 192 ],
-            "DT13": [ 465, 219 ]
+            "DT11": [ 719, 225 ],
+            "DT12": [ 506, 284 ],
+            "DT13": [ 559, 332 ]
         },
 
         "inflow":
         {
-            "FC9":  [ 465, 168 ],
-            "FC10": [ 515, 219 ],
-            "FC15": [ 627, 219 ]
+            "FC9":  [ 554, 259 ],
+            "FC10": [ 606, 332 ],
+            "FC15": [ 716, 332 ]
         },
 
         "valves":
         {
-            "VA4": { "pos": [ 501, 155 ] },
-            "VA5": { "pos": [ 645, 214 ] }
+            "VA4": { "pos": [ 669, 267 ] },
+            "VA5": { "pos": [ 759, 371 ] }
         },
 
         "pumps":
         {
-            "H1": { "pos": [ 236, 258 ] },
-            "H2": { "pos": [ 389, 213 ], "rotate": 180 }
+            "H1": { "pos": [ 330, 370 ], "rotate": 270 },
+            "H2": { "pos": [ 513, 339 ], "rotate": 90 }
         },
 
         "slevels":
@@ -107,30 +317,161 @@
     {
         "background": "mimic/page-3.png",
 
+        "tubes":
+        [
+            {
+                "model": [ [ 71, 85 ], [ 203, 85 ], [ 203, 252 ], [ 227, 252 ] ],
+                "pumps": [ "H7" ],
+                "valves -": [ "VA12" ],
+                "comment": "VA11-in"
+            },
+            {
+                "model": [ [ 271, 239 ], [ 291, 239 ], [ 291, 68 ], [ 551, 68 ], [ 551, 95 ] ],
+                "pumps": [ "H7" ],
+                "valves -": [ "VA11", "VA12" ],
+                "comment": "VA11-out-top"
+            },
+            {
+                "model": [ [ 271, 264 ], [ 291, 264 ], [ 291, 303 ], [ 612, 303 ], [ 612, 343 ] ],
+                "pumps": [ "H7" ],
+                "valves +": [ "VA11" ],
+                "valves -": [ "VA12" ],
+                "comment": "VA11-out-bottom"
+            },
+            {
+                "model": [ [ 517, 218 ], [ 492, 218 ] ],
+                "comment": "top-barrel-out"
+            },
+            {
+                "model": [ [ 466, 218 ], [ 403, 218 ], [ 403, 239 ], [ 383, 239 ] ],
+                "pumps": [ "H3" ],
+                "comment": "VA10-top-in"
+            },
+            {
+                "model": [ [ 546, 491 ], [ 521, 491 ] ],
+                "comment": "bottom-barrel-out"
+            },
+            {
+                "model": [ [ 496, 491 ], [ 403, 491 ], [ 403, 265 ], [ 383, 266 ] ],
+                "pumps": [ "H5" ],
+                "comment": "VA10-bottom-in"
+            },
+            {
+                "model": [ [ 340, 252 ], [ 322, 252 ], [ 322, 46 ], [ 71, 46 ] ],
+                "pumps": [ "H3", "H5" ],
+                "comment": "VA10-out"
+            },
+            {
+                "model": [ [ 914, 76 ], [ 914, 458 ] ],
+                "comment": "source"
+            },
+            {
+                "model": [ [ 929, 486 ], [ 929, 76 ] ],
+                "comment": "return"
+            },
+            {
+                "model": [ [ 899, 76 ], [ 899, 364 ] ],
+                "comments": "topping-up-in"
+            },
+            {
+                "model": [ [ 898, 115 ], [ 803, 115 ] ],
+                "comments": "topping-up-VA6-in"
+            },
+            {
+                "model": [ [ 780, 115 ], [ 594, 115 ] ],
+                "valves +": [ "VA6" ],
+                "comments": "topping-up-VA6-out"
+            },
+            {
+                "model": [ [ 595, 187 ], [ 668, 187 ] ],
+                "comments": "top-cooling-pump-in"
+            },
+            {
+                "model": [ [ 695, 187 ], [ 766, 187 ] ],
+                "pumps": [ "H4" ],
+                "comments": "top-cooling-pump-out"
+            },
+            {
+                "model": [ [ 766, 218 ], [ 595, 218 ] ],
+                "pumps": [ "H4" ],
+                "comments": "top-cooling-barrel-in"
+            },
+            {
+                "model": [ [ 912, 187 ], [ 815, 187 ] ],
+                "valves +": [ "VA7" ],
+                "comments": "source-top-cooling-in"
+            },
+            {
+                "model": [ [ 815, 218 ], [ 928, 218 ] ],
+                "valves +": [ "VA7" ],
+                "comments": "source-top-cooling-out"
+            },
+            {
+                "model": [ [ 898, 366 ], [ 818, 366 ] ],
+                "comments": "topping-up-VA8-in"
+            },
+            {
+                "model": [ [ 794, 366 ], [ 639, 366 ] ],
+                "valves +": [ "VA8" ],
+                "comments": "topping-up-VA8-out"
+            },
+            {
+                "model": [ [ 639, 461 ], [ 705, 461 ] ],
+                "comments": "bottom-cooling-pump-in"
+            },
+            {
+                "model": [ [ 730, 461 ], [ 779, 461 ] ],
+                "pumps": [ "H6" ],
+                "comments": "bottom-cooling-pump-out"
+            },
+            {
+                "model": [ [ 780, 490 ], [ 639, 490 ] ],
+                "pumps": [ "H6" ],
+                "comments": "bottom-cooling-barrel-in"
+            },
+
+            {
+                "model": [ [ 912, 461 ], [ 828, 461 ] ],
+                "valves +": [ "VA9" ],
+                "comments": "source-bottom-cooling-in"
+            },
+            {
+                "model": [ [ 828, 490 ], [ 928, 490 ] ],
+                "valves +": [ "VA9" ],
+                "comments": "source-bottom-cooling-out"
+            }
+        ],
+
         "temperature":
         {
-            "DT14": [ 577, 126 ],
-            "DT15": [ 577, 167 ],
-            "DT16": [ 633, 380 ],
-            "DT17": [ 675, 421 ]
+            "DT14": [ 615, 120 ],
+            "DT15": [ 615, 199 ],
+            "DT16": [ 660, 371 ],
+            "DT17": [ 660, 471 ]
         },
 
         "inflow":
         {
-            "FC11": [ 645, 102 ],
-            "FC12": [ 691, 161 ],
-            "FC13": [ 673, 350 ],
-            "FC14": [ 715, 423 ],
-            "FC16": [ 791, 161 ],
-            "FC17": [ 810, 423 ]
+            "FC11": [ 710, 96 ],
+            "FC12": [ 710, 199 ],
+            "FC13": [ 730, 347 ],
+            "FC14": [ 730, 471 ],
+            "FC16": [ 823, 168 ],
+            "FC17": [ 835, 442 ]
         },
 
         "valves":
         {
-            "VA6": { "pos": [ 674, 88  ] },
-            "VA7": { "pos": [ 815, 148 ] },
-            "VA8": { "pos": [ 721, 343 ] },
-            "VA9": { "pos": [ 832, 414 ] }
+            "VA6": { "pos": [ 778, 104 ] },
+            "VA7": { "pos": [ 866, 207 ] },
+            "VA8": { "pos": [ 793, 355 ] },
+            "VA9": { "pos": [ 880, 479 ] }
+        },
+
+        "dvalves":
+        {
+            "VA10":  { "pos": [ 339, 231  ], "tplace": "top" },
+            "VA11":  { "pos": [ 227, 231  ], "tplace": "top" }
         },
 
         "slevels":
@@ -150,10 +491,10 @@
 
         "pumps":
         {
-            "H3": { "pos": [ 408, 192 ] },
-            "H4": { "pos": [ 618, 148 ] },
-            "H5": { "pos": [ 452, 464 ] },
-            "H6": { "pos": [ 620, 411 ] }
+            "H3": { "pos": [ 465, 206 ], "rotate": 270 },
+            "H4": { "pos": [ 668, 175 ], "rotate": 90 },
+            "H5": { "pos": [ 495, 479 ], "rotate": 270 },
+            "H6": { "pos": [ 703, 448 ], "rotate": 90 }
         }
     }
 ]
