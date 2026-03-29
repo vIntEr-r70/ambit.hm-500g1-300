@@ -13,11 +13,6 @@ endif()
 
 include_directories(PRIVATE src/common)
 
-if (NOT MSVC)
-    add_subdirectory(src/libs/libaem)
-    add_subdirectory(src/gate)
-endif ()
-
 add_subdirectory(src/libs/libeng)
 add_subdirectory(src/libs/ambit-gui-core)
 add_subdirectory(src/gui)

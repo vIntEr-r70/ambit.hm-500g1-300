@@ -12,6 +12,8 @@ src/Lib/
 *optime-b
 sys_messages.txt
 .vscode/
+run
+run-all
 
 
 
