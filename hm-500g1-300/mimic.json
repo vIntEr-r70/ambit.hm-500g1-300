@@ -85,7 +85,7 @@
                 "comments": "collection-bath-out-top"
             },
             {
-                "model": [ [ 474, 520 ], [ 964, 520 ] ],
+                "model": [ [ 474, 520 ], [ 860, 520 ], [ 860, 525 ] ],
                 "pumps": [ "H7" ],
                 "valves +": [ "VA12" ],
                 "comments": "collection-bath-out-bottom"
@@ -211,7 +211,15 @@
             "flag.door":     [ 690, 350 ],
             "flag.pressure": [ 690, 380 ],
             "flag.bki":      [ 690, 410 ]
-        }
+        },
+
+        "navigation":
+        [
+            { "page-id": 1, "pos": [ 955, 26  ], "icon": "arrow.right" },
+            { "page-id": 1, "pos": [ 955, 265 ], "icon": "arrow.right" },
+            { "page-id": 2, "pos": [ 955, 350 ], "icon": "arrow.right" },
+            { "page-id": 2, "pos": [ 955, 475 ], "icon": "arrow.right" }
+        ]
     },
 
     {
@@ -311,7 +319,13 @@
         {
             "P6": { "pos": [ 257, 160 ] },
             "P7": { "pos": [ 257, 218 ] }
-        }
+        },
+
+        "navigation":
+        [
+            { "page-id": 0, "pos": [ 60, 215 ], "icon": "arrow.left" },
+            { "page-id": 0, "pos": [ 60, 360 ], "icon": "arrow.left" }
+        ]
     },
 
     {
@@ -320,7 +334,7 @@
         "tubes":
         [
             {
-                "model": [ [ 71, 85 ], [ 203, 85 ], [ 203, 252 ], [ 227, 252 ] ],
+                "model": [ [ 71, 111 ], [ 203, 111 ], [ 203, 252 ], [ 227, 252 ] ],
                 "pumps": [ "H7" ],
                 "valves -": [ "VA12" ],
                 "comment": "VA11-in"
@@ -362,15 +376,15 @@
                 "comment": "VA10-out"
             },
             {
-                "model": [ [ 914, 76 ], [ 914, 458 ] ],
+                "model": [ [ 909, 76 ], [ 909, 458 ] ],
                 "comment": "source"
             },
             {
-                "model": [ [ 929, 486 ], [ 929, 76 ] ],
+                "model": [ [ 924, 486 ], [ 924, 76 ] ],
                 "comment": "return"
             },
             {
-                "model": [ [ 899, 76 ], [ 899, 364 ] ],
+                "model": [ [ 894, 76 ], [ 894, 364 ] ],
                 "comments": "topping-up-in"
             },
             {
@@ -495,7 +509,13 @@
             "H4": { "pos": [ 668, 175 ], "rotate": 90 },
             "H5": { "pos": [ 495, 479 ], "rotate": 270 },
             "H6": { "pos": [ 703, 448 ], "rotate": 90 }
-        }
+        },
+
+        "navigation":
+        [
+            { "page-id": 0, "pos": [ 30, 26 ], "icon": "arrow.left" },
+            { "page-id": 0, "pos": [ 30, 93 ], "icon": "arrow.left" }
+        ]
     }
 ]
 

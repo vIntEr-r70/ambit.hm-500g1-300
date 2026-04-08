@@ -12,7 +12,7 @@ ArcDataViewWidget::ArcDataViewWidget(QWidget *parent) noexcept
     {
         QHBoxLayout *hL = new QHBoxLayout();
         {
-            IconButton *btn = new IconButton(this, ":/arrow.left");
+            IconButton *btn = new IconButton(this, ":/arrow-alt.left");
             connect(btn, &IconButton::clicked, [this] { emit go_back(); });
             btn->setBgColor("#8a8a8a");
             hL->addWidget(btn);

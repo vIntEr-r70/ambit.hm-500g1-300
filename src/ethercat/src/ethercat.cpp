@@ -615,7 +615,7 @@ namespace ethercat
                 ecrt_domain_queue(domain_);
             }
 
-            ecrt_master_application_time(master_, nsec * );
+            ecrt_master_application_time(master_, nsec);
             ecrt_master_sync_slave_clocks(master_);
 
             ecrt_master_send(master_);
