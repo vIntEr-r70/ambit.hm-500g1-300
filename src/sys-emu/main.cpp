@@ -47,26 +47,22 @@ auto main(int argc, char *argv[]) -> int
     syslink::add_new_device<devices::PR205_B6>();
     syslink::add_new_device<devices::PR205_B10>();
 
-    main_frame *w = new main_frame();
+    main_frame w;
     QRect screenGeometry(0, 0, 1024, 768);
-    w->setFixedSize(screenGeometry.width(), screenGeometry.height());
-    w->show();
+    w.setFixedSize(screenGeometry.width(), screenGeometry.height());
+    w.show();
 
     eng::timer::id_t timer_id = eng::timer::add_ms(10, [&]
     {
         a.processEvents();
 
-        if (!w->isHidden())
+        if (!w.isHidden())
             return;
 
         eng::timer::kill_timer(timer_id);
+        syslink::destroy();
     });
 
-    int result = eng::run();
-
-    // Вызываем деструкторы окон
-    delete w;
-
-    return result;
+    return eng::run();
 }
 

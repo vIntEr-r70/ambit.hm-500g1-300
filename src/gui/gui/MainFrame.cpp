@@ -85,7 +85,6 @@ void MainFrame::register_on_bus_done()
                 NavigationPanel_->set_button_color("mimic", clr);
             });
 
-
     // auto nw = new NotifyWindow(this);
     // connect(nw, &NotifyWindow::update_state, [this](char state)
     //     { NavigationPanel_->set_notify_state("diag", state); });
@@ -201,8 +200,11 @@ void MainFrame::update_mode()
 
 void MainFrame::keyPressEvent(QKeyEvent *e) noexcept
 {
-    if (e->key() == Qt::Key_Escape)
-        hide();
-}
+    if (e->key() != Qt::Key_Escape)
+        return;
 
+    auto_ctl_window_->close();
+
+    close();
+}
 

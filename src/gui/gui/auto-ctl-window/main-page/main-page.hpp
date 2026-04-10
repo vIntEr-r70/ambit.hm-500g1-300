@@ -35,4 +35,8 @@ private:
     void make_edit_program();
 
     void make_init_program();
+
+private:
+
+    void closeEvent(QCloseEvent *) override final;
 };

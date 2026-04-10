@@ -15,11 +15,28 @@ namespace devices
         online_ = value;
     }
 
+    void base_device::stop()
+    {
+    }
+
 
     modbus_device::modbus_device(std::string_view name)
         : base_device(name)
     {
-        mts::add_listener(*this);
+        listener_id_ = mts::add_listener(*this);
+    }
+
+    modbus_device::~modbus_device()
+    {
+        if (listener_id_)
+            mts::remove_listener(listener_id_);
+    }
+
+    void modbus_device::stop()
+    {
+        if (listener_id_)
+            mts::remove_listener(listener_id_);
+        listener_id_.reset();
     }
 
     void modbus_device::set(std::uint16_t address, std::size_t idx, bool value)

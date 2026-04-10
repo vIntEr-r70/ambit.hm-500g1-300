@@ -44,6 +44,8 @@ public:
 
     void add_usb_path(std::filesystem::path);
 
+    void stop_monitoring_directories();
+
 public:
 
     void remove(std::size_t);

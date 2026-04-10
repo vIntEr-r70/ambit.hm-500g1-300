@@ -12,7 +12,7 @@
 #include <QPixmapCache>
 
 ManualCtrlWindow::ManualCtrlWindow(QWidget *parent) noexcept
-    : QWidget(parent) 
+    : QWidget(parent)
 {
     QVBoxLayout* vL = new QVBoxLayout(this);
     vL->setContentsMargins(10, 10, 10, 10);

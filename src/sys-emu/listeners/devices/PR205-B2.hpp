@@ -26,6 +26,10 @@ namespace devices
 
         void bitset(std::size_t, bitset_callback);
 
+        bool bit_p_get(std::size_t);
+
+        void bit_p_set(std::size_t, bool);
+
     private:
 
         void changed(std::uint16_t, std::uint16_t) override final;

@@ -42,6 +42,7 @@ namespace syslink
         return *static_cast<T*>(base);
     }
 
+    void destroy();
 
 }
 

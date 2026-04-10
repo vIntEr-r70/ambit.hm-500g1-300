@@ -122,6 +122,17 @@ program_record_t const* program_list_model::record(std::string const &fname) con
     return it == records_index_map_.end() ? nullptr : *it;
 }
 
+void program_list_model::stop_monitoring_directories()
+{
+    if (hd_)
+        uv_fs_event_stop(&hd_->event);
+    hd_ = nullptr;
+
+    if (usb_)
+        uv_fs_event_stop(&usb_->event);
+    usb_ = nullptr;
+}
+
 void program_list_model::start_monitoring_directory(context_t &ctx)
 {
     // eng::log::info("{}: {}", __func__, ctx.path.native());

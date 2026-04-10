@@ -60,3 +60,8 @@ void main_page::make_init_program()
     emit goto_ctl_page(programs_list_widget_->selected_program());
 }
 
+void main_page::closeEvent(QCloseEvent *)
+{
+    programs_list_widget_->close();
+}
+

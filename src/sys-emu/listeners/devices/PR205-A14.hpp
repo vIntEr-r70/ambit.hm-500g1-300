@@ -10,7 +10,6 @@ namespace devices
     {
         std::unordered_map<std::size_t, bitset_callback> callbacks_;
         std::unordered_map<std::size_t, bitset_callback> va_callbacks_;
-        std::unordered_map<std::size_t, bitset_callback> p_callbacks_;
 
     public:
 
@@ -37,8 +36,6 @@ namespace devices
         void bitset(std::size_t, bitset_callback);
 
         void bitset_va(std::size_t, bitset_callback);
-
-        void bitset_p(std::size_t, bitset_callback);
 
     private:
 

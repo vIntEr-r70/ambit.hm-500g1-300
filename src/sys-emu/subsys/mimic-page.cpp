@@ -15,6 +15,7 @@
 #include <QGroupBox>
 #include <QTimer>
 #include <QSettings>
+#include <qboxlayout.h>
 
 mimic_page::mimic_page(QWidget *parent)
     : QWidget(parent)
@@ -73,60 +74,80 @@ mimic_page::mimic_page(QWidget *parent)
         }
         hL->addWidget(box);
 
-        box = new QGroupBox(this);
-        box->setTitle("Задвижки позиционные");
-        vL = new QVBoxLayout(box);
+        vL = new QVBoxLayout();
         {
-            std::string_view const keys[] = {
-                "VA10", "VA11", "VA12"
-            };
-
-            for (std::size_t i = 0; i < std::size(keys); ++i)
+            box = new QGroupBox(this);
+            box->setTitle("Задвижки позиционные");
+            QVBoxLayout *vvL = new QVBoxLayout(box);
             {
-                QHBoxLayout *hL = new QHBoxLayout();
+                std::string_view const keys[] = {
+                    "VA10", "VA11", "VA12"
+                };
+
+                for (std::size_t i = 0; i < std::size(keys); ++i)
                 {
-                    std::string lkey = std::format("l-{}", keys[i]);
-
-                    auto vL = new QVBoxLayout();
+                    QHBoxLayout *hL = new QHBoxLayout();
                     {
-                        QLabel *lbl = new QLabel(box);
-                        lbl->setAlignment(Qt::AlignCenter);
-                        lbl->setFrameStyle(QFrame::Box);
-                        lbl->setFixedHeight(25);
-                        init_VA(lkey, lbl);
-                        vL->addWidget(lbl);
+                        std::string lkey = std::format("l-{}", keys[i]);
 
-                        RoundButton *btn = new RoundButton(box);
-                        btn->setText(QString::fromStdString(lkey));
-                        init_VA(lkey, btn, true);
-                        load_state(btn);
-                        vL->addWidget(btn);
+                        auto vL = new QVBoxLayout();
+                        {
+                            QLabel *lbl = new QLabel(box);
+                            lbl->setAlignment(Qt::AlignCenter);
+                            lbl->setFrameStyle(QFrame::Box);
+                            lbl->setFixedHeight(25);
+                            init_VA(lkey, lbl);
+                            vL->addWidget(lbl);
+
+                            RoundButton *btn = new RoundButton(box);
+                            btn->setText(QString::fromStdString(lkey));
+                            init_VA(lkey, btn, true);
+                            load_state(btn);
+                            vL->addWidget(btn);
+                        }
+                        hL->addLayout(vL);
+
+                        std::string rkey = std::format("r-{}", keys[i]);
+
+                        vL = new QVBoxLayout();
+                        {
+                            QLabel *lbl = new QLabel(box);
+                            lbl->setAlignment(Qt::AlignCenter);
+                            lbl->setFrameStyle(QFrame::Box);
+                            lbl->setFixedHeight(25);
+                            init_VA(rkey, lbl);
+                            vL->addWidget(lbl);
+
+                            RoundButton *btn = new RoundButton(box);
+                            btn->setText(QString::fromStdString(rkey));
+                            init_VA(rkey, btn, true);
+                            load_state(btn);
+                            vL->addWidget(btn);
+                        }
+                        hL->addLayout(vL);
                     }
-                    hL->addLayout(vL);
-
-                    std::string rkey = std::format("r-{}", keys[i]);
-
-                    vL = new QVBoxLayout();
-                    {
-                        QLabel *lbl = new QLabel(box);
-                        lbl->setAlignment(Qt::AlignCenter);
-                        lbl->setFrameStyle(QFrame::Box);
-                        lbl->setFixedHeight(25);
-                        init_VA(rkey, lbl);
-                        vL->addWidget(lbl);
-
-                        RoundButton *btn = new RoundButton(box);
-                        btn->setText(QString::fromStdString(rkey));
-                        init_VA(rkey, btn, true);
-                        load_state(btn);
-                        vL->addWidget(btn);
-                    }
-                    hL->addLayout(vL);
+                    vvL->addLayout(hL);
                 }
-                vL->addLayout(hL);
             }
+            vL->addWidget(box);
+
+            box = new QGroupBox(this);
+            box->setTitle("Нагреватели");
+            vvL = new QVBoxLayout(box);
+            {
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                    std::string key = std::format("WH{}", i + 1);
+
+                    RoundButton *btn = new RoundButton(box);
+                    btn->setText(QString::fromStdString(key));
+                    init_WH(key, btn);
+                    vvL->addWidget(btn);
+                }
+            }
+            vL->addWidget(box);
         }
-        hL->addWidget(box);
+        hL->addLayout(vL);
     }
 }
 
@@ -229,12 +250,12 @@ void mimic_page::init_P(std::string const &key, RoundButton *btn)
         { "P3",  { dev_p_flip<devices::PR205_A14>, 0 } },
         { "P4",  { dev_p_flip<devices::PR205_A14>, 1 } },
         { "P5",  { dev_p_flip<devices::PR205_A14>, 4 } },
-        { "P6",  { dev_flip<devices::PR205_B2>,  4 } },
-        { "P7",  { dev_flip<devices::PR205_B2>,  5 } },
-        { "P8",  { dev_flip<devices::PR205_B6>,  4 } },
-        { "P9",  { dev_flip<devices::PR205_B6>,  5 } },
-        { "P10", { dev_flip<devices::PR205_B10>, 4 } },
-        { "P11", { dev_flip<devices::PR205_B10>, 5 } },
+        { "P6",  { dev_p_flip<devices::PR205_B2>,  4 } },
+        { "P7",  { dev_p_flip<devices::PR205_B2>,  5 } },
+        { "P8",  { dev_p_flip<devices::PR205_B6>,  4 } },
+        { "P9",  { dev_p_flip<devices::PR205_B6>,  5 } },
+        { "P10", { dev_p_flip<devices::PR205_B10>, 4 } },
+        { "P11", { dev_p_flip<devices::PR205_B10>, 5 } },
     };
 
     auto const &item = map.at(key);
@@ -340,4 +361,34 @@ void mimic_page::load_state(RoundButton *btn)
         update_btn_view(btn, value);
     });
 }
+
+void mimic_page::init_WH(std::string_view key, RoundButton *btn)
+{
+    struct item_t
+    {
+        bool(*flip)(std::size_t);
+        void(*notify)(std::size_t, devices::bitset_callback);
+        std::size_t ibit;
+    };
+
+    static std::unordered_map<std::string_view, item_t> const map {
+        { "WH1",  { dev_flip<devices::PR205_B6>,  dev_notify<devices::PR205_B6>,  2 } },
+        { "WH2",  { dev_flip<devices::PR205_B10>, dev_notify<devices::PR205_B10>, 2 } },
+    };
+
+    auto const &item = map.at(key);
+
+    connect(btn, &RoundButton::clicked, [this, btn, &item]
+    {
+        bool value = item.flip(item.ibit);
+        update_btn_view(btn, value);
+    });
+
+    item.notify(item.ibit, [this, btn](bool value)
+    {
+        update_btn_view(btn, value);
+    });
+
+}
+
 

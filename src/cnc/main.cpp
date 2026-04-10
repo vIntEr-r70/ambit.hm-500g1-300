@@ -4,9 +4,14 @@
 
 #include <eng/sibus/client.hpp>
 #include <eng/eng.hpp>
+#include <eng/log.hpp>
 
-auto main() -> int
+#include <filesystem>
+
+auto main(int argc, char *argv[]) -> int
 {
+    eng::log::info("{}: {}", argv[0], std::filesystem::current_path().c_str());
+
     eng::sibus::client::init();
 
     axis_panel_ctl axis_panel_ctl_x('X');

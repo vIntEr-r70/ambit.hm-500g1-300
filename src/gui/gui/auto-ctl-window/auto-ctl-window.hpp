@@ -16,5 +16,9 @@ class auto_ctl_window final
 public:
 
     auto_ctl_window(QWidget *) noexcept;
+
+private:
+
+    void closeEvent(QCloseEvent *) override final;
 };
 

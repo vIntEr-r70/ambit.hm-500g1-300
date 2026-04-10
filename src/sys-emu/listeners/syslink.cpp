@@ -1,6 +1,7 @@
 #include "syslink.hpp"
 
 #include <unordered_map>
+#include <algorithm>
 
 namespace syslink
 {
@@ -21,6 +22,14 @@ namespace syslink
         }
 
     }
+
+    void destroy()
+    {
+        std::ranges::for_each(devices, [](auto pair) {
+            pair.second->stop();
+        });
+    }
+
 
 }
 

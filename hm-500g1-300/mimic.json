@@ -148,6 +148,15 @@
             "H7": { "pos": [ 258, 444 ] }
         },
 
+        "slevels":
+        {
+            "P1": { "pos": [ 172, 400 ], "tplace": "top" },
+            "P2": { "pos": [ 172, 438 ], "tplace": "top" },
+            "P3": { "pos": [ 303, 415 ], "tplace": "top" },
+            "P4": { "pos": [ 303, 460 ], "tplace": "top" },
+            "P5": { "pos": [ 126, 430 ], "tplace": "top" }
+        },
+
         "pressure":
         {
             "DP1": [ 659, 351 ],
@@ -317,8 +326,8 @@
 
         "slevels":
         {
-            "P6": { "pos": [ 257, 160 ] },
-            "P7": { "pos": [ 257, 218 ] }
+            "P6": { "pos": [ 372, 276 ] },
+            "P7": { "pos": [ 372, 333 ] }
         },
 
         "navigation":
@@ -406,7 +415,12 @@
                 "comments": "top-cooling-pump-out"
             },
             {
-                "model": [ [ 766, 218 ], [ 595, 218 ] ],
+                "model": [ [ 766, 218 ], [ 702, 218 ] ],
+                "pumps": [ "H4" ],
+                "comments": "top-cooling-barrel-in"
+            },
+            {
+                "model": [ [ 662, 218 ], [ 595, 218 ] ],
                 "pumps": [ "H4" ],
                 "comments": "top-cooling-barrel-in"
             },
@@ -430,16 +444,21 @@
                 "comments": "topping-up-VA8-out"
             },
             {
-                "model": [ [ 639, 461 ], [ 705, 461 ] ],
+                "model": [ [ 639, 461 ], [ 698, 461 ] ],
                 "comments": "bottom-cooling-pump-in"
             },
             {
-                "model": [ [ 730, 461 ], [ 779, 461 ] ],
+                "model": [ [ 723, 461 ], [ 779, 461 ] ],
                 "pumps": [ "H6" ],
                 "comments": "bottom-cooling-pump-out"
             },
             {
-                "model": [ [ 780, 490 ], [ 639, 490 ] ],
+                "model": [ [ 780, 490 ], [ 729, 490 ] ],
+                "pumps": [ "H6" ],
+                "comments": "bottom-cooling-barrel-in"
+            },
+            {
+                "model": [ [ 689, 490 ], [ 639, 490 ] ],
                 "pumps": [ "H6" ],
                 "comments": "bottom-cooling-barrel-in"
             },
@@ -459,17 +478,17 @@
         "temperature":
         {
             "DT14": [ 615, 120 ],
-            "DT15": [ 615, 199 ],
+            "DT15": [ 612, 199 ],
             "DT16": [ 660, 371 ],
-            "DT17": [ 660, 471 ]
+            "DT17": [ 645, 471 ]
         },
 
         "inflow":
         {
             "FC11": [ 710, 96 ],
-            "FC12": [ 710, 199 ],
+            "FC12": [ 713, 199 ],
             "FC13": [ 730, 347 ],
-            "FC14": [ 730, 471 ],
+            "FC14": [ 733, 471 ],
             "FC16": [ 823, 168 ],
             "FC17": [ 835, 442 ]
         },
@@ -490,25 +509,24 @@
 
         "slevels":
         {
-            "P8":  { "pos": [ 430, 94  ] },
-            "P9":  { "pos": [ 430, 155 ] },
-            "P10": { "pos": [ 470, 339 ] },
-            "P11": { "pos": [ 470, 413 ] },
-            "P12": { "pos": [ 266, 456 ] }
+            "P8":  { "pos": [ 482, 111 ] },
+            "P9":  { "pos": [ 482, 169 ] },
+            "P10": { "pos": [ 508, 359 ] },
+            "P11": { "pos": [ 508, 429 ] }
         },
 
         "heaters":
         {
-            "WH1": { "pos": [ 601, 189 ] },
-            "WH2": { "pos": [ 674, 461 ] }
+            "WH1": { "pos": [ 661, 209 ] },
+            "WH2": { "pos": [ 689, 481 ] }
         },
 
         "pumps":
         {
             "H3": { "pos": [ 465, 206 ], "rotate": 270 },
-            "H4": { "pos": [ 668, 175 ], "rotate": 90 },
+            "H4": { "pos": [ 668, 175 ], "rotate": 90, "tplace": "top" },
             "H5": { "pos": [ 495, 479 ], "rotate": 270 },
-            "H6": { "pos": [ 703, 448 ], "rotate": 90 }
+            "H6": { "pos": [ 696, 448 ], "rotate": 90, "tplace": "top" }
         },
 
         "navigation":

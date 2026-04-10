@@ -69,22 +69,10 @@ namespace devices
         va_callbacks_[idx] = std::move(callback);
     }
 
-    void PR205_A14::bitset_p(std::size_t idx, bitset_callback callback)
-    {
-        p_callbacks_[idx] = std::move(callback);
-    }
-
     void PR205_A14::changed(std::uint16_t address, std::uint16_t value)
     {
         switch (address)
         {
-        case 0x4000:
-            std::ranges::for_each(p_callbacks_, [&](auto const &pair)
-            {
-                std::bitset<8> bitset(value);
-                (pair.second)(bitset.test(pair.first));
-            });
-            break;
         case 0x4001:
             std::ranges::for_each(callbacks_, [&](auto const &pair)
             {

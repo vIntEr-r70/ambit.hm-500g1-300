@@ -51,9 +51,9 @@ auto main(int argc, char *argv[]) -> int
     QRect screenGeometry(0, 0, 1024, 768);
 #endif
 
-    MainFrame *w = new MainFrame();
-    w->setFixedSize(screenGeometry.width(), screenGeometry.height());
-    w->show();
+    MainFrame w;
+    w.setFixedSize(screenGeometry.width(), screenGeometry.height());
+    w.show();
 
     eng::sibus::client::init();
 
@@ -61,19 +61,13 @@ auto main(int argc, char *argv[]) -> int
     {
         a.processEvents();
 
-        if (!w->isHidden())
+        if (!w.isHidden())
             return;
 
         eng::timer::kill_timer(timer_id);
-
         eng::sibus::client::destroy();
     });
 
-    int result = eng::run();
-
-    // Вызываем деструкторы окон
-    delete w;
-
-    return result;
+    return eng::run();
 }
 

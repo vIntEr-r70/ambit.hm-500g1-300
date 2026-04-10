@@ -191,7 +191,8 @@ void programs_list_widget::make_scroll(int shift)
     bar->setSliderPosition(pos + shift);
 }
 
-void programs_list_widget::showEvent(QShowEvent *)
+void programs_list_widget::closeEvent(QCloseEvent *)
 {
+    model_->stop_monitoring_directories();
 }
 

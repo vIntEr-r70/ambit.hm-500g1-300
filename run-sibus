@@ -1,0 +1,7 @@
+#!/bin/env bash
+
+clear
+source ./environment
+
+cd /home/alex/projects/sibus
+./build/sibus

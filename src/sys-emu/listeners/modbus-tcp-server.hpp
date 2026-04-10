@@ -1,5 +1,7 @@
 #pragma once
 
+#include <eng/pipe/listener.hpp>
+
 namespace devices {
     class modbus_device;
 }
@@ -7,7 +9,9 @@ namespace devices {
 namespace mts
 {
 
-    void add_listener(devices::modbus_device &);
+    eng::pipe::listener_id_t add_listener(devices::modbus_device &);
+
+    void remove_listener(eng::pipe::listener_id_t);
 
 }
 

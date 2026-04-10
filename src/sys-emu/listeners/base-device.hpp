@@ -1,5 +1,7 @@
 #pragma once
 
+#include <eng/pipe/listener.hpp>
+
 #include <string_view>
 #include <functional>
 #include <cstdint>
@@ -29,16 +31,21 @@ namespace devices
         bool online() const noexcept { return online_; }
 
         std::string const &name() const noexcept { return name_; }
+
+        virtual void stop() = 0;
     };
 
     class modbus_device
         : public base_device
     {
+        eng::pipe::listener_id_t listener_id_;
         std::unordered_map<std::uint16_t, std::uint16_t> map_;
 
     protected:
 
         modbus_device(std::string_view);
+
+        ~modbus_device();
 
     public:
 
@@ -49,6 +56,10 @@ namespace devices
     protected:
 
         void set(std::uint16_t, std::size_t, bool);
+
+    private:
+
+        void stop() override final;
 
     private:
 

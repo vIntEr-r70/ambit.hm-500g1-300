@@ -57,3 +57,8 @@ auto_ctl_window::auto_ctl_window(QWidget *parent) noexcept
     QStackedWidget::addWidget(editor_page_);
 }
 
+void auto_ctl_window::closeEvent(QCloseEvent *)
+{
+    main_page_->close();
+}
+

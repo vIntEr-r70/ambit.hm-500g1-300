@@ -206,7 +206,7 @@ namespace context
 namespace mts
 {
 
-    void add_listener(devices::modbus_device &device)
+    eng::pipe::listener_id_t add_listener(devices::modbus_device &device)
     {
 #ifdef _WIN32
         std::string ipc = std::format("\\\\.\\pipe\\{}", device.name());
@@ -217,10 +217,15 @@ namespace mts
         if (std::filesystem::exists(ipc))
             std::filesystem::remove(ipc);
 
-        eng::pipe::listen(ipc, [ptr=&device](uv_stream_t *stream)
+        return eng::pipe::start_listen(ipc, [ptr=&device](uv_stream_t *stream)
         {
             context::add_new_client(stream, ptr);
         });
+    }
+
+    void remove_listener(eng::pipe::listener_id_t id)
+    {
+        eng::pipe::stop_listen(id);
     }
 
 }

@@ -1,0 +1,2 @@
+export SIBUS_IPC_NAME=/tmp/sibus.pipe
+export LIAEM_RO_PATH=/home/alex/projects/ambit.hm-500g1-300/hm-500g1-300 

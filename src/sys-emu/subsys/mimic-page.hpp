@@ -24,5 +24,7 @@ private:
 
     void init_VA(std::string_view, QLabel *);
 
+    void init_WH(std::string_view, RoundButton *);
+
     void load_state(RoundButton *);
 };

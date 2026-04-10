@@ -38,7 +38,7 @@ public:
 
 private:
 
-    void showEvent(QShowEvent *) override final;
+    void closeEvent(QCloseEvent *) override final;
 
     void on_row_changed(int);
 
